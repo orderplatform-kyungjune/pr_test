@@ -1,29 +1,28 @@
-name: Auto Assign Reviewer
+name: test1
 
 on:
   pull_request:
     types: [opened]
 
 jobs:
-  assign_reviewer:
+  assign_reviewers:
     runs-on: ubuntu-latest
     steps:
-      - name: Assign Reviewer
+      - name: test2
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const response = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
+            const { data: collaborators } = await github.repos.listCollaborators({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name
+            });
+
+            const reviewers = collaborators.map(collaborator => collaborator.login);
+
+            await github.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
               owner: context.payload.repository.owner.login,
               repo: context.payload.repository.name,
-              pull_number: context.payload.pull_request.number
+              pull_number: context.payload.pull_request.number,
+              reviewers: reviewers
             });
-            
-            if (response.data.length === 0) {
-              await github.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
-                owner: context.payload.repository.owner.login,
-                repo: context.payload.repository.name,
-                pull_number: context.payload.pull_request.number,
-                reviewers: ['leee1846']
-              });
-            }
