@@ -5,10 +5,9 @@ on:
     types: [opened, ready_for_review]
 
 jobs:
-  assign:
+  add-reviews:
     runs-on: ubuntu-latest
     steps:
-      - uses: hkusu/review-assign-action@v1
+      - uses: kentaro-m/auto-assign-action@v1.2.1
         with:
-          assignees: ${{ github.actor }} # assign pull request author
-          reviewers: leee1846
+          configuration-path: '.github/auto-assign.yml'
