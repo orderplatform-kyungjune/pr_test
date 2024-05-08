@@ -1,13 +1,28 @@
-name: 'Auto Assign'
+name: test1
+
 on:
-  pull_request_target:
-    types: [opened, ready_for_review]
+  pull_request:
+    types: [opened]
 
 jobs:
-  add-reviews:
+  assign_reviewers:
     runs-on: ubuntu-latest
     steps:
-      - uses: kentaro-m/auto-assign-action@v2.0.0
+      - name: test2
+        uses: actions/github-script@v4
         with:
-          repo-token: '${{ secrets.GITHUB_TOKEN }}'
-          configuration-path: '.github/auto_assign_configs.yml'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: collaborators } = await github.repos.listCollaborators({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name
+            });
+
+            const reviewers = collaborators.map(collaborator => collaborator.login);
+
+            await github.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              pull_number: context.payload.pull_request.number,
+              reviewers: reviewers
+            });
