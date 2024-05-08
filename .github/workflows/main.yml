@@ -20,10 +20,12 @@ jobs:
             
             const pullRequestAuthor = context.payload.pull_request.user.login;
 
+            // 요청자를 제외한 리뷰어 목록
             const reviewers = collaborators
               .filter(collaborator => collaborator.login !== pullRequestAuthor)
               .map(collaborator => collaborator.login);
             
+            // 리뷰어 자동 설정
             if (reviewers.length > 0) {
               await github.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
                 owner: context.payload.repository.owner.login,
@@ -34,7 +36,8 @@ jobs:
             } else {
               console.log('No collaborators found to assign as reviewers.');
             }
-            console.log('github.issues',github.issues)
+            
+            // 요청자 자동 설정
             await github.issues.addAssignees({
               owner: context.payload.repository.owner.login,
               repo: context.payload.repository.name,
