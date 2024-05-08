@@ -18,20 +18,12 @@ jobs:
               repo: context.payload.repository.name
             });
             
-            console.log('레파지토리', context.payload.repository)
-            console.log('collaborators', collaborators)
-            
             const pullRequestAuthor = context.payload.pull_request.user.login;
-            
-            console.log('pullRequestAuthor', pullRequestAuthor)
 
             const reviewers = collaborators
               .filter(collaborator => collaborator.login !== pullRequestAuthor)
               .map(collaborator => collaborator.login);
             
-            console.log('reviewers', reviewers)
-
-            console.log('context.payload',context.payload)
             if (reviewers.length > 0) {
               await github.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
                 owner: context.payload.repository.owner.login,
@@ -42,3 +34,10 @@ jobs:
             } else {
               console.log('No collaborators found to assign as reviewers.');
             }
+            console.log('github.issues',github.issues)
+            await github.issues.addAssignees({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              issue_number: context.payload.pull_request.number,
+              assignees: [pullRequestAuthor]
+            });
