@@ -1,13 +1,29 @@
-name: 'Auto Assign'
+name: Auto Assign Reviewer
+
 on:
-  pull_request_target:
-    types: [opened, ready_for_review]
+  pull_request:
+    types: [opened]
 
 jobs:
-  add-reviews:
+  assign_reviewer:
     runs-on: ubuntu-latest
     steps:
-      - uses: kentaro-m/auto-assign-action@v2.0.0
+      - name: Assign Reviewer
+        uses: actions/github-script@v4
         with:
-          repo-token: '${{ secrets.GITHUB_TOKEN }}'
-          configuration-path: '.github/auto_assign_configs.yml'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const response = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            if (response.data.length === 0) {
+              await github.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers', {
+                owner: context.payload.repository.owner.login,
+                repo: context.payload.repository.name,
+                pull_number: context.payload.pull_request.number,
+                reviewers: ['leee1846']
+              });
+            }
