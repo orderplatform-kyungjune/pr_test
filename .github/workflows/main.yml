@@ -2,7 +2,7 @@ name: Review Assign
 
 on:
   pull_request:
-    types: [opened, ready_for_review]
+    types: [opened]
 
 jobs:
   assign:
@@ -11,4 +11,4 @@ jobs:
       - uses: hkusu/review-assign-action@v1
         with:
           assignees: ${{ github.actor }} # assign pull request author
-          reviewers: foo, bar, baz # if draft, assigned when draft is released
+          max-num-of-reviewers: 2
