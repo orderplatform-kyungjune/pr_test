@@ -1,14 +1,14 @@
-name: Auto Assign Reviewers
+name: Auto Assign
 
 on:
   pull_request:
     types: [opened]
 
 jobs:
-  assign_reviewers:
+  auto-asign:
     runs-on: ubuntu-latest
     steps:
-      - name: Assign Reviewers
+      - name: Auto Assign
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.TEST_TOKEN }}
