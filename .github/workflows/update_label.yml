@@ -14,10 +14,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Set up GitHub CLI
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
       - name: Install GitHub CLI
         run: |
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
@@ -39,4 +35,4 @@ jobs:
               NEW_LABEL_NAME="D-$NEW_LABEL"
               gh pr edit $PR_NUMBER --add-label "$NEW_LABEL_NAME"
             fi
-          fifi
+          fi
