@@ -25,17 +25,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           script: |
-            const { GitHub } = require('@actions/github');
+            const { GitHub, context } = require('@actions/github');
 
             const github = new GitHub(process.env.GITHUB_TOKEN);
 
             async function updateLabels() {
-              const prNumber = github.context.payload.pull_request.number;
+              const prNumber = context.payload.pull_request.number;
 
               try {
                 const { data: labels } = await github.issues.listLabelsOnIssue({
-                  owner: github.context.repo.owner,
-                  repo: github.context.repo.repo,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
                   issue_number: prNumber
                 });
 
@@ -45,8 +45,8 @@ jobs:
                   if (currentLabel > 0) {
                     const newLabelName = `D-${currentLabel - 1}`;
                     await github.issues.addLabels({
-                      owner: github.context.repo.owner,
-                      repo: github.context.repo.repo,
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
                       issue_number: prNumber,
                       labels: [newLabelName]
                     });
