@@ -19,8 +19,7 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Update D- Labels
-        if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+      - name: Run JavaScript script
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -28,7 +27,7 @@ jobs:
           const fs = require('fs');
 
           const PR_NUMBER = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).pull_request.number;
-          
+
           const options = {
             hostname: 'api.github.com',
             port: 443,
