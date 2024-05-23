@@ -11,17 +11,26 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Add or Update Label
+        uses: actions/github-script@v6
         with:
-          node-version: '14'
-
-      - name: Check and Add Label
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          PR_NUMBER=$(jq -r '.pull_request.number' < "${GITHUB_EVENT_PATH}")
-          LABELS=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
-          if ! echo "$LABELS" | grep -q 'D-'; then
-            gh pr edit $PR_NUMBER --add-label "D-3"
-          fi
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const labels = await github.pulls.listLabelsOnPullRequest({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            const hasDLabel = labels.data.some(label => label.name.startsWith('D-'));
+            if (!hasDLabel) {
+              await github.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['D-3']
+              });
+              core.info('Label D-3 added.');
+            } else {
+              core.info('D- label already exists.');
+            }
