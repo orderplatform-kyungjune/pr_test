@@ -17,12 +17,12 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const prNumber = context.payload.pull_request.number;
-            const labels = await github.pulls.listLabelsOnPullRequest({
+            const { data: labels } = await github.issues.listLabelsOnIssue({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: prNumber
+              issue_number: prNumber
             });
-            const hasDLabel = labels.data.some(label => label.name.startsWith('D-'));
+            const hasDLabel = labels.some(label => label.name.startsWith('D-'));
             if (!hasDLabel) {
               await github.issues.addLabels({
                 owner: context.repo.owner,
