@@ -1,10 +1,10 @@
-name: Update D- Labels Daily
+name: Update D- Labels
 
 on:
-  schedule:
-    - cron: '*/3 * * * *'  # 매 시간 3분마다 실행 (UTC 기준)
   pull_request:
     types: [opened, edited, reopened]
+  schedule:
+    - cron: '*/3 * * * *'  # 3분마다 실행됨
 
 jobs:
   update-labels:
@@ -15,77 +15,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Update D- Labels
-        if: github.event_name == 'schedule' || github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.TOKEN }}
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-
-            if (github.event_name == 'schedule') {
-              const { data: issues } = await github.rest.issues.listForRepo({
-                owner,
-                repo,
-                state: 'open'
-              });
-
-              for (const issue of issues) {
-                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                  owner,
-                  repo,
-                  issue_number: issue.number
-                });
-
-                for (const label of labels) {
-                  if (label.name.startsWith('D-')) {
-                    const number = parseInt(label.name.slice(2), 10);
-                    if (number > 0) {
-                      const newLabel = `D-${number - 1}`;
-                      await github.rest.issues.removeLabel({
-                        owner,
-                        repo,
-                        issue_number: issue.number,
-                        name: label.name
-                      });
-                      await github.rest.issues.addLabels({
-                        owner,
-                        repo,
-                        issue_number: issue.number,
-                        labels: [newLabel]
-                      });
-                      console.log(`Updated label ${label.name} to ${newLabel} for issue ${issue.number}`);
-                    }
-                  }
-                }
-              }
-            } else if (github.event_name == 'pull_request') {
-              const prNumber = context.payload.pull_request.number;
-              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                owner,
-                repo,
-                issue_number: prNumber
-              });
-
-              for (const label of labels) {
-                if (label.name.startsWith('D-')) {
-                  const number = parseInt(label.name.slice(2), 10);
-                  if (number > 0) {
-                    const newLabel = `D-${number - 1}`;
-                    await github.rest.issues.removeLabel({
-                      owner,
-                      repo,
-                      issue_number: prNumber,
-                      name: label.name
-                    });
-                    await github.rest.issues.addLabels({
-                      owner,
-                      repo,
-                      issue_number: prNumber,
-                      labels: [newLabel]
-                    });
-                    console.log(`Updated label ${label.name} to ${newLabel} for PR ${prNumber}`);
-                  }
-                }
-              }
-            }
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+        run: |
+          PR_NUMBER=$(jq -r '.pull_request.number' < "${GITHUB_EVENT_PATH}")
+          LABELS=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
+          if echo "$LABELS" | grep -q 'D-'; then
+            CURRENT_LABEL=$(echo "$LABELS" | grep -oP '(?<=D-)\d+')
+            NEW_LABEL=$((CURRENT_LABEL - 1))
+            if [ $NEW_LABEL -ge 0 ]; then
+              NEW_LABEL_NAME="D-$NEW_LABEL"
+              gh pr edit $PR_NUMBER --add-label "$NEW_LABEL_NAME"
+            fi
+          fi
