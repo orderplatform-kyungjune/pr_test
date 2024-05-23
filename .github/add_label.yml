@@ -1,0 +1,27 @@
+name: Add Label on Pull Request
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  add-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      - name: Check and Add Label
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(jq -r '.pull_request.number' < "${GITHUB_EVENT_PATH}")
+          LABELS=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
+          if ! echo "$LABELS" | grep -q 'D-'; then
+            gh pr edit $PR_NUMBER --add-label "D-3"
+          fi
