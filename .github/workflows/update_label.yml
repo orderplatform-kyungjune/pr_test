@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, edited, reopened]
   schedule:
-    - cron: '*/2 * * * *'  # 2분마다 실행됨
+    - cron: '*/2 * * * *'  # 매 2분마다 실행
 
 jobs:
   update-labels:
@@ -19,56 +19,29 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Run JavaScript script
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh
+
+      - name: Run JavaScript script to update labels
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           const https = require('https');
-          const fs = require('fs');
+          const { readFileSync } = require('fs');
+          const { execSync } = require('child_process');
 
-          const PR_NUMBER = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).pull_request.number;
+          const GITHUB_EVENT_PATH = process.env.GITHUB_EVENT_PATH;
+          const PR_NUMBER = JSON.parse(readFileSync(GITHUB_EVENT_PATH)).pull_request.number;
 
-          const options = {
-            hostname: 'api.github.com',
-            port: 443,
-            path: `/repos/${process.env.GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels`,
-            method: 'GET',
-            headers: {
-              'Authorization': `token ${process.env.GH_TOKEN}`,
-              'User-Agent': 'GitHub Actions'
+          const labels = execSync(`gh pr view ${PR_NUMBER} --json labels -q '.labels[].name'`).toString();
+          if (labels.includes('D-')) {
+            const currentLabel = parseInt(labels.match(/D-(\d+)/)[1]);
+            if (currentLabel > 0) {
+              const newLabelName = `D-${currentLabel - 1}`;
+              execSync(`gh pr edit ${PR_NUMBER} --add-label "${newLabelName}"`);
             }
-          };
-
-          const req = https.request(options, (res) => {
-            let data = '';
-            res.on('data', (chunk) => {
-              data += chunk;
-            });
-            res.on('end', () => {
-              const labels = JSON.parse(data);
-              const dLabel = labels.find(label => label.name.startsWith('D-'));
-              if (dLabel) {
-                const currentLabel = parseInt(dLabel.name.slice(2));
-                if (currentLabel > 0) {
-                  const newLabelName = `D-${currentLabel - 1}`;
-                  const addLabelOptions = {
-                    hostname: 'api.github.com',
-                    port: 443,
-                    path: `/repos/${process.env.GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels`,
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `token ${process.env.GH_TOKEN}`,
-                      'User-Agent': 'GitHub Actions',
-                      'Content-Type': 'application/json'
-                    }
-                  };
-                  const addLabelReq = https.request(addLabelOptions, (addLabelRes) => {
-                    addLabelRes.on('data', () => {});
-                  });
-                  addLabelReq.write(JSON.stringify([newLabelName]));
-                  addLabelReq.end();
-                }
-              }
-            });
-          });
-          req.end();
+          }
