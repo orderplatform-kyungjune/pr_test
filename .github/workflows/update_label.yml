@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, edited, reopened]
   schedule:
-    - cron: '*/2 * * * *'  # 매 2분마다 실행
+    - cron: '*/3 * * * *'  # 매 3분마다 실행
 
 jobs:
   update-labels:
@@ -20,39 +20,41 @@ jobs:
           node-version: '14'
 
       - name: Run JavaScript script to update labels
+        uses: actions/github-script@v7
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          const { context, GitHub } = require('@actions/github');
+        with:
+          script: |
+            const { context, GitHub } = require('@actions/github');
 
-          const github = new GitHub(process.env.GITHUB_TOKEN);
+            const github = new GitHub(process.env.GITHUB_TOKEN);
 
-          async function updateLabels() {
-            const prNumber = context.payload.pull_request.number;
+            async function updateLabels() {
+              const prNumber = context.payload.pull_request.number;
 
-            try {
-              const { data: labels } = await github.issues.listLabelsOnIssue({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber
-              });
+              try {
+                const { data: labels } = await github.issues.listLabelsOnIssue({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber
+                });
 
-              const dLabel = labels.find(label => label.name.startsWith('D-'));
-              if (dLabel) {
-                const currentLabel = parseInt(dLabel.name.slice(2));
-                if (currentLabel > 0) {
-                  const newLabelName = `D-${currentLabel - 1}`;
-                  await github.issues.addLabels({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: prNumber,
-                    labels: [newLabelName]
-                  });
+                const dLabel = labels.find(label => label.name.startsWith('D-'));
+                if (dLabel) {
+                  const currentLabel = parseInt(dLabel.name.slice(2));
+                  if (currentLabel > 0) {
+                    const newLabelName = `D-${currentLabel - 1}`;
+                    await github.issues.addLabels({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: prNumber,
+                      labels: [newLabelName]
+                    });
+                  }
                 }
+              } catch (error) {
+                console.error('Error updating labels:', error.message);
               }
-            } catch (error) {
-              console.error('Error updating labels:', error.message);
             }
-          }
 
-          updateLabels();
+            updateLabels();
