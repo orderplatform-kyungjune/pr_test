@@ -14,25 +14,62 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-          sudo apt-add-repository https://cli.github.com/packages
-          sudo apt update
-          sudo apt install gh
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
 
       - name: Update D- Labels
         if: github.event_name == 'pull_request' || github.event_name == 'schedule'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_NUMBER=$(jq -r '.pull_request.number' < "${GITHUB_EVENT_PATH}")
-          LABELS=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
-          if echo "$LABELS" | grep -q 'D-'; then
-            CURRENT_LABEL=$(echo "$LABELS" | grep -oP '(?<=D-)\d+')
-            NEW_LABEL=$((CURRENT_LABEL - 1))
-            if [ $NEW_LABEL -ge 0 ]; then
-              NEW_LABEL_NAME="D-$NEW_LABEL"
-              gh pr edit $PR_NUMBER --add-label "$NEW_LABEL_NAME"
-            fi
-          fi
+          const https = require('https');
+          const fs = require('fs');
+
+          const PR_NUMBER = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).pull_request.number;
+          
+          const options = {
+            hostname: 'api.github.com',
+            port: 443,
+            path: `/repos/${process.env.GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels`,
+            method: 'GET',
+            headers: {
+              'Authorization': `token ${process.env.GH_TOKEN}`,
+              'User-Agent': 'GitHub Actions'
+            }
+          };
+
+          const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              const labels = JSON.parse(data);
+              const dLabel = labels.find(label => label.name.startsWith('D-'));
+              if (dLabel) {
+                const currentLabel = parseInt(dLabel.name.slice(2));
+                if (currentLabel > 0) {
+                  const newLabelName = `D-${currentLabel - 1}`;
+                  const addLabelOptions = {
+                    hostname: 'api.github.com',
+                    port: 443,
+                    path: `/repos/${process.env.GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels`,
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `token ${process.env.GH_TOKEN}`,
+                      'User-Agent': 'GitHub Actions',
+                      'Content-Type': 'application/json'
+                    }
+                  };
+                  const addLabelReq = https.request(addLabelOptions, (addLabelRes) => {
+                    addLabelRes.on('data', () => {});
+                  });
+                  addLabelReq.write(JSON.stringify([newLabelName]));
+                  addLabelReq.end();
+                }
+              }
+            });
+          });
+          req.end();
