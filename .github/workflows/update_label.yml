@@ -4,10 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   schedule:
-    # 매일 KST 오후 12시 35분부터 1분 간격으로 3번 실행
-    - cron: '35 3 * * *'  # KST 12:35 (UTC 3:35)
-    - cron: '36 3 * * *'  # KST 12:36 (UTC 3:36)
-    - cron: '37 3 * * *'  # KST 12:37 (UTC 3:37)
+    - cron: '45 12 * * *'
 
 jobs:
   update-labels:
