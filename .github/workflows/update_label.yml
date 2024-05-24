@@ -1,6 +1,8 @@
 name: Update D- Labels
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   schedule:
     - cron: '10 0 * * *'   # 매일 KST 오전 9시 10분 (UTC 00:10)
     - cron: '13-59/3 0 * * *' # 매일 KST 오전 9시 13분부터 3분마다 (UTC 00:13-00:59)
