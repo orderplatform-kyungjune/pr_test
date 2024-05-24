@@ -1,8 +1,8 @@
 name: Update D- Labels5
 
 on:
-  schedule:
-    - cron: '*/3 6-14 * * *'  # 매일 오후 3시부터 3분마다 실행
+ schedule:
+    - cron: '*/3 8-14 * * *'  # 매일 오후 5시부터 3분마다 실행
 
 jobs:
   update-labels:
