@@ -1,10 +1,8 @@
 name: Update D- Labels
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
   schedule:
-    - cron: '45 12 * * *'
+    - cron: '0 5 * * *'  # 매일 오후 1시 (UTC 기준 5시)
 
 jobs:
   update-labels:
