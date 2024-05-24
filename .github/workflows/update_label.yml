@@ -4,8 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   schedule:
-    - cron: '10 0 * * *'   # 매일 KST 오전 9시 10분 (UTC 00:10)
-    - cron: '13-59/3 0 * * *' # 매일 KST 오전 9시 13분부터 3분마다 (UTC 00:13-00:59)
+    # 매일 KST 오후 12시 35분부터 1분 간격으로 3번 실행
+    - cron: '35 3 * * *'  # KST 12:35 (UTC 3:35)
+    - cron: '36 3 * * *'  # KST 12:36 (UTC 3:36)
+    - cron: '37 3 * * *'  # KST 12:37 (UTC 3:37)
 
 jobs:
   update-labels:
@@ -19,14 +21,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prs = await github.pulls.list({
+            const prs = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
             });
 
             for (const pr of prs.data) {
-              const labels = await github.issues.listLabelsOnIssue({
+              const labels = await github.rest.issues.listLabelsOnIssue({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number
@@ -37,13 +39,13 @@ jobs:
                   const currentLabel = parseInt(label.name.slice(2));
                   if (currentLabel > 0) {
                     const newLabelName = `D-${currentLabel - 1}`;
-                    await github.issues.addLabels({
+                    await github.rest.issues.addLabels({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       issue_number: pr.number,
                       labels: [newLabelName]
                     });
-                    await github.issues.removeLabel({
+                    await github.rest.issues.removeLabel({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       issue_number: pr.number,
