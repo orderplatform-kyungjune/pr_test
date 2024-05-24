@@ -1,0 +1,63 @@
+name: Update D- Labels4
+
+on:
+  schedule:
+    - cron: '*/3 6-14 * * *'  # 매일 오후 3시부터 3분마다 실행
+
+jobs:
+  update-labels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Run script to update labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            async function updateLabels() {
+              try {
+                const { data: prs } = await github.pulls.list({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'open'
+                });
+
+                for (const pr of prs) {
+                  const { data: labels } = await github.issues.listLabelsOnIssue({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number
+                  });
+
+                  for (const label of labels) {
+                    if (label.name.startsWith('D-')) {
+                      const currentLabel = parseInt(label.name.slice(2));
+                      if (currentLabel > 0) {
+                        const newLabelName = `D-${currentLabel - 1}`;
+                        await github.issues.addLabels({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr.number,
+                          labels: [newLabelName]
+                        });
+                        await github.issues.removeLabel({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: pr.number,
+                          name: label.name
+                        });
+                      }
+                      break;
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('Error updating labels:', error);
+              }
+            }
+
+            updateLabels();
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
