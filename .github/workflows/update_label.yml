@@ -15,57 +15,44 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '14'
-
       - name: Update D- labels
-        id: update-labels
         uses: actions/github-script@v7
         with:
           script: |
-            const token = process.env.GITHUB_TOKEN;
-            const octokit = require('@octokit/rest')({ auth: `token ${token}` });
+            const prs = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
 
-            async function updateLabels() {
-              const { data: pullRequests } = await octokit.pulls.list({
+            for (const pr of prs.data) {
+              const labels = await github.issues.listLabelsOnIssue({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                state: 'open'
+                issue_number: pr.number
               });
 
-              for (const pr of pullRequests) {
-                const { data: labels } = await octokit.issues.listLabelsOnIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number
-                });
-
-                for (const label of labels) {
-                  if (label.name.startsWith('D-')) {
-                    const currentLabel = parseInt(label.name.slice(2));
-                    if (currentLabel > 0) {
-                      const newLabelName = `D-${currentLabel - 1}`;
-                      await octokit.issues.addLabels({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        issue_number: pr.number,
-                        labels: [newLabelName]
-                      });
-                      await octokit.issues.removeLabel({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        issue_number: pr.number,
-                        name: label.name
-                      });
-                    }
-                    break;
+              for (const label of labels.data) {
+                if (label.name.startsWith('D-')) {
+                  const currentLabel = parseInt(label.name.slice(2));
+                  if (currentLabel > 0) {
+                    const newLabelName = `D-${currentLabel - 1}`;
+                    await github.issues.addLabels({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: pr.number,
+                      labels: [newLabelName]
+                    });
+                    await github.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: pr.number,
+                      name: label.name
+                    });
                   }
+                  break;
                 }
               }
             }
-
-            updateLabels();
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
