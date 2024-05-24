@@ -17,6 +17,14 @@ jobs:
           script: |
             async function updateLabels() {
               try {
+                const { data: pulls } = await github.pulls({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'open'
+                });
+                
+                console.log('pulls',pulls)
+            
                 const { data: prs } = await github.pulls.list({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
