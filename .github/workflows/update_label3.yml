@@ -1,8 +1,8 @@
-name: Update D- Labels
+name: Update D- Labels3
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # 매일 한국시간 오후 3시 43분 (UTC 기준 오전 6시 43분)
+    - cron: '*/3 7-23 * * *'  # 매일 한국시간 오후 3시 43분 (UTC 기준 오전 6시 43분)
 
 jobs:
   update-labels:
@@ -17,21 +17,21 @@ jobs:
         with:
           script: |
             const { Octokit } = require("@octokit/rest");
-            const { context } = require("@actions/github");
+            const githubContext = require("@actions/github").context;
 
             const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
             async function updateLabels() {
               const { data: prs } = await octokit.rest.pulls.list({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner: githubContext.repo.owner,
+                repo: githubContext.repo.repo,
                 state: 'open'
               });
 
               for (const pr of prs) {
                 const { data: labels } = await octokit.rest.issues.listLabelsOnIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
+                  owner: githubContext.repo.owner,
+                  repo: githubContext.repo.repo,
                   issue_number: pr.number
                 });
 
@@ -41,14 +41,14 @@ jobs:
                     if (currentLabel > 0) {
                       const newLabelName = `D-${currentLabel - 1}`;
                       await octokit.rest.issues.addLabels({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
+                        owner: githubContext.repo.owner,
+                        repo: githubContext.repo.repo,
                         issue_number: pr.number,
                         labels: [newLabelName]
                       });
                       await octokit.rest.issues.removeLabel({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
+                        owner: githubContext.repo.owner,
+                        repo: githubContext.repo.repo,
                         issue_number: pr.number,
                         name: label.name
                       });
