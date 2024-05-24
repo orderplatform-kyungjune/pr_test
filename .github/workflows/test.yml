@@ -22,20 +22,28 @@ jobs:
                   repo: context.repo.repo,
                   state: 'open'
                 });
+            
                 console.log('피알들',prs)
+            
                 for (const pr of prs) {
                   const { data: labels } = await github.issues.listLabelsOnIssue({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: pr.number
                   });
+            
                   console.log('라벨들',labels)
+            
                   for (const label of labels) {
                     if (label.name.startsWith('D-')) {
-                      console.log('startWith('D-')')
+            
+                      console.log("startWith('D-')")
+            
                       const currentLabel = parseInt(label.name.slice(2));
+            
                       console.log('현재라벨',currentLabel)
                       console.log('비교',currentLabel > 0)
+            
                       if (currentLabel > 0) {
                         const newLabelName = `D-${currentLabel - 1}`;
                         await github.issues.addLabels({
