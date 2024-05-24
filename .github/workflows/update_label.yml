@@ -2,7 +2,7 @@ name: Update D- Labels
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 매일 오후 1시 (UTC 기준 5시)
+    - cron: '10 4 * * *'  # 매일 오후 1시 (UTC 기준 5시)
 
 jobs:
   update-labels:
