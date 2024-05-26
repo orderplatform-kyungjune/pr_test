@@ -60,6 +60,6 @@ jobs:
               }
             }
 
-            setTimeout(() => updateLabels,1000);
+            updateLabels();
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
