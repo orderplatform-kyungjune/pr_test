@@ -7,20 +7,30 @@ on:
 jobs:
   add-label:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Add or Update Label
+        uses: actions/github-script@v7
         with:
-          node-version: '16'
-
-      - name: Install dependencies
-        run: npm install @actions/core @actions/github
-
-      - name: Run script to add or update label
-        run: node .github/scripts/add-label.js
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            const hasDLabel = labels.some(label => label.name.startsWith('D-'));
+            if (!hasDLabel) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['D-3']
+              });
+              console.log('Label D-3 added.');
+            } else {
+              console.log('D- label already exists.');
+            }
