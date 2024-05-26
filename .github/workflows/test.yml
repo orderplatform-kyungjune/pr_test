@@ -18,17 +18,17 @@ jobs:
           script: |
             async function updateLabels() {
               try {
-                console.log('깃헙',github.rest)
+                console.log('깃헙이슈',github.rest.issues)
                 const { data: labels } = await github.rest.issues.listLabelsForRepo({
                   owner: context.repo.owner,
                   repo: context.repo.repo
                 });
-                console.log('Labels:', labels);
+                console.log('라벨들', labels);
                 for (const label of labels) {
                   if (label.name.startsWith('D-')) {
-                    console.log('Label starts with "D-"');
+                    console.log('라벨 D-로 시작함');
                     const currentLabel = parseInt(label.name.slice(2));
-                    console.log('Current Label:', currentLabel);
+                    console.log('현재 라벨', currentLabel);
                     if (currentLabel > 0) {
                       const newLabelName = `D-${currentLabel - 1}`;
                       await github.issues.updateLabel({
