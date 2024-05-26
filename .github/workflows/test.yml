@@ -1,8 +1,8 @@
-name: test
+name: Update Label
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, reopened]
 
 jobs:
   update-labels:
@@ -12,46 +12,33 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Run script to update labels
+      - name: Update Labels
         uses: actions/github-script@v7
         with:
           script: |
             async function updateLabels() {
               try {
-                const { data: prs } = await github.pulls.list({
+                const { data: labels } = await github.issues.listLabelsForRepo({
                   owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  state: 'open'
+                  repo: context.repo.repo
                 });
-                console.log('PRs:', prs);
-                for (const pr of prs) {
-                  const { data: labels } = await github.issues.listLabelsOnIssue({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: pr.number
-                  });
-                  console.log('Labels:', labels);
-                  for (const label of labels) {
-                    if (label.name.startsWith('D-')) {
-                      console.log('Label starts with "D-"');
-                      const currentLabel = parseInt(label.name.slice(2));
-                      console.log('Current Label:', currentLabel);
-                      if (currentLabel > 0) {
-                        const newLabelName = `D-${currentLabel - 1}`;
-                        await github.issues.addLabels({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          issue_number: pr.number,
-                          labels: [newLabelName]
-                        });
-                        await github.issues.removeLabel({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          issue_number: pr.number,
-                          name: label.name
-                        });
-                      }
-                      break;
+                console.log('Labels:', labels);
+                for (const label of labels) {
+                  if (label.name.startsWith('D-')) {
+                    console.log('Label starts with "D-"');
+                    const currentLabel = parseInt(label.name.slice(2));
+                    console.log('Current Label:', currentLabel);
+                    if (currentLabel > 0) {
+                      const newLabelName = `D-${currentLabel - 1}`;
+                      await github.issues.updateLabel({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        name: label.name,
+                        new_name: newLabelName,
+                        color: label.color,
+                        description: label.description
+                      });
+                      console.log(`Label "${label.name}" updated to "${newLabelName}"`);
                     }
                   }
                 }
