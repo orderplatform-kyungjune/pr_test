@@ -18,7 +18,8 @@ jobs:
           script: |
             async function updateLabels() {
               try {
-                const { data: labels } = await github.issues.listLabelsForRepo({
+                console.log('깃헙',github.rest)
+                const { data: labels } = await github.rest.issues.listLabelsForRepo({
                   owner: context.repo.owner,
                   repo: context.repo.repo
                 });
