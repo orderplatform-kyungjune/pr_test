@@ -21,6 +21,6 @@ jobs:
         run: npm install @actions/core @actions/github
 
       - name: Run script to add or update label
-        run: node ./.github/scripts/add-label.js
+        run: node .github/scripts/add-label.js
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
