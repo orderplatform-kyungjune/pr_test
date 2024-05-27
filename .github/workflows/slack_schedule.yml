@@ -55,7 +55,7 @@ jobs:
                       "type": "header",
                       "text": {
                         "type": "plain_text",
-                        "text": ${{ github.repository }},
+                        "text": "${{ github.repository }}",
                       }
                     },
                     {
@@ -63,7 +63,7 @@ jobs:
                     },
                     {
                       "type": "section",
-                      "fields": ${{ steps.get-prs.outputs.prBlocks }}
+                      "fields": "${{ steps.get-prs.outputs.prBlocks }}"
                     }
                   ]
                 }
