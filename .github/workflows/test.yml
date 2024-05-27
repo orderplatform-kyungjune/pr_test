@@ -46,20 +46,20 @@ jobs:
             async function updateLabels() {
               try {
                 const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
-                console.log('라벨들:', labelsByPR);
+                console.log('모든 라벨들', labelsByPR);
 
                 for (const prNumber in labelsByPR) {
                   const prLabels = labelsByPR[prNumber];
                   const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'));
-                  console.log('PR:', prNumber, 'D Labels:', DLabels);
+                  console.log('PR:',prNumber, 'D Labels:', DLabels);
 
                   if (DLabels.length < 1) {
-                    console.log('PR:', prNumber, '"D-" label does not exist');
+                    console.log('PR:', prNumber, 'D- label이 존재하지않음');
                     continue;
                   }
 
                   for (const DLabel of DLabels) {
-                    console.log('PR:', prNumber, 'Deleting label:', DLabel);
+                    console.log('PR:', prNumber, '삭제라벨:', DLabel);
                     await github.rest.issues.removeLabel({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
@@ -68,9 +68,10 @@ jobs:
                     });
                   }
 
-                  const newLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2)))) - 1;
+                  const biggestNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2))));
+                  const newLabelNumber = biggestNumber < 1 ? 0 : biggestNumber - 1;
                   const newLabel = `D-${newLabelNumber}`;
-                  console.log('PR:', prNumber, 'New label:', newLabel);
+                  console.log('PR:', prNumber, '새로운 라벨', newLabel);
 
                   await github.rest.issues.addLabels({
                     owner: context.repo.owner,
