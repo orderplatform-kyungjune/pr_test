@@ -30,7 +30,7 @@ jobs:
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            const updateLabels = async () => {
+            async function updateLabels() { 
               try {
                 const prLabels = JSON.parse(process.env.PR_LABELS);
                 const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'))

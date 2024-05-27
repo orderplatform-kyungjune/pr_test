@@ -16,7 +16,7 @@ jobs:
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            const addLabel = async () => {
+            async function addLabel() { 
               try{
                 const prNumber = context.payload.pull_request.number;
                 const { data: labels } = await github.rest.issues.listLabelsOnIssue({
