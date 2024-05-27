@@ -1,4 +1,4 @@
-name: Update Label Schedule
+name: Update Label Schedule1
 
 on:
   schedule:
