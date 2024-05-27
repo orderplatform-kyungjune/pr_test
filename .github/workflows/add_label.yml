@@ -2,25 +2,46 @@ name: Add Label on Pull Request
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, reopened]
 
 jobs:
   add-label:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Add Label
+        uses: actions/github-script@v7
         with:
-          node-version: '16'
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const addLabel = async () => {
+              try{
+                const prNumber = context.payload.pull_request.number;
+                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber
+                });
 
-      - name: Install dependencies
-        run: npm install @actions/core @actions/github
-
-      - name: Run script to add or update label
-        run: node ./.github/workflows/add-label.js
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+#               label 이미 존재함
+                if (labels.some(label => label.name.startsWith('D-'))) {
+                  console.log('D- label already exists.');
+                  return;
+                }
+            
+#               D-3 label 추가
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  labels: ['D-3']
+                });
+                console.log('Label D-3 added.'); 
+              } catch (error) {
+                console.error('Error adding labels:', error);
+              }
+            };
+                    
+            addLabel();
