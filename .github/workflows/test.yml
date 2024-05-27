@@ -34,16 +34,12 @@ jobs:
               try {
                 const prLabels = JSON.parse(process.env.PR_LABELS);
                 const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'))
-                console.log('피알 라벨들',prLabels)
-                console.log('D 라벨들',DLabels)
-
                 if(DLabels.length < 1) {
                   console.log('"D-" label does not exist');
                   return
                 }
                 
                 for (const DLabel of DLabels) {
-                  console.log('삭제',DLabel)
                   await github.rest.issues.removeLabel({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -51,11 +47,9 @@ jobs:
                     name: DLabel
                   });
                 }
-                console.log()
+                
                 const newLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2)))) - 1
-                console.log('새로운 number',newLabelNumber)
                 const newLabel = `D-${newLabelNumber}`
-                console.log('새로운 label',newLabel)
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -63,12 +57,12 @@ jobs:
                   labels: [ newLabel ]
                 });
                       
-                console.log(`D-Label updated to "${newLabel}"`);
+                console.log(`D- Label updated to "${newLabel}"`);
               } catch (error) {
                 console.error('Error updating labels:', error);
               }
             }
 
             updateLabels();
-            env:
-              PR_LABELS: ${{ steps.pr-labels.outputs.labels }}
+        env:
+          PR_LABELS: ${{ steps.pr-labels.outputs.labels }}
