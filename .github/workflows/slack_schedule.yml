@@ -31,7 +31,7 @@ jobs:
                   type: "section",
                   text: {
                     type: "mrkdwn",
-                    text: `<${prLink}|${dLabel.name} - PR #${pr.number}: ${pr.title}>`
+                    text: `<${prLink}|#${pr.number}: ${pr.title} ${dLabel.name}>`
                   }
                 };
               }
