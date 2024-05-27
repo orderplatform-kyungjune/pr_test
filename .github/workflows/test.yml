@@ -64,5 +64,5 @@ jobs:
 
             updateLabels();
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
           PR_LABELS: ${{ steps.pr-labels.outputs.labels }}
