@@ -25,24 +25,19 @@ jobs:
 
             let prBlocks = pullRequests.map(pr => {
               const dLabel = pr.labels.find(label => label.name.startsWith('D-'));
-              if (dLabel) {
-                const prLink = 'https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}';
-                return {
-                  type: "section",
-                  text: {
-                    type: "mrkdwn",
-                    text: `<${prLink}|#${pr.number}: ${pr.title} ${dLabel.name}>`
-                  }
-                };
-              }
-              return null;
-            }).filter(prBlock => prBlock !== null);
+              const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
+            
+              return {
+                "type": "mrkdwn",
+                "text": `<${prLink}|${dLabel.name} - PR #${pr.number}: ${pr.title}>`
+              };
+            });
 
             if (prBlocks.length === 0) {
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prBlocks', prBlocks);
             }
 
       - name: Send to Slack
@@ -50,16 +45,28 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: custom
+          mention: "channel"
           fields: workflow,job,commit,repo,ref,author,took
           custom_payload: |
             {
-              "channel": "#your-channel",  # 멘션할 Slack 채널
               "attachments": [
                 {
-                  "pretext": "Here are the open pull requests:",
-                  "title": "${{ github.repository }}",
-                  "blocks": ${{ steps.get-prs.outputs.prBlocks }},
-                  "color": "#36a64f"
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": ${{ github.repository }},
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": ${{ steps.get-prs.outputs.prBlocks }}
+                    }
+                  ]
                 }
               ]
             }
