@@ -23,22 +23,39 @@ jobs:
               state: 'open'
             });
 
-            console.log('디테일',pullRequests)
-            let prDetails = pullRequests.map(pr => `PR #${pr.number}: ${pr.title}`).join('\\n');
+            let prDetails = pullRequests.map(pr => {
+              const dLabel = pr.labels.find(label => label.name.startsWith('D-'));
+              if (dLabel) {
+                const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
+                return `<${prLink}|${dLabel.name} - PR #${pr.number}: ${pr.title}>`;
+              }
+              return null;
+            }).filter(prDetail => prDetail !== null).join('\\n');
+            
             if (prDetails.length === 0) {
-              prDetails = "No open pull requests.";
+              core.setOutput('hasPrs', 'false');
+            } else {
+              core.setOutput('hasPrs', 'true');
+              core.setOutput('prDetails', prDetails);
             }
 
-            core.setOutput('prDetails', prDetails);
-
       - name: Send to Slack
+        if: steps.get-prs.outputs.hasPrs == 'true'
         uses: 8398a7/action-slack@v3
         with:
           status: custom
           fields: workflow,job,commit,repo,ref,author,took
+          mention: "channel"
           custom_payload: |
             {
-              "text": "Here are the open pull requests:\n${{ steps.get-prs.outputs.prDetails }}"
+              "attachments": [
+                {
+                  "pretext": "Here are the open pull requests:",
+                  "title": "${{ github.repository }}",
+                  "text": "${{ steps.get-prs.outputs.prDetails }}",
+                  "color": "#36a64f"
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
