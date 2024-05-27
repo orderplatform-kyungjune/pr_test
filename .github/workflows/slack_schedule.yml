@@ -23,7 +23,7 @@ jobs:
               state: 'open'
             });
 
-            let prDetails = pullRequests.map(pr => `PR #${pr.number}: ${pr.title}`).join('\n');
+            let prDetails = pullRequests.map(pr => `PR #${pr.number}: ${pr.title}`).join('\\n');
             if (prDetails.length === 0) {
               prDetails = "No open pull requests.";
             }
