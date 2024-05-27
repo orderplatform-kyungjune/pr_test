@@ -12,34 +12,48 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      - name: Get PR Labels
+        id: pr-labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/labels', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const labels = response.data.map(label => label.name);
+            console.log('피알의 라벨들', labels);
+            core.setOutput('labels', JSON.stringify(labels));
+
       - name: Update Labels
         uses: actions/github-script@v7
         with:
           script: |
             async function updateLabels() {
               try {
-                console.log('깃헙이슈',github.rest.issues)
-                const { data: labels } = await github.rest.issues.listLabelsForRepo({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo
-                });
-                console.log('라벨들', labels);
-                for (const label of labels) {
-                  if (label.name.startsWith('D-')) {
-                    console.log('라벨 D-로 시작함');
-                    const currentLabel = parseInt(label.name.slice(2));
-                    console.log('현재 라벨', currentLabel);
+                const prLabels = JSON.parse(process.env.PR_LABELS);
+                console.log('PR 라벨들', prLabels);
+                for (const label of prLabels) {
+                  if (label.startsWith('D-')) {
+                    console.log('D-로 시작함');
+                    const currentLabel = parseInt(label.slice(2));
+                    console.log('Current Label:', currentLabel);
                     if (currentLabel > 0) {
                       const newLabelName = `D-${currentLabel - 1}`;
-                      await github.issues.updateLabel({
+                      await github.rest.issues.addLabels({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
-                        name: label.name,
-                        new_name: newLabelName,
-                        color: label.color,
-                        description: label.description
+                        issue_number: context.issue.number,
+                        labels: [newLabelName]
                       });
-                      console.log(`Label "${label.name}" updated to "${newLabelName}"`);
+                      await github.rest.issues.removeLabel({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: context.issue.number,
+                        name: label
+                      });
+                      console.log(`Label "${label}" updated to "${newLabelName}"`);
                     }
                   }
                 }
@@ -50,4 +64,5 @@ jobs:
 
             updateLabels();
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_LABELS: ${{ steps.pr-labels.outputs.labels }}
