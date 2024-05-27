@@ -23,7 +23,6 @@ jobs:
               issue_number: context.issue.number
             });
             const labels = response.data.map(label => label.name);
-            console.log('피알의 라벨들', labels);
             core.setOutput('labels', JSON.stringify(labels));
 
       - name: Update Labels
@@ -34,12 +33,13 @@ jobs:
             async function updateLabels() {
               try {
                 const prLabels = JSON.parse(process.env.PR_LABELS);
-                console.log('PR 라벨들', prLabels);
+                const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'))
+            
+                console.log('DLabels',DLabels)
                 for (const label of prLabels) {
                   if (label.startsWith('D-')) {
-                    console.log('D-로 시작함');
                     const currentLabel = parseInt(label.slice(2));
-                    console.log('Current Label:', currentLabel);
+            
                     if (currentLabel > 0) {
                       const newLabelName = `D-${currentLabel - 1}`;
                       await github.rest.issues.addLabels({
@@ -48,12 +48,14 @@ jobs:
                         issue_number: context.issue.number,
                         labels: [newLabelName]
                       });
+            
                       await github.rest.issues.removeLabel({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
                         issue_number: context.issue.number,
                         name: label
                       });
+            
                       console.log(`Label "${label}" updated to "${newLabelName}"`);
                     }
                   }
