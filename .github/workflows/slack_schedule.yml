@@ -1,0 +1,73 @@
+name: Notify Slack about Pull Requests
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get Pull Requests
+        id: get-prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+
+            let prBlocks = pullRequests.map(pr => {
+              const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
+              
+              return {
+                "type": "mrkdwn",
+                "text": `<${prLink}|#${pr.number}: ${pr.title}>`
+              };
+            });
+
+            if (prBlocks.length === 0) {
+              core.setOutput('hasPrs', 'false');
+            } else {
+              core.setOutput('hasPrs', 'true');
+              core.setOutput('prBlocks', prBlocks);
+            }
+
+      - name: Send to Slack
+        if: steps.get-prs.outputs.hasPrs == 'true'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          mention: "channel"
+          fields: workflow,job,commit,repo,ref,author,took
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.repository }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": ${{ steps.get-prs.outputs.prBlocks }}
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
