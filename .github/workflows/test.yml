@@ -17,47 +17,70 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const response = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/labels', {
+            const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number
+              state: 'open'
             });
-            const labels = response.data.map(label => label.name);
-            core.setOutput('labels', JSON.stringify(labels));
+
+            const labelsByPR = {};
+
+            for (const pr of pullRequests) {
+              const prNumber = pr.number;
+              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber
+              });
+              const prLabels = labels.map(label => label.name);
+              labelsByPR[prNumber] = prLabels;
+            }
+
+            core.setOutput('labelsByPR', JSON.stringify(labelsByPR));
 
       - name: Update Labels
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            async function updateLabels() { 
+            async function updateLabels() {
               try {
-                const prLabels = JSON.parse(process.env.PR_LABELS);
-                const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'))
-                if(DLabels.length < 1) {
-                  console.log('"D-" label does not exist');
-                  return
-                }
-                
-                for (const DLabel of DLabels) {
-                  await github.rest.issues.removeLabel({
+                const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
+                console.log('라벨들:', labelsByPR);
+
+                for (const prNumber in labelsByPR) {
+                  const prLabels = labelsByPR[prNumber];
+                  const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'));
+                  console.log('PR:', prNumber, 'D Labels:', DLabels);
+
+                  if (DLabels.length < 1) {
+                    console.log('PR:', prNumber, '"D-" label does not exist');
+                    continue;
+                  }
+
+                  for (const DLabel of DLabels) {
+                    console.log('PR:', prNumber, 'Deleting label:', DLabel);
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: prNumber,
+                      name: DLabel
+                    });
+                  }
+
+                  const newLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2)))) - 1;
+                  const newLabel = `D-${newLabelNumber}`;
+                  console.log('PR:', prNumber, 'New label:', newLabel);
+
+                  await github.rest.issues.addLabels({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: context.issue.number,
-                    name: DLabel
+                    issue_number: prNumber,
+                    labels: [newLabel]
                   });
+
+                  console.log(`PR: ${prNumber}, "D-" Label updated to "${newLabel}"`);
                 }
-                
-                const newLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2)))) - 1
-                const newLabel = `D-${newLabelNumber}`
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  labels: [ newLabel ]
-                });
-                      
-                console.log(`D- Label updated to "${newLabel}"`);
               } catch (error) {
                 console.error('Error updating labels:', error);
               }
@@ -65,4 +88,4 @@ jobs:
 
             updateLabels();
         env:
-          PR_LABELS: ${{ steps.pr-labels.outputs.labels }}
+          LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
