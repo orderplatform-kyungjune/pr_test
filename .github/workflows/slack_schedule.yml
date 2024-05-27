@@ -24,6 +24,7 @@ jobs:
             });
 
             let prDetails = pullRequests.map(pr => `PR #${pr.number}: ${pr.title}`).join('\\n');
+            console.log('디테일',prDetails)
             if (prDetails.length === 0) {
               prDetails = "No open pull requests.";
             }
