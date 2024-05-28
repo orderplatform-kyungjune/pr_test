@@ -12,6 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 1. Get Pull Requests
       - name: Get Pull Requests
         id: get-prs
         uses: actions/github-script@v7
@@ -39,11 +40,11 @@ jobs:
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              console.log('블락스',prBlocks)
-              core.setOutput('prBlocks', prBlocks);
+              core.setOutput('prBlocks', JSON.stringify(prBlocks));
               core.setOutput('prCount', pullRequests.length);
             }
 
+      # 2. Send to Slack
       - name: Send to Slack
         if: steps.get-prs.outputs.hasPrs == 'true'
         uses: 8398a7/action-slack@v3
@@ -74,14 +75,16 @@ jobs:
                         "text": "${{ github.repository }}"
                       }
                     },
-                    { 
+                    ${{#each steps.get-prs.outputs.prBlocks}}
+                    {
                       "type": "section",
                       "text": {
-                        "type": "mrkdwn",   
-                        "text": `*<${{steps.get-prs.outputs.prBlocks.link}}|${{steps.get-prs.outputs.prBlocks.title}}>* \n #${{steps.get-prs.outputs.prBlocks.number}} opened on ${{steps.get-prs.outputs.prBlocks.openAt}} by ${{steps.get-prs.outputs.prBlocks.author}}`
+                        "type": "mrkdwn",
+                        "text": "*<${this.link}|${this.title}>*\n#${this.number} opened on ${this.openAt} by ${this.author}"
                       }
                     }
-                    ${{ steps.get-prs.outputs.prBlocks }}
+                    ${{ unless loop.last }}, ${{ end }}
+                    ${{/each}}
                   ]
                 }
               ]
