@@ -33,7 +33,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": `*<${prLink}|${pr.title}>*\n#${pr.number} opened on ${prOpenedDate} by ${prAuthor}`
+                  "text": `<${prLink}|${pr.title}> \n #${pr.number} opened on ${prOpenedDate} by ${prAuthor}`
                 }
               };
             });
