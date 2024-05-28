@@ -43,32 +43,43 @@ jobs:
               });
 
               // D- 라벨 찾기
-              let color = '#000080'; // 기본 색상
+              let color = '#36a64f'; // 기본 색상 (초록색)
+              let labelNumber = Infinity;
               labels.forEach(label => {
                 if (label.name.startsWith('D-')) {
-                  color = colorMap[label.name] || color;
+                  const num = parseInt(label.name.slice(2), 10);
+                  if (!isNaN(num) && num < labelNumber) {
+                    labelNumber = num;
+                    color = colorMap[label.name] || color;
+                  }
                 }
               });
-            
+
               return {
-                "color": color,
-                "blocks": [
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
+                labelNumber: labelNumber, // D- 뒤에 붙는 숫자
+                block: {
+                  "color": color,
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
+                      }
                     }
-                  }
-                ]
+                  ]
+                }
               };
             }));
+
+            // 라벨의 D- 뒤에 붙는 숫자가 적은 순서대로 정렬
+            prBlocks.sort((a, b) => a.labelNumber - b.labelNumber);
 
             if (prBlocks.length === 0) {
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prBlocks', JSON.stringify(prBlocks.map(pr => pr.block)));
               core.setOutput('prCount', pullRequests.length);
             }
 
