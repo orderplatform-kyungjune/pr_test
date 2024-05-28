@@ -2,7 +2,7 @@ name: Notify Slack about Pull Requests
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, edited]
 
 jobs:
   notify-slack:
@@ -27,13 +27,11 @@ jobs:
               const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
             
               return {
-                "type": "context",
-                "elements": [
-                  {
-                    "type": "mrkdwn",
-                    "text": `<${prLink}|#${pr.number}: ${pr.title}>`
-                  }
-                ]
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": `<${prLink}|#${pr.number}: ${pr.title}>`
+                }
               };
             });
 
