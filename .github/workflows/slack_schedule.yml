@@ -23,6 +23,7 @@ jobs:
               state: 'open'
             });
 
+            const prCount = pullRequests.length;
             let prBlocks = pullRequests.map(pr => {
               const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
             
@@ -40,6 +41,7 @@ jobs:
             } else {
               core.setOutput('hasPrs', 'true');
               core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prCount', prCount);
             }
 
       - name: Send to Slack
@@ -47,10 +49,11 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: custom
+          mention: "channel"
           fields: workflow,job,commit,repo,ref,author,took
           custom_payload: |
             {
-              "text": "<!channel> 리뷰를 기다리고 있어요",
+              "text": "<!channel> ${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
