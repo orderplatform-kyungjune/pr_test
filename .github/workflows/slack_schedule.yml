@@ -69,7 +69,7 @@ jobs:
                     {
                       "type": "divider"
                     }
-                    ${steps.get-prs.outputs.prBlocks}
+                    ${{steps.get-prs.outputs.prBlocks}}
                   ]
                 }
               ]
