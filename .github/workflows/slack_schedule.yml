@@ -1,8 +1,8 @@
 name: Notify Slack about Pull Requests
 
 on:
-  pull_request:
-    types: [opened, reopened]
+  schedule:
+    - cron: '59 22 * * *'  # 매일 한국 시간 07:59에 실행
 
 jobs:
   notify-slack:
