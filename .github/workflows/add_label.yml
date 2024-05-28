@@ -35,9 +35,10 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: prNumber,
-                  labels: ['D-3']
+                  labels: ['D-5'],
+                  color: 'red'
                 });
-                console.log('Label D-3 added.');
+                console.log('Label D-5 added.');
               } catch (error) {
                 console.error('Error adding labels:', error);
               }
