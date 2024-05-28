@@ -2,7 +2,7 @@ name: Notify Slack about Pull Requests
 
 on:
   pull_request:
-    types: [opened, reopened, edited]
+    types: [opened, reopened]
 
 jobs:
   notify-slack:
@@ -47,10 +47,10 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: custom
-          mention: "channel"
           fields: workflow,job,commit,repo,ref,author,took
           custom_payload: |
             {
+              "text": "<!channel> 리뷰를 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
