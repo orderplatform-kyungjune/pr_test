@@ -26,21 +26,22 @@ jobs:
 
             let prBlocks = pullRequests.map(pullRequest => {
               const { number, title, created_at } = pullRequest;
+              const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
             
               return {
-                number,
-                title,
-                openAt: new Date(created_at).toLocaleDateString('ko-KR'),
-                author: pullRequest.user.login,
-                link: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`,
-              };
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*<${link}|${title}>*\n#${number} opened on ${created_at} by ${pullRequest.user.login}"
+                }            
+              }
             });
 
             if (prBlocks.length === 0) {
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prBlocks', prBlocks);
               core.setOutput('prCount', pullRequests.length);
             }
 
@@ -68,23 +69,7 @@ jobs:
                     {
                       "type": "divider"
                     },
-                    {
-                      "type": "header",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "${{ github.repository }}"
-                      }
-                    },
-                    ${{#each steps.get-prs.outputs.prBlocks}}
-                    {
-                      "type": "section",
-                      "text": {
-                        "type": "mrkdwn",
-                        "text": "*<${this.link}|${this.title}>*\n#${this.number} opened on ${this.openAt} by ${this.author}"
-                      }
-                    }
-                    ${{ unless loop.last }}, ${{ end }}
-                    ${{/each}}
+                    ${{ steps.get-prs.outputs.prBlocks }}
                   ]
                 }
               ]
