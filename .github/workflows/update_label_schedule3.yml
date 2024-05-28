@@ -2,7 +2,7 @@ name: Update Label Schedule3
 
 on:
   schedule:
-    - cron: '30 1 * * *'  # 매일 한국 시간 오전 10시 30분에 실행 (UTC 시간 1시 30분)
+    - cron: '30 3 * * *'  # 매일 한국 시간 오전 12시 30분 실행 (UTC 시간 3시 30분)
 
 jobs:
   update-labels:
@@ -17,26 +17,30 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: pullRequests } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open'
-            });
-
-            const labelsByPR = {};
-
-            for (const pr of pullRequests) {
-              const prNumber = pr.number;
-              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+            async function getLabels() {
+              const { data: pullRequests } = await github.rest.pulls.list({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: prNumber
+                state: 'open'
               });
-              const prLabels = labels.map(label => label.name);
-              labelsByPR[prNumber] = prLabels;
-            }
 
-            core.setOutput('labelsByPR', JSON.stringify(labelsByPR));
+              const labelsByPR = {};
+
+              for (const pr of pullRequests) {
+                const prNumber = pr.number;
+                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber
+                });
+                const prLabels = labels.map(label => label.name);
+                labelsByPR[prNumber] = prLabels;
+              }
+
+              core.setOutput('labelsByPR', JSON.stringify(labelsByPR));  
+            }
+            
+            getLabels();
 
       - name: Update Labels
         uses: actions/github-script@v7

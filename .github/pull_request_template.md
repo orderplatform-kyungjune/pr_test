@@ -8,5 +8,10 @@
 
 
 ### 🌝 상세리뷰 요청사항 (33333332343)
-main
-33dssadsdsd2ㄴㅇasdasds
+{
+"type": "section",
+"text": {
+"type": "mrkdwn",   
+"text": `*<${{steps.get-prs.outputs.prBlocks.link}}|${{steps.get-prs.outputs.prBlocks.title}}>* \n #${{steps.get-prs.outputs.prBlocks.number}} opened on ${{steps.get-prs.outputs.prBlocks.openAt}} by ${{steps.get-prs.outputs.prBlocks.author}}`
+}
+}

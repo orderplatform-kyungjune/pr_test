@@ -12,6 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 1. Get Pull Requests
       - name: Get Pull Requests
         id: get-prs
         uses: actions/github-script@v7
@@ -23,31 +24,39 @@ jobs:
               state: 'open'
             });
 
-            let prBlocks = pullRequests.map(pr => {
-              const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
-              
+            let prBlocks = pullRequests.map(pullRequest => {
+              const { number, title, created_at } = pullRequest;
+              const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
+              const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
+            
               return {
-                "type": "mrkdwn",
-                "text": `<${prLink}|#${pr.number}: ${pr.title}>`
-              };
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`  
+                }       
+              }
             });
 
             if (prBlocks.length === 0) {
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', prBlocks);
+              core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prCount', pullRequests.length);
             }
 
+      # 2. Send to Slack
       - name: Send to Slack
         if: steps.get-prs.outputs.hasPrs == 'true'
         uses: 8398a7/action-slack@v3
         with:
           status: custom
-          mention: "channel"
           fields: workflow,job,commit,repo,ref,author,took
+          mention: "here"
           custom_payload: |
             {
+              "text": "<!here> ${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
@@ -61,10 +70,7 @@ jobs:
                     {
                       "type": "divider"
                     },
-                    {
-                      "type": "section",
-                      "fields": ${{ steps.get-prs.outputs.prBlocks }}
-                    }
+                    ... ${{ steps.get-prs.outputs.prBlocks }}
                   ]
                 }
               ]
