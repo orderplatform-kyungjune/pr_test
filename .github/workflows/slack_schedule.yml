@@ -32,8 +32,8 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": `*<${link}|${title}>*\n#${number} opened on ${created_at} by ${pullRequest.user.login}`
-                }            
+                  "text": `*<${link}|${title}>*\n#${number} opened on ${created_at} by ${pullRequest.user.login}`  
+                }       
               }
             });
 
@@ -68,8 +68,8 @@ jobs:
                     },
                     {
                       "type": "divider"
-                    }
-                    ${{steps.get-prs.outputs.prBlocks}}
+                    },
+                    ...(JSON.parse('${{ steps.get-prs.outputs.prBlocks }}'))
                   ]
                 }
               ]
