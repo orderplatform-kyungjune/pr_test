@@ -45,12 +45,14 @@ jobs:
               // D- 라벨 찾기
               let color = '#36a64f'; // 기본 색상 (초록색)
               let labelNumber = Infinity;
+              let labelText = '';
               labels.forEach(label => {
                 if (label.name.startsWith('D-')) {
                   const num = Number(label.name.slice(2));
                   if (!isNaN(num) && num < labelNumber) {
                     labelNumber = num;
                     color = colorMap[label.name] || color;
+                    labelText = label.name;
                   }
                 }
               });
@@ -64,7 +66,7 @@ jobs:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
+                        "text": `*[${labelText}] <${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
                       }
                     }
                   ]
