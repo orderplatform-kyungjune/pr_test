@@ -27,12 +27,13 @@ jobs:
             let prBlocks = pullRequests.map(pullRequest => {
               const { number, title, created_at } = pullRequest;
               const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
+              const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
             
               return {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": `*<${link}|${title}>*\n#${number} opened on ${created_at} by ${pullRequest.user.login}`  
+                  "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`  
                 }       
               }
             });
