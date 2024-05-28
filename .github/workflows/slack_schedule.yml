@@ -47,7 +47,7 @@ jobs:
               let labelNumber = Infinity;
               labels.forEach(label => {
                 if (label.name.startsWith('D-')) {
-                  const num = parseInt(label.name.slice(2), 10);
+                  const num = Number(label.name.slice(2));
                   if (!isNaN(num) && num < labelNumber) {
                     labelNumber = num;
                     color = colorMap[label.name] || color;
