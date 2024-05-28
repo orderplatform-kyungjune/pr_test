@@ -13,5 +13,5 @@
 "text": {
 "type": "mrkdwn",   
 "text": `*<${{steps.get-prs.outputs.prBlocks.link}}|${{steps.get-prs.outputs.prBlocks.title}}>* \n #${{steps.get-prs.outputs.prBlocks.number}} opened on ${{steps.get-prs.outputs.prBlocks.openAt}} by ${{steps.get-prs.outputs.prBlocks.author}}`
-}
+}sds
 }
