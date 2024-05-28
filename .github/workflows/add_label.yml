@@ -25,7 +25,6 @@ jobs:
                   issue_number: prNumber
                 });
 
-
                 if (labels.some(label => label.name.startsWith('D-'))) {
                   console.log('D- label already exists.');
                   return
@@ -43,5 +42,5 @@ jobs:
                 console.error('Error adding labels:', error);
               }
             };
-                    
+            
             addLabel();
