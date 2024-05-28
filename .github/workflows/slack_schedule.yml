@@ -27,11 +27,13 @@ jobs:
               const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
             
               return {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": `<${prLink}|#${pr.number}: ${pr.title}>`
-                }
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": `<${prLink}|#${pr.number}: ${pr.title}>`
+                  }
+                ]
               };
             });
 
