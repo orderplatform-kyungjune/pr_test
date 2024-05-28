@@ -115,4 +115,4 @@ jobs:
               ]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.TORDER_SLACK }}
+          TORDER_SLACK: ${{ secrets.TORDER_SLACK }}
