@@ -24,25 +24,64 @@ jobs:
               state: 'open'
             });
 
-            let prBlocks = pullRequests.map(pullRequest => {
+            let colorMap = {
+              'D-0': '#ff0000', // 빨간색
+              'D-1': '#ff8c00', // 주황색
+              'D-2': '#ffff00', // 노랑색
+            };
+
+            let prBlocks = await Promise.all(pullRequests.map(async (pullRequest) => {
               const { number, title, created_at } = pullRequest;
               const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
               const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
-            
+
+              // 라벨 가져오기
+              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number
+              });
+
+              // D- 라벨 찾기
+              let color = '#36a64f'; // 기본 색상 (초록색)
+              let labelNumber = Infinity;
+              let labelText = '';
+              labels.forEach(label => {
+                if (label.name.startsWith('D-')) {
+                  const num = Number(label.name.slice(2));
+                  if (!isNaN(num) && num < labelNumber) {
+                    labelNumber = num;
+                    color = colorMap[label.name] || color;
+                    labelText = label.name;
+                  }
+                }
+              });
+
               return {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`  
-                }       
-              }
-            });
+                labelNumber: labelNumber, // D- 뒤에 붙는 숫자
+                block: {
+                  "color": color,
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": `*[${labelText}] <${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
+                      }
+                    }
+                  ]
+                }
+              };
+            }));
+
+            // 라벨의 D- 뒤에 붙는 숫자가 적은 순서대로 정렬
+            prBlocks.sort((a, b) => a.labelNumber - b.labelNumber);
 
             if (prBlocks.length === 0) {
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prBlocks', JSON.stringify(prBlocks.map(pr => pr.block)));
               core.setOutput('prCount', pullRequests.length);
             }
 
@@ -56,7 +95,7 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "<!here> ${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
+              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
@@ -69,10 +108,10 @@ jobs:
                     },
                     {
                       "type": "divider"
-                    },
-                    ... ${{ steps.get-prs.outputs.prBlocks }}
+                    }
                   ]
-                }
+                },
+                ...${{ steps.get-prs.outputs.prBlocks }}
               ]
             }
         env:
