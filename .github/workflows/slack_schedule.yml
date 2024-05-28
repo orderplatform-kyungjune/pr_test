@@ -23,18 +23,15 @@ jobs:
               state: 'open'
             });
 
-            const prCount = pullRequests.length;
-            let prBlocks = pullRequests.map(pr => {
-              const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
-              const prOpenedDate = new Date(pr.created_at).toLocaleDateString('ko-KR');
-              const prAuthor = pr.user.login;
+            let prBlocks = pullRequests.map(pullRequest => {
+              const { number, title, created_at } = pullRequest;
             
               return {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": `<${prLink}|${pr.title}> \n #${pr.number} opened on ${prOpenedDate} by ${prAuthor}`
-                }
+                number,
+                title,
+                openAt: new Date(created_at).toLocaleDateString('ko-KR'),
+                author: pullRequest.user.login,
+                link: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`,
               };
             });
 
@@ -42,8 +39,9 @@ jobs:
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
+              console.log('블락스',prBlocks)
               core.setOutput('prBlocks', prBlocks);
-              core.setOutput('prCount', prCount);
+              core.setOutput('prCount', pullRequests.length);
             }
 
       - name: Send to Slack
@@ -51,11 +49,11 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: custom
-          mention: "channel"
           fields: workflow,job,commit,repo,ref,author,took
+          mention: "here"
           custom_payload: |
             {
-              "text": "<!channel> ${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
+              "text": "${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
@@ -69,6 +67,20 @@ jobs:
                     {
                       "type": "divider"
                     },
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.repository }}"
+                      }
+                    },
+                    { 
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",   
+                        "text": `*<${{steps.get-prs.outputs.prBlocks.link}}|${{steps.get-prs.outputs.prBlocks.title}}>* \n #${{steps.get-prs.outputs.prBlocks.number}} opened on ${{steps.get-prs.outputs.prBlocks.openAt}} by ${{steps.get-prs.outputs.prBlocks.author}}`
+                      }
+                    }
                     ${{ steps.get-prs.outputs.prBlocks }}
                   ]
                 }

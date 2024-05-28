@@ -10,3 +10,9 @@
 ### 🌝 상세리뷰 요청사항 (33333332343)
 main
 33dssadsdsd2ㄴㅇasdasds
+
+"type": "section",
+"text": {
+"type": "mrkdwn",
+"text": `*<${prLink}|${pr.title}>*\n#${pr.number} opened on ${prOpenedDate} by ${prAuthor}`
+}
