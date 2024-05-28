@@ -1,17 +1,22 @@
-### ↘️ 배포 Labels 체크하기 ↘️
+### 작업 티켓
 <hr/>
+<!-- [필수] 작업 티켓의 링크를 넣어주세요 -->
 
-### 📸 작업내용(필수) 및 스크린샷
+### 작업 내용
 <hr/>
+<!-- [필수] 작업 내용을 간결하게 설명해주세요 -->
 
+### 주안점
+<hr/>
+<!-- [선택] 유심히 봐주었으면 하는 부분을 설명해주세요 -->
 
+### 스크린샷
+<hr/>
+<!-- [선택] 작업한 UI의 스크린샷을 넣어주세요 -->
 
-
-### 🌝 상세리뷰 요청사항 (33333332343)
-{
-"type": "section",
-"text": {
-"type": "mrkdwn",   
-"text": `*<${{steps.get-prs.outputs.prBlocks.link}}|${{steps.get-prs.outputs.prBlocks.title}}>* \n #${{steps.get-prs.outputs.prBlocks.number}} opened on ${{steps.get-prs.outputs.prBlocks.openAt}} by ${{steps.get-prs.outputs.prBlocks.author}}`
-}sds
-}
+## 체크리스트
+- [ ] 제목을 양식에 맞게 작성하셨나요?
+- [ ] 배포 label을 다시 한번 확인 하셨나요?
+- [ ] 새로운 기술을 사용했다면, 그 기술을 설명하고 있나요?
+- [ ] 이해하기 어려운 비즈니스 로직에 관해서 부연 설명을 하고 있나요?
+- [ ] 작업을 설명하는 Jira 티켓을 추가했나요?
