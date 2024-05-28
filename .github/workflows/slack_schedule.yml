@@ -32,7 +32,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*<${link}|${title}>*\n#${number} opened on ${created_at} by ${pullRequest.user.login}"
+                  "text": `*<${link}|${title}>*\n#${number} opened on ${created_at} by ${pullRequest.user.login}`
                 }            
               }
             });
@@ -41,7 +41,7 @@ jobs:
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', prBlocks);
+              core.setOutput('prBlocks', JSON.stringify(prBlocks));
               core.setOutput('prCount', pullRequests.length);
             }
 
@@ -68,8 +68,8 @@ jobs:
                     },
                     {
                       "type": "divider"
-                    },
-                    ${{ steps.get-prs.outputs.prBlocks }}
+                    }
+                    ${steps.get-prs.outputs.prBlocks}
                   ]
                 }
               ]
