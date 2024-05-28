@@ -25,22 +25,21 @@ jobs:
                   issue_number: prNumber
                 });
 
-
                 if (labels.some(label => label.name.startsWith('D-'))) {
                   console.log('D- label already exists.');
                   return
                 } 
-            
+
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: prNumber,
-                  labels: ['D-3']
+                  labels: ['D-5'],
                 });
-                console.log('Label D-3 added.');
+                console.log('Label D-5 added.');
               } catch (error) {
                 console.error('Error adding labels:', error);
               }
             };
-                    
+            
             addLabel();
