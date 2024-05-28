@@ -25,10 +25,13 @@ jobs:
 
             let prBlocks = pullRequests.map(pr => {
               const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
-              
+            
               return {
-                "type": "mrkdwn",
-                "text": `<${prLink}|#${pr.number}: ${pr.title}>`
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": `<${prLink}|#${pr.number}: ${pr.title}>`
+                }
               };
             });
 
@@ -36,7 +39,7 @@ jobs:
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', prBlocks);
+              core.setOutput('prBlocks', JSON.stringify(prBlocks));
             }
 
       - name: Send to Slack
@@ -61,10 +64,7 @@ jobs:
                     {
                       "type": "divider"
                     },
-                    {
-                      "type": "section",
-                      "text": ${{ steps.get-prs.outputs.prBlocks }}
-                    }
+                    ...(JSON.parse('${{ steps.get-prs.outputs.prBlocks }}'))
                   ]
                 }
               ]
