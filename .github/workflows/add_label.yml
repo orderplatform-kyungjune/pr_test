@@ -29,13 +29,12 @@ jobs:
                   console.log('D- label already exists.');
                   return
                 } 
-            
+
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: prNumber,
                   labels: ['D-5'],
-                  color: 'red'
                 });
                 console.log('Label D-5 added.');
               } catch (error) {
