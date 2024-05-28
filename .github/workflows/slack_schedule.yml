@@ -26,12 +26,14 @@ jobs:
             const prCount = pullRequests.length;
             let prBlocks = pullRequests.map(pr => {
               const prLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr.number}`;
+              const prOpenedDate = new Date(pr.created_at).toLocaleDateString('ko-KR');
+              const prAuthor = pr.user.login;
             
               return {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": `<${prLink}|#${pr.number}: ${pr.title}>`
+                  "text": `*<${prLink}|${pr.title}>*\n#${pr.number} opened on ${prOpenedDate} by ${prAuthor}`
                 }
               };
             });
