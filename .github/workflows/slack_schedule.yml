@@ -1,4 +1,4 @@
-name: Notify Slack about Pull Requests
+name: Notify Slack Schedule about Pull Requests
 
 on:
   schedule:
