@@ -60,15 +60,15 @@ jobs:
                     continue;
                   }
                   
-                  DLabels.forEach((DLabel) => {
-                    console.log('PR:',prNumber, '삭제:', DLabel);
+                  for (const DLabel of DLabels) {
+                    console.log('PR:', prNumber, '삭제:', DLabel);
                     await github.rest.issues.removeLabel({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       issue_number: prNumber,
                       name: DLabel
                     });
-                  })
+                  } 
 
                   const biggestLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2))));
                   const newLabel = `D-${biggestLabelNumber < 1 ? 0 : biggestLabelNumber - 1}`;
