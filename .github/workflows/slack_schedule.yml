@@ -24,14 +24,34 @@ jobs:
               state: 'open'
             });
 
-            let colors = ["#36a64f", "#ff5733", "#3498db", "#f39c12", "#9b59b6"]; // 예시 컬러 배열
-            let prBlocks = pullRequests.map((pullRequest, index) => {
+            let colorMap = {
+              'D-0': '#ff0000', // 빨간색
+              'D-1': '#ff8c00', // 주황색
+              'D-2': '#ffff00', // 노랑색
+            };
+
+            let prBlocks = await Promise.all(pullRequests.map(async (pullRequest) => {
               const { number, title, created_at } = pullRequest;
               const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
               const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
+
+              // 라벨 가져오기
+              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number
+              });
+
+              // D- 라벨 찾기
+              let color = '#000080'; // 기본 색상
+              labels.forEach(label => {
+                if (label.name.startsWith('D-')) {
+                  color = colorMap[label.name] || color;
+                }
+              });
             
               return {
-                "color": colors[index % colors.length], // 컬러 배열에서 순환
+                "color": color,
                 "blocks": [
                   {
                     "type": "section",
@@ -42,7 +62,7 @@ jobs:
                   }
                 ]
               };
-            });
+            }));
 
             if (prBlocks.length === 0) {
               core.setOutput('hasPrs', 'false');
