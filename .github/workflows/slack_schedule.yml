@@ -42,7 +42,7 @@ jobs:
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks));
+              core.setOutput('prBlocks', prBlocks);
               core.setOutput('prCount', prCount);
             }
 
