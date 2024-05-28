@@ -63,7 +63,7 @@ jobs:
                     },
                     {
                       "type": "section",
-                      "fields": ${{ steps.get-prs.outputs.prBlocks }}
+                      "text": ${{ steps.get-prs.outputs.prBlocks }}
                     }
                   ]
                 }
