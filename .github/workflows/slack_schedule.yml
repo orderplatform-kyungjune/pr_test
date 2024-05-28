@@ -56,7 +56,7 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
+              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 관심을 기다리고 있어요."
               "attachments": [
                 {
                   "blocks": [
