@@ -24,18 +24,24 @@ jobs:
               state: 'open'
             });
 
-            let prBlocks = pullRequests.map(pullRequest => {
+            let colors = ["#36a64f", "#ff5733", "#3498db", "#f39c12", "#9b59b6"]; // 예시 컬러 배열
+            let prBlocks = pullRequests.map((pullRequest, index) => {
               const { number, title, created_at } = pullRequest;
               const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
               const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
             
               return {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`  
-                }       
-              }
+                "color": colors[index % colors.length], // 컬러 배열에서 순환
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": `*<${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
+                    }
+                  }
+                ]
+              };
             });
 
             if (prBlocks.length === 0) {
@@ -56,7 +62,7 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "<!here> ${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
+              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
@@ -69,10 +75,10 @@ jobs:
                     },
                     {
                       "type": "divider"
-                    },
-                    ... ${{ steps.get-prs.outputs.prBlocks }}
+                    }
                   ]
-                }
+                },
+                ...${{ steps.get-prs.outputs.prBlocks }}
               ]
             }
         env:
