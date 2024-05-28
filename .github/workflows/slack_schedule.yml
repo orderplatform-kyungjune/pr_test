@@ -56,6 +56,15 @@ jobs:
           mention: "here"
           custom_payload: |
             {
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "<!here>"
+                  }
+                ]
+              },
               "text": "${{ steps.get-prs.outputs.prCount }}개의 pull request가 여러분의 관심을 기다리고 있어요",
               "attachments": [
                 {
