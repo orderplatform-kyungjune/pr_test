@@ -31,6 +31,7 @@ jobs:
         id: check-conditions
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.TOKEN }}
           script: |
             const approvals = parseInt(core.getInput('APPROVED_COUNT'));
             const hasLabel = context.payload.pull_request.labels.map((label) => label.name).includes('D-0');
@@ -48,6 +49,7 @@ jobs:
         if: steps.check-conditions.outputs.mergeable == 'true'
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
@@ -64,6 +66,7 @@ jobs:
         if: steps.check-conditions.outputs.mergeable == 'false'
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.TOKEN }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
