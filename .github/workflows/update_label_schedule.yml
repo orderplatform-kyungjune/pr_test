@@ -1,4 +1,4 @@
-name: Update Label Schedule
+name: update D- label schedule
 
 on:
   schedule:
@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v3
 
-      - name: Get PR Labels
+      - name: get pr labels
         id: pr-labels
         uses: actions/github-script@v7
         with:
@@ -42,7 +42,7 @@ jobs:
             
             getLabels();
 
-      - name: Update Labels
+      - name: update labels
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
