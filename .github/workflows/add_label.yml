@@ -1,4 +1,4 @@
-name: add Add DLabel on Pull Request
+name: add D- label on pull request
 
 on:
   pull_request:
@@ -8,10 +8,10 @@ jobs:
   add-label:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v3
 
-      - name: Add Label
+      - name: add label
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
