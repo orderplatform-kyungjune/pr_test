@@ -25,24 +25,24 @@ jobs:
               pull_number: context.issue.number
             });
             
-            return { approvedCount: reviews.filter(review => review.state === 'APPROVED').length };
+            core.setOutput('approvedCount', reviews.filter(review => review.state === 'APPROVED').length);
 
       - name: Check for required approvals or label
         id: check-conditions
         uses: actions/github-script@v7
         with:
           script: |
-            const approvals = parseInt(core.getInput('approvedCount'));
+            const approvals = parseInt(core.getInput('APPROVED_COUNT'));
             const hasLabel = context.payload.pull_request.labels.map((label) => label.name).includes('D-0');
             
             if (approvals >= 2 || hasLabel) {
-              return { mergeable: true };
+              core.setOutput('mergeable', true);
+              return;
             }
             
-            return { mergeable: false };
-
+            core.setOutput('mergeable', false);
         env:
-          approvedCount: ${{ steps.get-reviews.outputs.approvedCount }}
+          APPROVED_COUNT: ${{ steps.get-reviews.outputs.approvedCount }}
 
       - name: Update commit status to success
         if: steps.check-conditions.outputs.mergeable == 'true'
