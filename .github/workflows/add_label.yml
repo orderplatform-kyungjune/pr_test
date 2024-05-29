@@ -2,10 +2,9 @@ name: add D- label on pull request
 
 on:
   workflow_call:
-    inputs:
-      github_token:
+    secrets:
+      token:
         required: true
-        type: string
 
 jobs:
   add-label:
@@ -17,7 +16,7 @@ jobs:
       - name: add label
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.TOKEN }}
+          github-token: ${{ secrets.token }}
           script: |
             async function addLabel() { 
               try{
