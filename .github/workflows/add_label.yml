@@ -2,7 +2,7 @@ name: add D- label on pull request
 
 on:
   workflow_call:
-    types: [parameters]
+    types: [workflow_call]
     inputs:
       github_token:
         description: 'GitHub token'
