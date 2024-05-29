@@ -53,7 +53,7 @@ jobs:
             
                 for (const prNumber in labelsByPR) {
                   const DLabels = labelsByPR[prNumber].filter(prLabel => prLabel.startsWith('D-'));
-                  
+            
                   if (DLabels.length < 1) {
                     continue;
                   }
