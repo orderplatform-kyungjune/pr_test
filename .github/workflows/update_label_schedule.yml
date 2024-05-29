@@ -33,8 +33,8 @@ jobs:
                   repo: context.repo.repo,
                   issue_number: prNumber
                 });
-                const prLabels = labels.map(label => label.name);
-                labelsByPR[prNumber] = prLabels;
+
+                labelsByPR[prNumber] = labels.map(label => label.name);
               }
 
               core.setOutput('labelsByPR', JSON.stringify(labelsByPR));  
@@ -52,16 +52,13 @@ jobs:
                 const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
             
                 for (const prNumber in labelsByPR) {
-                  const prLabels = labelsByPR[prNumber];
-                  const DLabels = prLabels.filter(prLabel => prLabel.startsWith('D-'));
-                  console.log('PR:',prNumber, 'D Labels:', DLabels);
+                  const DLabels = labelsByPR[prNumber].filter(prLabel => prLabel.startsWith('D-'));
+                  
                   if (DLabels.length < 1) {
-                    console.log('PR:',prNumber, '라벨이없음');
                     continue;
                   }
             
                   for (const DLabel of DLabels) {
-                    console.log('PR:', prNumber, '삭제:', DLabel);
                     await github.rest.issues.removeLabel({
                       owner: context.repo.owner,
                       repo: context.repo.repo,

@@ -18,12 +18,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            // PR 목록 가져오기
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
             });
 
+            // label color
             let colorMap = {
               'D-0': '#ff0000', // 빨간색
               'D-1': '#ff8c00', // 주황색
@@ -58,7 +60,7 @@ jobs:
               });
 
               return {
-                labelNumber: labelNumber, // D- 뒤에 붙는 숫자
+                labelNumber, // D- 뒤에 붙는 숫자
                 block: {
                   "color": color,
                   "blocks": [
@@ -81,7 +83,7 @@ jobs:
               core.setOutput('hasPrs', 'false');
             } else {
               core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks.map(pr => pr.block)));
+              core.setOutput('prBlocks', JSON.stringify(prBlocks.map(prBlock => prBlock.block)));
               core.setOutput('prCount', pullRequests.length);
             }
 
