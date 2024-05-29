@@ -5,8 +5,8 @@ on:
     types: [workflow_call]
     inputs:
       github_token:
-        description: 'GitHub token'
         required: true
+        type: string
 
 jobs:
   add-label:
