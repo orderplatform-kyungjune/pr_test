@@ -1,10 +1,9 @@
 name: notify slack schedule about prs
 
 on:
-  workflow_call:
-    secrets:
-      slack_webhook_url:
-        required: true
+  schedule:
+    - cron: '59 22 * * *'  # 매일 한국 시간 07:59에 실행
+
 
 jobs:
   notify-slack:
@@ -117,4 +116,4 @@ jobs:
               ]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.slack_webhook_url }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
