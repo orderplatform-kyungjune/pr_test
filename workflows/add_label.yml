@@ -1,4 +1,4 @@
-name: add D- label on pull requestㄴㅇㄴㄴㄴㅇㄴ
+name: add D- label on pull request
 
 on:
   pull_request:
