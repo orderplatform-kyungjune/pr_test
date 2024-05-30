@@ -9,6 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Use Add D- Label Action
-        uses: torder-lkj/update_d_label@v1.0.1
+        uses: torder-lkj/update_d_label@v1.0.3
         with:
           github_token: ${{ secrets.TOKEN }}
