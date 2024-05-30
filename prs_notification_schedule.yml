@@ -16,7 +16,7 @@ jobs:
 
       - name: get pull requests
         id: get-prs
-        uses: actions/github-script@v7
+        uses: actions/.github-script@v7
         with:
           script: |
             // PR 목록 가져오기
