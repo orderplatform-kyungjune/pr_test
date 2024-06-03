@@ -2,7 +2,7 @@ name: notify slack schedule about prs
 
 on:
   schedule:
-    - cron: '59 22 * * *'  # 매일 한국 시간 07:59에 실행
+    - cron: '59 22 * 1-5'  # 매주 월요일부터 금요일까지 한국 시간 07:59에 실행
 
 jobs:
   call-workflow:

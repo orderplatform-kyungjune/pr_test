@@ -2,7 +2,7 @@ name: update D- label schedule
 
 on:
   schedule:
-    - cron: '1 15 * * *'  # 매일 한국 시간 00:01에 실행
+    - cron: '1 15 * * 1-5'  # 매주 월요일부터 금요일까지 한국 시간 00:01에 실행
 
 jobs:
   call-workflow:
