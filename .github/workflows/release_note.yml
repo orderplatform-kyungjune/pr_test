@@ -54,7 +54,7 @@ jobs:
         id: generate_notes
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
           script: |
             const prTitles = process.env.merged_pr_titles;
             console.log('prTitles 목록',prTitles)
