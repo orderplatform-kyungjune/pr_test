@@ -15,4 +15,4 @@ jobs:
       - name: Use Add D- Label Action
         uses: torder-lkj/add_label@v1.0.2
         with:
-          github_token: ${{ secrets.OR_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
