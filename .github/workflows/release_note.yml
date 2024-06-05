@@ -27,16 +27,17 @@ jobs:
               sort: 'updated',
               direction: 'desc'
             });
-            
-            // Get merged PRs only
-            const mergedPRs = pulls.filter(pr => pr.merged_at);
+
+            // Get merged PRs after the most recent merge into main
+            const lastMainMerge = pulls.find(pr => pr.base.ref === 'main' && pr.merged_at);
+            const mergedPRs = pulls.filter(pr => pr.merged_at && pr.merged_at > lastMainMerge.merged_at);
 
             if (mergedPRs.length === 0) {
               console.log('No merged pull requests found.');
               core.exportVariable('MERGED_PR_TITLES', '');
             } else {
               const prTitles = mergedPRs.map(pr => `- PR #${pr.number}: ${pr.title} by @${pr.user.login}`).join('\n');
-              console.log('pull 목록',prTitles)
+              console.log('pull 목록', prTitles)
               core.exportVariable('MERGED_PR_TITLES', prTitles);
             }
 
@@ -58,7 +59,7 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const prTitles = process.env.MERGED_PR_TITLES;
-            console.log('prTitles 목록',prTitles)
+            console.log('prTitles 목록', prTitles)
             if (!prTitles) {
               console.log('No merged pull requests found.');
               return;
@@ -69,14 +70,14 @@ jobs:
               repo: context.repo.repo,
               tag: context.ref.replace('refs/tags/', ''),
             });
-            console.log('릴리즈',release)
+            console.log('릴리즈', release)
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.id,
               body: `${prTitles}`,
             });
-            
+
             core.exportVariable('RELEASE_URL', release.html_url);
 
       - name: Output Release URL
