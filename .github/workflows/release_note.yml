@@ -27,11 +27,13 @@ jobs:
               sort: 'updated',
               direction: 'desc'
             });
-
+            console.log('pr목록',pulls)
             // Get merged PRs after the most recent merge into main
             const lastMainMerge = pulls.find(pr => pr.base.ref === 'main' && pr.merged_at);
+            console.log('메인merge',lastMainMerge)
             const mergedPRs = pulls.filter(pr => pr.merged_at && pr.merged_at > lastMainMerge.merged_at);
-
+            console.log('머지드pr',mergedPRs)
+            
             if (mergedPRs.length === 0) {
               console.log('No merged pull requests found.');
               core.exportVariable('MERGED_PR_TITLES', '');
