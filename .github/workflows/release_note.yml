@@ -27,16 +27,17 @@ jobs:
               sort: 'updated',
               direction: 'desc'
             });
-            console.log('pull 목록',pulls)
             
             // Get merged PRs only
             const mergedPRs = pulls.filter(pr => pr.merged_at);
 
             if (mergedPRs.length === 0) {
-              core.setOutput('merged_pr_titles', '');
+              console.log('No merged pull requests found.');
+              core.exportVariable('MERGED_PR_TITLES', '');
             } else {
               const prTitles = mergedPRs.map(pr => `- PR #${pr.number}: ${pr.title} by @${pr.user.login}`).join('\n');
-              core.setOutput('merged_pr_titles', prTitles);
+              console.log('pull 목록',prTitles)
+              core.exportVariable('MERGED_PR_TITLES', prTitles);
             }
 
       - name: Create Release
@@ -56,7 +57,7 @@ jobs:
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            const prTitles = process.env.merged_pr_titles;
+            const prTitles = process.env.MERGED_PR_TITLES;
             console.log('prTitles 목록',prTitles)
             if (!prTitles) {
               console.log('No merged pull requests found.');
@@ -75,9 +76,9 @@ jobs:
               release_id: release.id,
               body: `${prTitles}`,
             });
-              
-            core.setOutput('release_url', release.html_url);
+            
+            core.exportVariable('RELEASE_URL', release.html_url);
 
       - name: Output Release URL
         run: |
-          echo "Release URL: ${{ steps.generate_notes.outputs.release_url }}"
+          echo "Release URL: $RELEASE_URL"
