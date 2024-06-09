@@ -13,35 +13,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Get the most recent merge into main
-        id: get_last_main_merge
+      - name: Get the previous tag
+        id: get_previous_tag
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
-          script: |  
-            // Get the latest commit in main branch
-            const { data: mainBranch } = await github.rest.repos.getBranch({
+          script: |
+            const { data: tags } = await github.rest.repos.listTags({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              branch: 'main'
+              per_page: 100
             });
-            const mainBranchSha = mainBranch.commit.sha;
+            
+            console.log('모든 태그',tags)
+            
+            // Get current tag name
+            const currentTag = context.ref.replace('refs/tags/', '');
+            console.log('현재 태그', currentTag);
 
-            // Get the latest merge commit in main branch
-            const { data: commits } = await github.rest.repos.listCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: mainBranchSha,
-              per_page: 100 // adjust as needed
-            });
-            
-            const mergeCommit = commits.find(commit => commit.commit.message.includes('Merge pull request'));
-            
-            if (!mergeCommit) {
-              core.exportVariable('LAST_MAIN_MERGE', '');
-            } else {
-              core.exportVariable('LAST_MAIN_MERGE', mergeCommit.sha);
+            // Find the previous tag
+            const currentIndex = tags.findIndex(tag => tag.name === currentTag);
+            if (currentIndex === -1 || currentIndex === tags.length - 1) {
+              console.log('No previous tag found or current tag is the oldest tag.');
+              core.exportVariable('PREVIOUS_TAG_SHA', '');
+              return
             }
+            
+            const previousTag = tags[currentIndex + 1];
+            console.log('Previous Tag:', previousTag.name);
+            core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
 
       - name: Get merged pull requests
         id: get_merged_prs
@@ -49,27 +49,37 @@ jobs:
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            const lastMainMergeHash = process.env.LAST_MAIN_MERGE;
-            
-            if (!lastMainMergeHash) {
-              console.log('No merge commits found in main branch.');
+            const previousTagSha = process.env.PREVIOUS_TAG_SHA;
+
+            if (!previousTagSha) {
+              console.log('No previous tag found.');
               core.exportVariable('MERGED_PR_TITLES', '');
               return;
             }
 
-            const { data: pulls } = await github.rest.pulls.list({
+            // Get commits between previous tag and current tag
+            const { data: commits } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'closed',
-              base: 'main',
-              sort: 'updated',
-              direction: 'desc'
+              base: previousTagSha,
+              head: context.sha
             });
 
-            // Get merged PRs after the most recent merge into main
-            const mergedPRs = pulls.filter(pr => pr.merged_at && pr.merge_commit_sha === lastMainMergeHash);
-            console.log('Merged PRs:', mergedPRs);
-            
+            const mergedPRs = [];
+
+            // Find merge commits in the range
+            for (const commit of commits.commits) {
+              if (commit.commit.message.includes('Merge pull request')) {
+                const prNumber = commit.commit.message.match(/#(\d+)/)[1];
+                const { data: pr } = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
+                mergedPRs.push(pr);
+              }
+            }
+
             if (mergedPRs.length === 0) {
               console.log('No merged pull requests found.');
               core.exportVariable('MERGED_PR_TITLES', '');
