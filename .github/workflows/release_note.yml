@@ -85,13 +85,12 @@ jobs:
             
             console.log('pr목록',mergedPRs)
             for (const pr of mergedPRs) {
-              const prTitle = pr.title.trim()
-              if (prTitle.startsWith('Feature/') || prTitle.startsWith('feature/')) {
-                featurePRs.push(`- #${pr.number} ${prTitle} by @${pr.user.login}`);
-              } else if (prTitle.startsWith('Release/') || prTitle.startsWith('release/')) {
-                releasePRs.push(`- #${pr.number} ${prTitle} by @${pr.user.login}`);
+              if (pr.title.includes('Feature/') || pr.title.includes('feature/')) {
+                featurePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
+              } else if (pr.title.includes('Release/') || pr.title.includes('release/')) {
+                releasePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
               } else {
-                etcPRs.push(`- #${pr.number} ${prTitle} by @${pr.user.login}`);
+                etcPRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
               }
             }
 
