@@ -52,7 +52,7 @@ jobs:
               return;
             }
 
-            const { data: commits } = await github.rest.repos.compareCommits({
+            const { data: isCommits } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
               base: previousTagSha,
@@ -61,9 +61,9 @@ jobs:
 
             const mergedPRs = [];
 
-            for (const commit of commits.commits) {
-              if (commit.commit.message.includes('Merge pull request')) {
-                const prNumber = commit.commit.message.match(/#(\d+)/)[1];
+            for (const isCommit of isCommits.commits) {
+              if (isCommit.commit.message.includes('Merge pull request')) {
+                const prNumber = isCommit.commit.message.match(/#(\d+)/)[1];
                 const { data: pr } = await github.rest.pulls.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -83,27 +83,29 @@ jobs:
             const releasePRs = [];
             const etcPRs = [];
             
-            console.log('pr목록',mergedPRs)
-            for (const pr of mergedPRs) {
-              if (pr.title.includes('Feature/') || pr.title.includes('feature/')) {
-                featurePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
-              } else if (pr.title.includes('Release/') || pr.title.includes('release/')) {
-                releasePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
+            for (const mergedPR of mergedPRs) {
+              const { number, title, user } = mergedPR
+
+              if (title.includes('Feature/') || title.includes('feature/')) {
+                featurePRs.push(`- #${number}: ${title} by @${user.login}`);
+              } else if (title.includes('Release/') || title.includes('release/')) {
+                releasePRs.push(`- #${number}: ${title} by @${user.login}`);
               } else {
-                etcPRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
+                etcPRs.push(`- #${number}: ${title} by @${user.login}`);
               }
             }
 
             let prTitles = '';
             if (releasePRs.length > 0) {
-              prTitles += `### Release\n${releasePRs.join('\n')}\n\n`;
+              prTitles += `### RELEASE\n${releasePRs.join('\n')}\n\n`;
             }
             if (featurePRs.length > 0) {
-              prTitles += `### Feature\n${featurePRs.join('\n')}\n\n`;
+              prTitles += `### FEATURE\n${featurePRs.join('\n')}\n\n`;
             }
             if (etcPRs.length > 0) {
               prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
             }
+
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
       - name: create Release
@@ -141,7 +143,7 @@ jobs:
               release_id: release.id,
               body: `${prTitles}`,
             });
-            
+
             core.exportVariable('RELEASE_URL', release.html_url);
 
       - name: output release url
