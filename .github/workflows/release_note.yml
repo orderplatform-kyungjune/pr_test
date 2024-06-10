@@ -87,11 +87,11 @@ jobs:
               const { number, title, user } = mergedPR
 
               if (title.includes('Feature/') || title.includes('feature/')) {
-                featurePRs.push(`- #${number}: ${title} by @${user.login}`);
+                featurePRs.push(`- #${number} ${title} by @${user.login}`);
               } else if (title.includes('Release/') || title.includes('release/')) {
-                releasePRs.push(`- #${number}: ${title} by @${user.login}`);
+                releasePRs.push(`- #${number} ${title} by @${user.login}`);
               } else {
-                etcPRs.push(`- #${number}: ${title} by @${user.login}`);
+                etcPRs.push(`- #${number} ${title} by @${user.login}`);
               }
             }
 
@@ -108,7 +108,7 @@ jobs:
 
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
-      - name: create Release
+      - name: create release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -119,8 +119,8 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: generate release notes
-        id: generate_notes
+      - name: update release notes
+        id: update_notes
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
