@@ -1,4 +1,4 @@
-name: Create Release Notes
+name: create release note
 
 on:
   push:
@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v3
 
-      - name: Get the previous tag
+      - name: get previous tag
         id: get_previous_tag
         uses: actions/github-script@v7
         with:
@@ -25,25 +25,20 @@ jobs:
               per_page: 100
             });
             
-            console.log('모든 태그',tags)
-            
-            // Get current tag name
             const currentTag = context.ref.replace('refs/tags/', '');
-            console.log('현재 태그', currentTag);
-
-            // Find the previous tag
             const currentIndex = tags.findIndex(tag => tag.name === currentTag);
+            
             if (currentIndex === -1 || currentIndex === tags.length - 1) {
-              console.log('No previous tag found or current tag is the oldest tag.');
               core.exportVariable('PREVIOUS_TAG_SHA', '');
+              console.log('No previous tag found or current tag is the oldest tag.');
               return
             }
             
             const previousTag = tags[currentIndex + 1];
-            console.log('Previous Tag:', previousTag.name);
             core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
+            console.log('Previous Tag:', previousTag.name);
 
-      - name: Get merged pull requests
+      - name: get merged pull requests
         id: get_merged_prs
         uses: actions/github-script@v7
         with:
@@ -57,7 +52,6 @@ jobs:
               return;
             }
 
-            // Get commits between previous tag and current tag
             const { data: commits } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -67,7 +61,6 @@ jobs:
 
             const mergedPRs = [];
 
-            // Find merge commits in the range
             for (const commit of commits.commits) {
               if (commit.commit.message.includes('Merge pull request')) {
                 const prNumber = commit.commit.message.match(/#(\d+)/)[1];
@@ -81,15 +74,15 @@ jobs:
             }
 
             if (mergedPRs.length === 0) {
-              console.log('No merged pull requests found.');
               core.exportVariable('MERGED_PR_TITLES', '');
-            } else {
-              const prTitles = mergedPRs.map(pr => `- PR #${pr.number}: ${pr.title} by @${pr.user.login}`).join('\n');
-              console.log('Pull 목록:', prTitles);
-              core.exportVariable('MERGED_PR_TITLES', prTitles);
+              console.log('No merged pull requests found.');
+              return
             }
+            
+            const prTitles = mergedPRs.map(pr => `- PR #${pr.number}: ${pr.title} by @${pr.user.login}`).join('\n');
+            core.exportVariable('MERGED_PR_TITLES', prTitles);
 
-      - name: Create Release
+      - name: create Release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -100,14 +93,13 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Generate Release Notes
+      - name: generate release notes
         id: generate_notes
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const prTitles = process.env.MERGED_PR_TITLES;
-            console.log('PR Titles:', prTitles);
             if (!prTitles) {
               console.log('No merged pull requests found.');
               return;
@@ -118,7 +110,7 @@ jobs:
               repo: context.repo.repo,
               tag: context.ref.replace('refs/tags/', ''),
             });
-            console.log('릴리즈:', release);
+
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -128,6 +120,6 @@ jobs:
 
             core.exportVariable('RELEASE_URL', release.html_url);
 
-      - name: Output Release URL
+      - name: output release url
         run: |
           echo "Release URL: $RELEASE_URL"
