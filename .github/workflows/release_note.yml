@@ -93,7 +93,16 @@ jobs:
               }
             }
 
-            const prTitles = `### Release\n${releasePRs.join('\n') || 'None'}\n---\n\n### Feature\n${featurePRs.join('\n') || 'None'}\n---\n\n### ETC\n${etcPRs.join('\n') || 'None'}`;
+            let prTitles = '';
+            if (releasePRs.length > 0) {
+              prTitles += `### Release\n\n---${releasePRs.join('\n')}\n\n`;
+            }
+            if (featurePRs.length > 0) {
+              prTitles += `### Feature\n\n---${featurePRs.join('\n')}\n\n`;
+            }
+            if (etcPRs.length > 0) {
+              prTitles += `### ETC\n\n---${etcPRs.join('\n')}\n\n`;
+            }
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
       - name: create Release
