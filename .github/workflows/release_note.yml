@@ -79,7 +79,21 @@ jobs:
               return
             }
             
-            const prTitles = mergedPRs.map(pr => `- PR #${pr.number}: ${pr.title} by @${pr.user.login}`).join('\n');
+            const featurePRs = [];
+            const releasePRs = [];
+            const etcPRs = [];
+
+            for (const pr of mergedPRs) {
+              if (pr.title.startsWith('Feature/') || pr.title.startsWith('feature/')) {
+                featurePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
+              } else if (pr.title.startsWith('Release/') || pr.title.startsWith('release/')) {
+                releasePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
+              } else {
+                etcPRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
+              }
+            }
+
+            const prTitles = `${featurePRs.join('\n') || 'None'}${releasePRs.join('\n') || 'None'}${etcPRs.join('\n') || 'None'}`;
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
       - name: create Release
@@ -104,20 +118,20 @@ jobs:
               console.log('No merged pull requests found.');
               return;
             }
-
+            
             const { data: release } = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag: context.ref.replace('refs/tags/', ''),
             });
-
+            
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.id,
               body: `${prTitles}`,
             });
-
+            
             core.exportVariable('RELEASE_URL', release.html_url);
 
       - name: output release url
