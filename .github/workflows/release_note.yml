@@ -82,7 +82,8 @@ jobs:
             const featurePRs = [];
             const releasePRs = [];
             const etcPRs = [];
-
+            
+            console.log('pr목록',mergedPRs)
             for (const pr of mergedPRs) {
               if (pr.title.startsWith('Feature/') || pr.title.startsWith('feature/')) {
                 featurePRs.push(`- #${pr.number}: ${pr.title} by @${pr.user.login}`);
@@ -95,13 +96,13 @@ jobs:
 
             let prTitles = '';
             if (releasePRs.length > 0) {
-              prTitles += `### Release\n\n---${releasePRs.join('\n')}\n\n`;
+              prTitles += `### Release\n${releasePRs.join('\n')}\n\n`;
             }
             if (featurePRs.length > 0) {
-              prTitles += `### Feature\n\n---${featurePRs.join('\n')}\n\n`;
+              prTitles += `### Feature\n${featurePRs.join('\n')}\n\n`;
             }
             if (etcPRs.length > 0) {
-              prTitles += `### ETC\n\n---${etcPRs.join('\n')}\n\n`;
+              prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
             }
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
