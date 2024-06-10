@@ -93,7 +93,7 @@ jobs:
               }
             }
 
-            const prTitles = `${featurePRs.join('\n') || 'None'}${releasePRs.join('\n') || 'None'}${etcPRs.join('\n') || 'None'}`;
+            const prTitles = `### Release\n${releasePRs.join('\n') || 'None'}\n---\n\n### Feature\n${featurePRs.join('\n') || 'None'}\n---\n\n### ETC\n${etcPRs.join('\n') || 'None'}`;
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
       - name: create Release
