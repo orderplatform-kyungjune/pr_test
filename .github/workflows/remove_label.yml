@@ -1,4 +1,4 @@
-name: remove 'D-DAY' label on approved PR
+name: Remove 'D-' Label on Approved PR
 
 on:
   pull_request_review:
@@ -30,12 +30,18 @@ jobs:
                 pull_number: prNumber
               });
 
-              // Count the number of approvals
-              const approvals = reviews.filter(review => review.state === 'APPROVED').length;
-              console.log('어프루벌',approvals)
-              // If there are less than 2 approvals, exit
-              if (approvals < 2) {
-                console.log('Less than 2 approvals, no labels removed.');
+              // Get unique users who have approved the PR
+              const uniqueApprovers = new Set(
+                reviews
+                  .filter(review => review.state === 'APPROVED')
+                  .map(review => review.user.login)
+              );
+
+              console.log('Unique approvers:', uniqueApprovers);
+
+              // If there are less than 2 unique approvers, exit
+              if (uniqueApprovers.size < 2) {
+                console.log('Less than 2 unique approvals, no labels removed.');
                 return;
               }
 
