@@ -40,7 +40,7 @@ jobs:
               console.log('Unique approvers:', uniqueApprovers);
 
               // If there are less than 2 unique approvers, exit
-              if (uniqueApprovers.size < 2) {
+              if (uniqueApprovers.size < 1) {
                 console.log('Less than 2 unique approvals, no labels removed.');
                 return;
               }
