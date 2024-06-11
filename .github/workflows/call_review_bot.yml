@@ -1,0 +1,16 @@
+# .github/workflows/other-repo.yml
+name: call review_bot.yml
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  schedule:
+    - cron: '59 22 * * 1-5'  # 매주 월~금요일까지 한국 시간 07:59에 실행
+    - cron: '1 15 * * 1-5'   # 매주 월~금요일까지 한국 시간 00:01에 실행
+
+jobs:
+  call-reusable-workflow:
+    uses: .github/workflows/review_bot.yml@main
+    secrets: inherit
