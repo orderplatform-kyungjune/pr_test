@@ -1,4 +1,4 @@
-name: Remove 'D-' Label on Approved PR
+name: remove 'D-DAY' label on approved PR
 
 on:
   pull_request_review:
@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.TOKEN }}
 
-      - name: Remove 'D-' Labels
+      - name: remove 'D-DAY' labels
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
@@ -23,43 +23,35 @@ jobs:
               const prNumber = context.payload.pull_request.number;
               const { owner, repo } = context.repo;
 
-              // Get PR reviews
               const { data: reviews } = await github.rest.pulls.listReviews({
                 owner,
                 repo,
                 pull_number: prNumber
               });
 
-              // Create a map to track the latest review state for each reviewer
               const reviewerStates = new Map();
 
               for (const review of reviews) {
                 reviewerStates.set(review.user.login, review.state);
               }
 
-              // Get unique users who have approved the PR
               const uniqueApprovers = new Set(
                 [...reviewerStates.entries()]
                   .filter(([user, state]) => state === 'APPROVED')
                   .map(([user, state]) => user)
               );
 
-              console.log('Unique approvers:', uniqueApprovers);
-
-              // If there are less than 2 unique approvers, exit
-              if (uniqueApprovers.size < 1) {
+              if (uniqueApprovers.size < 2) {
                 console.log('Less than 2 unique approvals, no labels removed.');
                 return;
               }
 
-              // Get PR labels
               const { data: labels } = await github.rest.issues.listLabelsOnIssue({
                 owner,
                 repo,
                 issue_number: prNumber
               });
 
-              // Find and remove 'D-' labels
               for (const label of labels) {
                 if (label.name.startsWith('D-')) {
                   await github.rest.issues.removeLabel({
