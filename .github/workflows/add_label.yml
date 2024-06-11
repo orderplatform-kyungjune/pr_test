@@ -1,4 +1,4 @@
-name: 'Add D-5 Label'
+name: add D-5 label
 
 on:
   pull_request:
