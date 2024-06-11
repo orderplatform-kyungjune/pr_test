@@ -5,7 +5,7 @@ on:
     types: [opened, reopened]
 
 jobs:
-  create_release:
+  add-label:
     runs-on: ubuntu-latest
 
     steps:

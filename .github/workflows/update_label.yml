@@ -1,11 +1,11 @@
 name: update D-DAY label
 
 on:
-  pull_request:
-    types: [opened, reopened]
+  schedule:
+    - cron: '1 15 * * 1-5'  # 매주 월요일부터 금요일까지 한국 시간 00:01에 실행
 
 jobs:
-  create_release:
+  update-label:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
