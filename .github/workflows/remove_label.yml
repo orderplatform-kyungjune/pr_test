@@ -32,7 +32,7 @@ jobs:
 
               // Count the number of approvals
               const approvals = reviews.filter(review => review.state === 'APPROVED').length;
-
+              console.log('어프루벌',approvals)
               // If there are less than 2 approvals, exit
               if (approvals < 2) {
                 console.log('Less than 2 approvals, no labels removed.');
