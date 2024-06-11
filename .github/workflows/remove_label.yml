@@ -1,0 +1,66 @@
+name: remove 'D-DAY' label on approved PR
+
+on:
+  pull_request:
+    types: [review_submitted]
+
+jobs:
+  remove-label:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.TOKEN }}
+
+      - name: Remove 'D-' Labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            async function removeLabels() {
+              const prNumber = context.payload.pull_request.number;
+              const { owner, repo } = context.repo;
+
+              // Get PR reviews
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner,
+                repo,
+                pull_number: prNumber
+              });
+
+              // Count the number of approvals
+              const approvals = reviews.filter(review => review.state === 'APPROVED').length;
+
+              // If there are less than 2 approvals, exit
+              if (approvals < 2) {
+                console.log('Less than 2 approvals, no labels removed.');
+                return;
+              }
+
+              // Get PR labels
+              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                owner,
+                repo,
+                issue_number: prNumber
+              });
+
+              // Find and remove 'D-' labels
+              for (const label of labels) {
+                if (label.name.startsWith('D-')) {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: prNumber,
+                    name: label.name
+                  });
+                  console.log(`Label ${label.name} removed.`);
+                }
+              }
+            }
+
+            removeLabels().catch(error => {
+              console.error('Error removing labels:', error);
+              process.exit(1);
+            });
