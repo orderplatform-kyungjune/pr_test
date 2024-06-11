@@ -2,7 +2,7 @@ name: Remove 'D-' Label on Approved PR
 
 on:
   pull_request_review:
-    types: [submitted, edited]
+    types: [submitted, edited, dismissed]
 
 jobs:
   remove-label:
@@ -30,11 +30,18 @@ jobs:
                 pull_number: prNumber
               });
 
+              // Create a map to track the latest review state for each reviewer
+              const reviewerStates = new Map();
+
+              for (const review of reviews) {
+                reviewerStates.set(review.user.login, review.state);
+              }
+
               // Get unique users who have approved the PR
               const uniqueApprovers = new Set(
-                reviews
-                  .filter(review => review.state === 'APPROVED')
-                  .map(review => review.user.login)
+                [...reviewerStates.entries()]
+                  .filter(([user, state]) => state === 'APPROVED')
+                  .map(([user, state]) => user)
               );
 
               console.log('Unique approvers:', uniqueApprovers);
