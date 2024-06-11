@@ -1,8 +1,8 @@
 name: remove 'D-DAY' label on approved PR
 
 on:
-  pull_request:
-    types: [review_submitted]
+  pull_request_review:
+    types: [submitted, edited]
 
 jobs:
   remove-label:
@@ -17,7 +17,7 @@ jobs:
       - name: Remove 'D-' Labels
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
           script: |
             async function removeLabels() {
               const prNumber = context.payload.pull_request.number;
