@@ -1,4 +1,4 @@
-name: Manage PR Labels and Notify Slack
+name: github action bot
 
 on:
   workflow_call:
@@ -111,7 +111,6 @@ jobs:
               console.error('Error removing labels:', error);
               process.exit(1);
             });
-
 
 
   notify-slack:
@@ -234,7 +233,6 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
   update-label:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' && github.event.schedule == '1 15 * * 1-5'
@@ -316,3 +314,146 @@ jobs:
             updateLabels();
         env:
           LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
+  create_release_note:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v3
+
+      - name: get previous tag
+        id: get_previous_tag
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const { data: tags } = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+
+            const currentTag = context.ref.replace('refs/tags/', '');
+            const currentIndex = tags.findIndex(tag => tag.name === currentTag);
+
+            if (currentIndex === -1 || currentIndex === tags.length - 1) {
+              core.exportVariable('PREVIOUS_TAG_SHA', '');
+              console.log('No previous tag found or current tag is the oldest tag.');
+              return
+            }
+
+            const previousTag = tags[currentIndex + 1];
+            core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
+            console.log('Previous Tag:', previousTag.name);
+
+      - name: get merged pull requests
+        id: get_merged_prs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const previousTagSha = process.env.PREVIOUS_TAG_SHA;
+
+            if (!previousTagSha) {
+              console.log('No previous tag found.');
+              core.exportVariable('MERGED_PR_TITLES', '');
+              return;
+            }
+
+            const { data: isCommits } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: previousTagSha,
+              head: context.sha
+            });
+
+            const mergedPRs = [];
+
+            for (const isCommit of isCommits.commits) {
+              if (isCommit.commit.message.includes('Merge pull request')) {
+                const prNumber = isCommit.commit.message.match(/#(\d+)/)[1];
+                const { data: pr } = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
+                mergedPRs.push(pr);
+              }
+            }
+
+            if (mergedPRs.length === 0) {
+              core.exportVariable('MERGED_PR_TITLES', '');
+              console.log('No merged pull requests found.');
+              return
+            }
+
+            const featurePRs = [];
+            const releasePRs = [];
+            const etcPRs = [];
+
+            for (const mergedPR of mergedPRs) {
+              const { number, title, user } = mergedPR
+
+              if (title.includes('Feature/') || title.includes('feature/')) {
+                featurePRs.push(`- #${number} ${title} by @${user.login}`);
+              } else if (title.includes('Release/') || title.includes('release/')) {
+                releasePRs.push(`- #${number} ${title} by @${user.login}`);
+              } else {
+                etcPRs.push(`- #${number} ${title} by @${user.login}`);
+              }
+            }
+
+            let prTitles = '';
+            if (releasePRs.length > 0) {
+              prTitles += `### RELEASE\n${releasePRs.join('\n')}\n\n`;
+            }
+            if (featurePRs.length > 0) {
+              prTitles += `### FEATURE\n${featurePRs.join('\n')}\n\n`;
+            }
+            if (etcPRs.length > 0) {
+              prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
+            }
+
+            core.exportVariable('MERGED_PR_TITLES', prTitles);
+
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: update release notes
+        id: update_notes
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const prTitles = process.env.MERGED_PR_TITLES;
+            if (!prTitles) {
+              console.log('No merged pull requests found.');
+              return;
+            }
+
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: context.ref.replace('refs/tags/', ''),
+            });
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              body: `${prTitles}`,
+            });
+
+            core.exportVariable('RELEASE_URL', release.html_url);
+
+      - name: output release url
+        run: |
+          echo "Release URL: $RELEASE_URL"
