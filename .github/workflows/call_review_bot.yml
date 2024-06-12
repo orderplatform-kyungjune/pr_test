@@ -12,5 +12,5 @@ on:
 
 jobs:
   call-reusable-workflow:
-    uses: .github/workflows/review_bot.yml@main
+    uses: ./.github/workflows/review_bot.yml@main
     secrets: inherit
