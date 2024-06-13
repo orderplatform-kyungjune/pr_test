@@ -113,9 +113,92 @@ jobs:
             });
 
 
+  update-label:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && env.CRON_SCHEDULE == '1 15 * * 1-5'
+#    if: github.event_name == 'schedule' && github.event.schedule == '1 15 * * 1-5'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: get PR labels
+        id: pr-labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            async function getLabels() {
+              const { data: pullRequests } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+
+              const labelsByPR = {};
+
+              for (const pr of pullRequests) {
+                const prNumber = pr.number;
+                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber
+                });
+
+                labelsByPR[prNumber] = labels.map(label => label.name);
+              }
+
+              core.setOutput('labelsByPR', JSON.stringify(labelsByPR));  
+            }
+            
+            getLabels();
+
+      - name: update labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            async function updateLabels() {
+              try {
+                const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
+
+                for (const prNumber in labelsByPR) {
+                  const DLabels = labelsByPR[prNumber].filter(prLabel => prLabel.startsWith('D-'));
+
+                  if (DLabels.length < 1) {
+                    continue;
+                  }
+
+                  for (const DLabel of DLabels) {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: prNumber,
+                      name: DLabel
+                    });
+                  } 
+
+                  const biggestLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2))));
+                  const newLabel = `D-${biggestLabelNumber < 1 ? 0 : biggestLabelNumber - 1}`;
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    labels: [newLabel]
+                  });
+
+                  console.log(`PR:${prNumber}, "D-" Label updated to "${newLabel}"`);
+                }
+              } catch (error) {
+                console.error('Error updating labels:', error);
+              }
+            }
+
+            updateLabels();
+        env:
+          LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
   notify-slack:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.event.schedule == '59 22 * * 1-5'
+    if: github.event_name == 'schedule' && env.CRON_SCHEDULE == '59 22 * * 1-5'
+#    if: github.event_name == 'schedule' && github.event.schedule == '59 22 * * 1-5'
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
@@ -134,9 +217,9 @@ jobs:
             
             // label color
             let colorMap = {
-              'D-0': '#ff0000', // 빨간색
-              'D-1': '#ff8c00', // 주황색
-              'D-2': '#ffff00', // 노랑색
+              'D-0': '#B60205', // 빨간색
+              'D-1': '#D93F0B', // 주황색
+              'D-2': '#FBCA04', // 노랑색
             };
             
             let prBlocks = await Promise.all(pullRequests.map(async (pullRequest) => {
@@ -152,7 +235,7 @@ jobs:
               });
             
               // D- 라벨 찾기
-              let color = '#36a64f'; // 기본 색상 (초록색)
+              let color = '#0E8A16'; // 기본 색상 (초록색)
               let labelNumber = Infinity;
               let labelText = '';
               let hasDLabel = false;
@@ -233,87 +316,6 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  update-label:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.event.schedule == '1 15 * * 1-5'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: get PR labels
-        id: pr-labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            async function getLabels() {
-              const { data: pullRequests } = await github.rest.pulls.list({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                state: 'open'
-              });
-
-              const labelsByPR = {};
-
-              for (const pr of pullRequests) {
-                const prNumber = pr.number;
-                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber
-                });
-
-                labelsByPR[prNumber] = labels.map(label => label.name);
-              }
-
-              core.setOutput('labelsByPR', JSON.stringify(labelsByPR));  
-            }
-            
-            getLabels();
-
-      - name: update labels
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.TOKEN }}
-          script: |
-            async function updateLabels() {
-              try {
-                const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
-
-                for (const prNumber in labelsByPR) {
-                  const DLabels = labelsByPR[prNumber].filter(prLabel => prLabel.startsWith('D-'));
-
-                  if (DLabels.length < 1) {
-                    continue;
-                  }
-
-                  for (const DLabel of DLabels) {
-                    await github.rest.issues.removeLabel({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      issue_number: prNumber,
-                      name: DLabel
-                    });
-                  } 
-
-                  const biggestLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2))));
-                  const newLabel = `D-${biggestLabelNumber < 1 ? 0 : biggestLabelNumber - 1}`;
-                  await github.rest.issues.addLabels({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: prNumber,
-                    labels: [newLabel]
-                  });
-
-                  console.log(`PR:${prNumber}, "D-" Label updated to "${newLabel}"`);
-                }
-              } catch (error) {
-                console.error('Error updating labels:', error);
-              }
-            }
-
-            updateLabels();
-        env:
-          LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
   create_release_note:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
