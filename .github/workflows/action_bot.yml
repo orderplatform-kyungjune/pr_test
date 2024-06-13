@@ -115,10 +115,9 @@ jobs:
 
   update-label:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && env.CRON_SCHEDULE == '1 15 * * 1-5'
-#    if: github.event_name == 'schedule' && github.event.schedule == '1 15 * * 1-5'
+    if: github.event.schedule == '1 15 * * 1-5'
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v3
 
       - name: get PR labels
@@ -197,8 +196,7 @@ jobs:
           LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
   notify-slack:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && env.CRON_SCHEDULE == '59 22 * * 1-5'
-#    if: github.event_name == 'schedule' && github.event.schedule == '59 22 * * 1-5'
+    if: github.event.schedule == '59 22 * * 1-5'
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
