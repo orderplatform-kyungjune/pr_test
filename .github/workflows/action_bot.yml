@@ -125,6 +125,7 @@ jobs:
         with:
           script: |
             console.log('이벤트_네임',github.event_name)
+            console.log('이벤트',github.event)
             console.log('스케줄',github.event.schedule)
             async function getLabels() {
               const { data: pullRequests } = await github.rest.pulls.list({
