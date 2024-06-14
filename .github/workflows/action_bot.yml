@@ -124,7 +124,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            console.log('이벤트_네임',github)
+            console.log('이벤트네임:', context.eventName);
+            console.log('이벤트:', context);
             async function getLabels() {
               const { data: pullRequests } = await github.rest.pulls.list({
                 owner: context.repo.owner,
