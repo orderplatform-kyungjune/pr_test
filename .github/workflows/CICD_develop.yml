@@ -1,15 +1,16 @@
 name: Deploy to Develop
 
+
 on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'select branch to deploy'
+        description: 'Enter the branch to deploy from the available branches list below'
         required: true
         default: 'develop'
-        type: choice
+        type: string
       label:
-        description: 'select label to deploy'
+        description: 'Select label to deploy'
         required: true
         default: 'origin'
         type: choice
@@ -21,8 +22,10 @@ on:
           - partners
 
 jobs:
-  deploy:
+  fetch_branches:
     runs-on: ubuntu-latest
+    outputs:
+      branches: ${{ steps.get_branches.outputs.branches }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -31,7 +34,8 @@ jobs:
         id: get_branches
         run: |
           BRANCHES=$(git branch -r | grep -v '\->' | sed 's/origin\///g' | tr '\n' ' ')
-          echo "Available branches: $BRANCHES"
+          echo "::set-output name=branches::${BRANCHES}"
+          echo "Available branches: ${BRANCHES}"
 
   deploy_origin:
     if: github.event.inputs.label == 'origin'
