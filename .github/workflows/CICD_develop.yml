@@ -1,0 +1,47 @@
+name: deploy to develop
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'branch to deploy'
+        required: true
+        default: 'develop'
+        type: choice
+        options: ${{ steps.branches.outputs.branches }}
+      label:
+        description: 'label to deploy'
+        required: true
+        default: 'origin'
+        type: choice
+        options:
+          - origin
+          - global
+          - uplus
+          - brand1
+          - partners
+
+jobs:
+  fetch_branches:
+    runs-on: ubuntu-latest
+    outputs:
+      branches: ${{ steps.get_branches.outputs.branches }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v2
+
+      - name: get all branches
+        id: get_branches
+        run: |
+          echo "branches=$(git branch -r | grep -v '\->' | sed 's/origin\///g' | tr '\n' ',')" >> $GITHUB_ENV
+
+  deploy:
+    needs: fetch_branches
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v2
+
+      - name: deploy to specified domain
+        run: |
+          echo "여기는 배포 로직 입니다."

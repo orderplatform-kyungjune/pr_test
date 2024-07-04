@@ -4,6 +4,7 @@ on:
   workflow_call:
 
 jobs:
+  # D-DAY 라벨 생성
   add-label:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
@@ -12,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.TOKEN }}
-
+      # D-5 라벨 생성
       - name: add D-5 label
         uses: actions/github-script@v7
         with:
@@ -45,8 +46,7 @@ jobs:
             };
             addLabel();
 
-
-
+  # D-DAY 라벨 삭제
   remove-label:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request_review'
@@ -56,6 +56,7 @@ jobs:
         with:
           token: ${{ secrets.TOKEN }}
 
+      # D-DAY 라벨 삭제
       - name: remove D- labels
         uses: actions/github-script@v7
         with:
@@ -112,20 +113,20 @@ jobs:
               process.exit(1);
             });
 
-
+  # D-DAY label 업데이트 (ex. D-5 => D-4)
   update-label:
     runs-on: ubuntu-latest
+    if: github.event.schedule == '1 15 * * 0-4'
     steps:
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 모든 PR의 라벨 가져옴
       - name: get PR labels
         id: pr-labels
         uses: actions/github-script@v7
         with:
           script: |
-            console.log('이벤트네임:', context.eventName);
-            console.log('이벤트:', context);
             async function getLabels() {
               const { data: pullRequests } = await github.rest.pulls.list({
                 owner: context.repo.owner,
@@ -151,6 +152,7 @@ jobs:
             
             getLabels();
 
+      # 가져온 PR의 라벨중 "D-"로 시작하는 라벨 업데이트 (ex. D-5 => D-4)
       - name: update labels
         uses: actions/github-script@v7
         with:
@@ -195,13 +197,16 @@ jobs:
             updateLabels();
         env:
           LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
+
+  # "D-"로 시작하는 라벨이 있는 PR 목록 slack 채널로 알림
   notify-slack:
     runs-on: ubuntu-latest
-    if: github.event.schedule == '59 22 * * 1-5'
+    if: github.event.schedule == '59 22 * * 0-4'
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
 
+      # "D-"로 시작하는 라벨이 있는 PR 목록을 순서대로 나열함
       - name: get pull requests
         id: get-prs
         uses: actions/github-script@v7
@@ -285,6 +290,7 @@ jobs:
               core.setOutput('prCount', prBlocks.length);
             }
 
+      # 가져온 PR 목록을 슬랙 채널에 알림
       - name: Notify Slack
         if: steps.get-prs.outputs.hasPrs == 'true'
         uses: 8398a7/action-slack@v3
@@ -315,6 +321,8 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # "v"로 시작하는 태그를 감지하여 main 브랜치에 머지된 PR 목록을 기반으로 release-note 만듬
   create_release_note:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
@@ -322,21 +330,26 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v3
 
+      # 이전 태그의 sha 가져오기
       - name: get previous tag
         id: get_previous_tag
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
+            // 최근 100개의 tag 가져오기
             const { data: tags } = await github.rest.repos.listTags({
               owner: context.repo.owner,
               repo: context.repo.repo,
               per_page: 100
             });
 
+            // 현재 태그 추출
             const currentTag = context.ref.replace('refs/tags/', '');
+            // 현재 태그 index 추출
             const currentIndex = tags.findIndex(tag => tag.name === currentTag);
 
+            // 현재 태그가 목록에 없거나 현재 태그가 가장 오래된 태그인 경우, 이전 태그가 없다고 판단
             if (currentIndex === -1 || currentIndex === tags.length - 1) {
               core.exportVariable('PREVIOUS_TAG_SHA', '');
               console.log('No previous tag found or current tag is the oldest tag.');
@@ -344,24 +357,30 @@ jobs:
             }
 
             const previousTag = tags[currentIndex + 1];
+            
+            // 이전 태그의 커밋 SHA를 PREVIOUS_TAG_SHA 환경 변수로 설정
             core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
             console.log('Previous Tag:', previousTag.name);
 
+      # 해당 태그의 병합된 PR 목록 가져오기
       - name: get merged pull requests
         id: get_merged_prs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
+            // 이전 태그의 SHA 가져오기
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
-
+            
+            // 이전 태그가 없을경우 PR이 없음을 표시
             if (!previousTagSha) {
               console.log('No previous tag found.');
               core.exportVariable('MERGED_PR_TITLES', '');
               return;
             }
-
-            const { data: isCommits } = await github.rest.repos.compareCommits({
+            
+            // 이전 태그와 현재 커밋 사이의 모든 커밋정보 가져오기
+            const { data: commitsData } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
               base: previousTagSha,
@@ -370,14 +389,19 @@ jobs:
 
             const mergedPRs = [];
 
-            for (const isCommit of isCommits.commits) {
-              if (isCommit.commit.message.includes('Merge pull request')) {
-                const prNumber = isCommit.commit.message.match(/#(\d+)/)[1];
+            // 이전 태그와 현재 커밋 사이의 모든 커밋을 확인
+            for (const commitData of commitsData.commits) {
+              // PR이 병합된 커밋인지 확인
+              if (commitData.commit.message.includes('Merge pull request')) {
+                // PR 번호 추출
+                const prNumber = commitData.commit.message.match(/#(\d+)/)[1];
+                // 해당 PR 정보 가져오기
                 const { data: pr } = await github.rest.pulls.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: prNumber
                 });
+                // 병합된 PR 목록에 추가
                 mergedPRs.push(pr);
               }
             }
@@ -392,6 +416,7 @@ jobs:
             const releasePRs = [];
             const etcPRs = [];
 
+            // PR을 유형별로 분류 (feature, release, etc)
             for (const mergedPR of mergedPRs) {
               const { number, title, user } = mergedPR
 
@@ -404,6 +429,7 @@ jobs:
               }
             }
 
+            // PR 제목 형식화
             let prTitles = '';
             if (releasePRs.length > 0) {
               prTitles += `### RELEASE\n${releasePRs.join('\n')}\n\n`;
@@ -414,9 +440,11 @@ jobs:
             if (etcPRs.length > 0) {
               prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
             }
-
+            
+            // 환경 변수에 저장
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
+      # 빈 릴리즈 생성
       - name: create release
         id: create_release
         uses: actions/create-release@v1
@@ -428,6 +456,7 @@ jobs:
           draft: false
           prerelease: false
 
+      # 릴리즈 노트 업데이트
       - name: update release notes
         id: update_notes
         uses: actions/github-script@v7
@@ -455,6 +484,7 @@ jobs:
 
             core.exportVariable('RELEASE_URL', release.html_url);
 
+      # 릴리스 URL 출력
       - name: output release url
         run: |
           echo "Release URL: $RELEASE_URL"
