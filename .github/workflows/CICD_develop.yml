@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to deploy'
+        description: 'select branch to deploy'
         required: true
         default: 'develop'
-        type: string
+        type: choice
       label:
-        description: 'Label to deploy'
+        description: 'select label to deploy'
         required: true
         default: 'origin'
         type: choice
