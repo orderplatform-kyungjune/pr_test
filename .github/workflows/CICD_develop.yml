@@ -1,16 +1,16 @@
-name: deploy to develop
+name: Deploy to Develop
 
 on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'branch to deploy'
+        description: 'Branch to deploy'
         required: true
         default: 'develop'
         type: choice
-        options: ${{ steps.branches.outputs.branches }}
+        options: ${{ steps.get_branches.outputs.branches }}
       label:
-        description: 'label to deploy'
+        description: 'Label to deploy'
         required: true
         default: 'origin'
         type: choice
@@ -27,21 +27,86 @@ jobs:
     outputs:
       branches: ${{ steps.get_branches.outputs.branches }}
     steps:
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: get all branches
+      - name: Get all branches
         id: get_branches
         run: |
-          echo "branches=$(git branch -r | grep -v '\->' | sed 's/origin\///g' | tr '\n' ',')" >> $GITHUB_ENV
+          BRANCHES=$(git branch -r | grep -v '\->' | sed 's/origin\///g' | tr '\n' ',')
+          echo "::set-output name=branches::${BRANCHES}"
 
-  deploy:
-    needs: fetch_branches
+  deploy_origin:
+    if: github.event.inputs.label == 'origin'
     runs-on: ubuntu-latest
+    needs: fetch_branches
     steps:
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
-      - name: deploy to specified domain
+      - name: Deploy to origin domain
         run: |
-          echo "여기는 배포 로직 입니다."
+          echo "Deploying branch ${{ github.event.inputs.branch }} to origin domain"
+          # 여기는 배포 로직 입니다.
+
+  deploy_global:
+    if: github.event.inputs.label == 'global'
+    runs-on: ubuntu-latest
+    needs: fetch_branches
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Deploy to global domain
+        run: |
+          echo "Deploying branch ${{ github.event.inputs.branch }} to global domain"
+          # 여기는 배포 로직 입니다.
+
+  deploy_uplus:
+    if: github.event.inputs.label == 'uplus'
+    runs-on: ubuntu-latest
+    needs: fetch_branches
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Deploy to uplus domain
+        run: |
+          echo "Deploying branch ${{ github.event.inputs.branch }} to uplus domain"
+          # 여기는 배포 로직 입니다.
+
+  deploy_brand1:
+    if: github.event.inputs.label == 'brand1'
+    runs-on: ubuntu-latest
+    needs: fetch_branches
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Deploy to brand1 domain
+        run: |
+          echo "Deploying branch ${{ github.event.inputs.branch }} to brand1 domain"
+          # 여기는 배포 로직 입니다.
+
+  deploy_partners:
+    if: github.event.inputs.label == 'partners'
+    runs-on: ubuntu-latest
+    needs: fetch_branches
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Deploy to partners domain
+        run: |
+          echo "Deploying branch ${{ github.event.inputs.branch }} to partners domain"
+          # 여기는 배포 로직 입니다.
