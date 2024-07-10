@@ -1,16 +1,15 @@
 name: Deploy to Develop
 
-
 on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Enter the branch to deploy from the available branches list below'
+        description: 'Branch to deploy'
         required: true
         default: 'develop'
         type: string
       label:
-        description: 'Select label to deploy'
+        description: 'Label to deploy'
         required: true
         default: 'origin'
         type: choice
@@ -22,92 +21,36 @@ on:
           - partners
 
 jobs:
-  fetch_branches:
+  check_branch_exists:
     runs-on: ubuntu-latest
-    outputs:
-      branches: ${{ steps.get_branches.outputs.branches }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Get all branches
-        id: get_branches
-        run: |
-          BRANCHES=$(git branch -r | grep -v '\->' | sed 's/origin\///g' | tr '\n' ' ')
-          echo "::set-output name=branches::${BRANCHES}"
-          echo "Available branches: ${BRANCHES}"
+      - name: Check if branch exists
+        id: check_branch
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: branches } = await github.git.listMatchingRefs({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'heads/' + github.event.inputs.branch
+            });
+            core.exportVariable('branch_exists', branches.length > 0 ? 'true' : 'false');
+            if (branches.length > 0) {
+              core.exportVariable('branch_name', github.event.inputs.branch);
+            }
 
   deploy_origin:
-    if: github.event.inputs.label == 'origin'
     runs-on: ubuntu-latest
-    needs: fetch_branches
+    if: github.event.inputs.label == 'origin' && env.branch_exists == 'true'
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ env.branch_name }}
 
-      - name: Deploy to origin domain
+      - name: Echo Deployment Information
         run: |
-          echo "Deploying branch ${{ github.event.inputs.branch }} to origin domain"
-          # 여기는 배포 로직 입니다.
-
-  deploy_global:
-    if: github.event.inputs.label == 'global'
-    runs-on: ubuntu-latest
-    needs: fetch_branches
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.branch }}
-
-      - name: Deploy to global domain
-        run: |
-          echo "Deploying branch ${{ github.event.inputs.branch }} to global domain"
-          # 여기는 배포 로직 입니다.
-
-  deploy_uplus:
-    if: github.event.inputs.label == 'uplus'
-    runs-on: ubuntu-latest
-    needs: fetch_branches
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.branch }}
-
-      - name: Deploy to uplus domain
-        run: |
-          echo "Deploying branch ${{ github.event.inputs.branch }} to uplus domain"
-          # 여기는 배포 로직 입니다.
-
-  deploy_brand1:
-    if: github.event.inputs.label == 'brand1'
-    runs-on: ubuntu-latest
-    needs: fetch_branches
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.branch }}
-
-      - name: Deploy to brand1 domain
-        run: |
-          echo "Deploying branch ${{ github.event.inputs.branch }} to brand1 domain"
-          # 여기는 배포 로직 입니다.
-
-  deploy_partners:
-    if: github.event.inputs.label == 'partners'
-    runs-on: ubuntu-latest
-    needs: fetch_branches
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.inputs.branch }}
-
-      - name: Deploy to partners domain
-        run: |
-          echo "Deploying branch ${{ github.event.inputs.branch }} to partners domain"
-          # 여기는 배포 로직 입니다.
+          echo "Selected label: ${{ github.event.inputs.label }}"
+          echo "Branch to deploy: ${{ github.event.inputs.branch }}"  
+          echo "Unique identifier of branch: ${{ github.sha }}"
