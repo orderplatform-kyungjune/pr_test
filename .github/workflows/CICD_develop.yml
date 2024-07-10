@@ -42,7 +42,7 @@ jobs:
 
   deploy_origin:
     runs-on: ubuntu-latest
-    if: github.event.inputs.label == 'origin' && branch_exists == 'true'
+    if: github.event.inputs.label == 'origin' && env.branch_exists == 'true'
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
