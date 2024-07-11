@@ -46,9 +46,11 @@ jobs:
             });
           
             if (branch) {
+              console.log(11111)
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
             } else {
+              console.log(22222)
               core.setOutput('branch_exists', 'false');
             }
 
