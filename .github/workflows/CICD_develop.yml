@@ -27,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # 여기서 원하는 Node.js 버전을 명시적으로 지정합니다.
+          node-version: '20'
       - name: Check if branch exists
         id: check_branch
         uses: actions/github-script@v6
@@ -52,7 +52,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # 여기서도 같은 버전을 사용합니다.
+          node-version: '20'
       - name: Check out repository
         uses: actions/checkout@v2
         with:
