@@ -23,6 +23,9 @@ on:
 jobs:
   check_branch_exists:
     runs-on: ubuntu-latest
+    outputs:
+      branch_exists: ${{ steps.set_branch_exists.outputs.branch_exists }}
+      branch_name: ${{ steps.set_branch_exists.outputs.branch_name }}
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -35,7 +38,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const branchName = '${{ github.event.inputs.branch }}'
+            const branchName = '${{ github.event.inputs.branch }}';
             const { data: branch } = await github.request('GET /repos/{owner}/{repo}/branches/{branch}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -43,25 +46,29 @@ jobs:
             });
             
             if (branch) {
-              core.exportVariable('branch_exists', 'true');
-              core.exportVariable('branch_name', branchName);
+              core.exportVariable('BRANCH_EXISTS', 'true');
+              core.exportVariable('BRANCH_NAME', branchName);
+              console.log('::set-output name=branch_exists::true');
+              console.log(`::set-output name=branch_name::${branchName}`);
             } else {
-              core.exportVariable('branch_exists', 'false');
+              core.exportVariable('BRANCH_EXISTS', 'false');
+              console.log('::set-output name=branch_exists::false');
             }
 
       - name: Set branch exists output
         id: set_branch_exists
         run: |
-          echo "branch_exists=${{ env.branch_exists }}" >> $GITHUB_ENV
-          echo "branch_name=${{ env.branch_name }}" >> $GITHUB_ENV
+          echo "branch_exists=${{ env.BRANCH_EXISTS }}" >> $GITHUB_ENV
+          echo "branch_name=${{ env.BRANCH_NAME }}" >> $GITHUB_ENV
 
   deploy_origin:
     runs-on: ubuntu-latest
     needs: check_branch_exists
+    if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
     steps:
       - name: Check branch_exists
         run: |
-          if [ "${{ env.branch_exists }}" == "true" ] && [ "${{ github.event.inputs.label }}" == "origin" ]; then
+          if [ "${{ needs.check_branch_exists.outputs.branch_exists }}" == "true" ] && [ "${{ github.event.inputs.label }}" == "origin" ]; then
             echo "Deploying origin"
             exit 0
           else
@@ -73,7 +80,7 @@ jobs:
         if: always()
         uses: actions/checkout@v2
         with:
-          ref: ${{ env.branch_name }}
+          ref: ${{ needs.check_branch_exists.outputs.branch_name }}
 
       - name: echo
         if: always()
