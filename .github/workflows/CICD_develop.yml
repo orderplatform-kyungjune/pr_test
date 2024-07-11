@@ -35,19 +35,21 @@ jobs:
               repo: context.repo.repo,
               ref: 'heads/' + github.event.inputs.branch
             });
-            core.exportVariable('branch_exists', branches.length > 0 ? 'true' : 'false');
+            const branchExists = branches.length > 0 ? 'true' : 'false';
+            console.log(`::set-output name=branch_exists::${branchExists}`);
             if (branches.length > 0) {
-              core.exportVariable('branch_name', github.event.inputs.branch);
+              console.log(`::set-output name=branch_name::${github.event.inputs.branch}`);
             }
 
   deploy_origin:
     runs-on: ubuntu-latest
-    if: github.event.inputs.label == 'origin' && env.branch_exists == 'true'
+    if: github.event.inputs.label == 'origin' && steps.check_branch.outputs.branch_exists == 'true'
+    needs: check_branch_exists
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ env.branch_name }}
+          ref: ${{ steps.check_branch.outputs.branch_name }}
 
       - name: Echo Deployment Information
         run: |
