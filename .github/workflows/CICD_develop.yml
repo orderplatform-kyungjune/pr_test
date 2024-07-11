@@ -29,19 +29,30 @@ jobs:
     steps:
       - name: Check if branch exists
         id: check_branch
-        uses: actions/github-script@v6  # 최신 버전으로 업데이트
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { data: branches } = await github.git.listMatchingRefs({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/' + github.event.inputs.branch
-            });
-            core.setOutput('branch_exists', branches.length > 0 ? 'true' : 'false');
-            if (branches.length > 0) {
-              core.setOutput('branch_name', github.event.inputs.branch);
-            }
+        run: |
+          node -e "const axios = require('axios');
+          const owner = process.env.GITHUB_REPOSITORY_OWNER;
+          const repo = process.env.GITHUB_REPOSITORY.split('/')[1];
+          const branch = '${{ github.event.inputs.branch }}';
+
+          axios.get(`https://api.github.com/repos/${owner}/${repo}/branches`)
+            .then(response => {
+              const branches = response.data;
+              const branchExists = branches.some(b => b.name === \`refs/heads/\${branch}\`);
+              if (branchExists) {
+                console.log(`::set-output name=branch_exists::true`);
+                console.log(`::set-output name=branch_name::\${branch}`);
+              } else {
+                console.log(`::set-output name=branch_exists::false`);
+              }
+            })
+            .catch(error => {
+              console.error(`Error fetching branches: \${error.message}`);
+              process.exit(1);
+            });"
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
 
   deploy_origin:
     runs-on: ubuntu-latest
