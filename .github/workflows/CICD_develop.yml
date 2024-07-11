@@ -28,26 +28,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Check if branch exists
         id: check_branch
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const branches = await github.repos.listBranches({
-              owner: context.repo.owner,
-              repo: context.repo.repo
+            const { Octokit } = require("@octokit/core");
+
+            const octokit = new Octokit({
+              auth: process.env.GITHUB_TOKEN
             });
-            console.log(branches.data);
-#            const { data: branches } = await github.git.listMatchingRefs({
-#              owner: context.repo.owner,
-#              repo: context.repo.repo,
-#              ref: 'heads/' + github.event.inputs.branch
-#            });
-#            core.setOutput('branch_exists', branches.length > 0 ? 'true' : 'false');
-#            if (branches.length > 0) {
-#              core.setOutput('branch_name', github.event.inputs.branch);
-#            }
+
+            try {
+              const response = await octokit.request('GET /repos/{owner}/{repo}/branches/{branch}', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: github.event.inputs.branch
+              });
+              core.setOutput('branch_exists', 'true');
+              core.setOutput('branch_name', github.event.inputs.branch);
+            } catch (error) {
+              core.setOutput('branch_exists', 'false');
+            }
 
   deploy_origin:
     runs-on: ubuntu-latest
@@ -58,6 +62,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
