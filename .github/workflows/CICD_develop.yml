@@ -23,6 +23,9 @@ on:
 jobs:
   check_branch_exists:
     runs-on: ubuntu-latest
+    outputs:
+      branch_exists: ${{ steps.check_branch.outputs.branch_exists }}
+      branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
       - name: Check if branch exists
         id: check_branch
@@ -43,13 +46,13 @@ jobs:
 
   deploy_origin:
     runs-on: ubuntu-latest
-    if: github.event.inputs.label == 'origin' && steps.check_branch.outputs.branch_exists == 'true'
     needs: check_branch_exists
+    if: github.event.inputs.label == 'origin' && needs.check_branch_exists.outputs.branch_exists == 'true'
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ steps.check_branch.outputs.branch_name }}
+          ref: ${{ needs.check_branch_exists.outputs.branch_name }}
 
       - name: Echo Deployment Information
         run: |
