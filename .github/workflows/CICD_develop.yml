@@ -42,18 +42,16 @@ jobs:
             });
               
             if (branch) {
-              console.log(1)
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
             } else {
-              console.log(2)
               core.setOutput('branch_exists', 'false');
             }
 
   deploy_origin:
     runs-on: ubuntu-latest
     needs: check_branch_exists
-    if: github.event.inputs.label == 'origin' && needs.check_branch_exists.outputs.branch_exists == 'true'
+    if: github.event.inputs.label == 'origin'
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v4
