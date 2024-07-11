@@ -35,8 +35,10 @@ jobs:
         id: check_branch
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const github = require('@actions/github');
+            const context = github.context;
             const { data: branches } = await github.git.listMatchingRefs({
               owner: context.repo.owner,
               repo: context.repo.repo,
