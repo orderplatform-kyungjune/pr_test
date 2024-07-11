@@ -42,16 +42,16 @@ jobs:
             });
             
             if (branch) {
-              core.exportVariable('branch_exists', 'true');
-              core.exportVariable('branch_name', branchName);
+              console.log('::set-output name=branch_exists::true');
+              console.log(`::set-output name=branch_name::${branchName}`);
             } else {
-              core.exportVariable('branch_exists', 'false');
+              console.log('::set-output name=branch_exists::false');
             }
 
   deploy_origin:
     runs-on: ubuntu-latest
     needs: check_branch_exists
-    if: needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin'
+    if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
     steps:
       - name: check out repository
         uses: actions/checkout@v2
