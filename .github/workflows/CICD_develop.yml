@@ -50,7 +50,7 @@ jobs:
 
   deploy_origin:
     runs-on: ubuntu-latest
-    if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
+    if: needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin'
     steps:
       - name: check out repository
         uses: actions/checkout@v2
