@@ -27,36 +27,35 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14'  # Octokit v7에서는 Node.js 버전 14 이상을 권장합니다.
+          node-version: '20'  # Octokit v7에서는 Node.js 버전 14 이상을 권장합니다.
 
       - name: Check if branch exists
-        id: check_branch
-        run: |
-          const { request } = require('@octokit/request');
-
-          try {
-            const response = await request('GET /repos/{owner}/{repo}/branches/{branch}', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: github.event.inputs.branch,
-              headers: {
-                'authorization': `token ${process.env.GITHUB_TOKEN}`,
-                'accept': 'application/vnd.github.v3+json'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const { request } = require('@octokit/request');
+  
+            try {
+              const response = await request('GET /repos/{owner}/{repo}/branches/{branch}', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: github.event.inputs.branch,
+                headers: {
+                  'authorization': `token ${process.env.GITHUB_TOKEN}`,
+                  'accept': 'application/vnd.github.v3+json'
+                }
+              });
+  
+              core.setOutput('branch_exists', 'true');
+              core.setOutput('branch_name', github.event.inputs.branch);
+            } catch (error) {
+              if (error.status === 404) {
+                core.setOutput('branch_exists', 'false');
+              } else {
+                throw error;
               }
-            });
-
-            core.setOutput('branch_exists', 'true');
-            core.setOutput('branch_name', github.event.inputs.branch);
-          } catch (error) {
-            if (error.status === 404) {
-              core.setOutput('branch_exists', 'false');
-            } else {
-              throw error;
             }
-          }
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy_origin:
     runs-on: ubuntu-latest
@@ -66,7 +65,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14'
+          node-version: '20'
 
       - name: Check out repository
         uses: actions/checkout@v2
