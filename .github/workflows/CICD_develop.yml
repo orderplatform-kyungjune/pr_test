@@ -41,12 +41,12 @@ jobs:
               branch: branchName
             });
               
-            console.log('branchName', branchName)
-            console.log('branch', branch)
             if (branch) {
+              console.log(1)
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
             } else {
+              console.log(2)
               core.setOutput('branch_exists', 'false');
             }
 
