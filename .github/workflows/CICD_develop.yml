@@ -23,14 +23,11 @@ on:
 jobs:
   check_branch_exists:
     runs-on: ubuntu-latest
-    outputs:
-      branch_exists: ${{ steps.set_branch_exists.outputs.branch_exists }}
-      branch_name: ${{ steps.set_branch_exists.outputs.branch_name }}
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '14'
 
       - name: Check if branch exists
         id: check_branch
@@ -55,20 +52,31 @@ jobs:
       - name: Set branch exists output
         id: set_branch_exists
         run: |
-          echo "branch_exists=${branch_exists}" >> $GITHUB_ENV
-          echo "branch_name=${branch_name}" >> $GITHUB_ENV
+          echo "branch_exists=${{ env.branch_exists }}" >> $GITHUB_ENV
+          echo "branch_name=${{ env.branch_name }}" >> $GITHUB_ENV
 
   deploy_origin:
     runs-on: ubuntu-latest
     needs: check_branch_exists
-    if: ${{ env.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
     steps:
+      - name: Check branch_exists
+        run: |
+          if [ "${{ env.branch_exists }}" == "true" ] && [ "${{ github.event.inputs.label }}" == "origin" ]; then
+            echo "Deploying origin"
+            exit 0
+          else
+            echo "Conditions not met for deploying origin"
+            exit 1
+          fi
+
       - name: check out repository
+        if: always()
         uses: actions/checkout@v2
         with:
           ref: ${{ env.branch_name }}
 
       - name: echo
+        if: always()
         run: |
           echo "Selected label: ${{ github.event.inputs.label }}"
           echo "Branch to deploy: ${{ github.event.inputs.branch }}"  
