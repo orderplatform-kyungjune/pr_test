@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Check if branch exists
         id: check_branch
-        uses: actions/github-script@v6  
+        uses: actions/github-script@v6  # 최신 버전으로 업데이트
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -38,10 +38,9 @@ jobs:
               repo: context.repo.repo,
               ref: 'heads/' + github.event.inputs.branch
             });
-            const branchExists = branches.length > 0 ? 'true' : 'false';
-            console.log(`::set-output name=branch_exists::${branchExists}`);
+            core.setOutput('branch_exists', branches.length > 0 ? 'true' : 'false');
             if (branches.length > 0) {
-              console.log(`::set-output name=branch_name::${github.event.inputs.branch}`);
+              core.setOutput('branch_name', github.event.inputs.branch);
             }
 
   deploy_origin:
