@@ -27,38 +27,25 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14'  # 적절한 버전으로 변경하세요
-
-      - name: Install dependencies
-        run: npm install @octokit/request
+          node-version: '14'
 
       - name: Check if branch exists
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            try {
-              const response = await import('@octokit/request');
-              const { request } = response.default;  // 혹은 필요한 함수에 따라 수정하세요
-              const branchName = github.event.inputs.branch;
-              const result = await request('GET /repos/{owner}/{repo}/branches/{branch}', {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                branch: branchName,
-                headers: {
-                  authorization: `token ${process.env.GITHUB_TOKEN}`,
-                  accept: 'application/vnd.github.v3+json'
-                }
-              });
+            const branchName = github.event.inputs.branch;
+            const { data: branch } = await github.request('GET /repos/{owner}/{repo}/branches/{branch}', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: branchName
+            });
 
-              if (result.status === 200) {
-                core.setOutput('branch_exists', 'true');
-                core.setOutput('branch_name', branchName);
-              } else {
-                core.setOutput('branch_exists', 'false');
-              }
-            } catch (error) {
-              core.setFailed(error.message);
+            if (branch) {
+              core.setOutput('branch_exists', 'true');
+              core.setOutput('branch_name', branchName);
+            } else {
+              core.setOutput('branch_exists', 'false');
             }
 
   deploy_origin:
