@@ -48,11 +48,8 @@ jobs:
             if (branch) {
               core.exportVariable('BRANCH_EXISTS', 'true');
               core.exportVariable('BRANCH_NAME', branchName);
-              console.log('::set-output name=branch_exists::true');
-              console.log(`::set-output name=branch_name::${branchName}`);
             } else {
               core.exportVariable('BRANCH_EXISTS', 'false');
-              console.log('::set-output name=branch_exists::false');
             }
 
       - name: Set branch exists output
@@ -64,10 +61,11 @@ jobs:
   deploy_origin:
     runs-on: ubuntu-latest
     needs: check_branch_exists
-    if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
     steps:
       - name: Check branch_exists
         run: |
+          echo ${{needs.check_branch_exists.outputs.branch_exists}}
+          echo ${{github.event.inputs.label}}
           if [ "${{ needs.check_branch_exists.outputs.branch_exists }}" == "true" ] && [ "${{ github.event.inputs.label }}" == "origin" ]; then
             echo "Deploying origin"
             exit 0
