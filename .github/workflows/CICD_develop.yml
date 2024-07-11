@@ -40,7 +40,9 @@ jobs:
               repo: context.repo.repo,
               branch: branchName
             });
-
+              
+            console.log('branchName', branchName)
+            console.log('branch', branch)
             if (branch) {
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
