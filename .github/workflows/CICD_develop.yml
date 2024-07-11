@@ -23,13 +23,17 @@ on:
 jobs:
   check_branch_exists:
     runs-on: ubuntu-latest
+    outputs:
+      branch_exists: ${{ steps.set_branch_exists.outputs.branch_exists }}
+      branch_name: ${{ steps.set_branch_exists.outputs.branch_name }}
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14'
+          node-version: '20'
 
       - name: Check if branch exists
+        id: check_branch
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -42,21 +46,27 @@ jobs:
             });
             
             if (branch) {
-              console.log('::set-output name=branch_exists::true');
-              console.log(`::set-output name=branch_name::${branchName}`);
+              core.exportVariable('branch_exists', 'true');
+              core.exportVariable('branch_name', branchName);
             } else {
-              console.log('::set-output name=branch_exists::false');
+              core.exportVariable('branch_exists', 'false');
             }
+
+      - name: Set branch exists output
+        id: set_branch_exists
+        run: |
+          echo "branch_exists=${branch_exists}" >> $GITHUB_ENV
+          echo "branch_name=${branch_name}" >> $GITHUB_ENV
 
   deploy_origin:
     runs-on: ubuntu-latest
     needs: check_branch_exists
-    if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
+    if: ${{ env.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
     steps:
       - name: check out repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ needs.check_branch_exists.outputs.branch_name }}
+          ref: ${{ env.branch_name }}
 
       - name: echo
         run: |
