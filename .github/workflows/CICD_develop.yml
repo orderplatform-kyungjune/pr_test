@@ -35,27 +35,23 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const { request } = require('@octokit/request');
-  
-            try {
-              const response = await request('GET /repos/{owner}/{repo}/branches/{branch}', {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                branch: github.event.inputs.branch,
-                headers: {
-                  'authorization': `token ${process.env.GITHUB_TOKEN}`,
-                  'accept': 'application/vnd.github.v3+json'
-                }
-              });
-  
+            const response = await request('GET /repos/{owner}/{repo}/branches/{branch}', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: github.event.inputs.branch,
+              headers: {
+                'authorization': `token ${process.env.GITHUB_TOKEN}`,
+                'accept': 'application/vnd.github.v3+json'
+              }
+            });
+            
+            if (response.status === 200) {
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', github.event.inputs.branch);
-            } catch (error) {
-              if (error.status === 404) {
-                core.setOutput('branch_exists', 'false');
-              } else {
-                throw error;
-              }
+              return;
             }
+            
+            core.setOutput('branch_exists', 'false');
 
   deploy_origin:
     runs-on: ubuntu-latest
