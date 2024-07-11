@@ -25,24 +25,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Check if branch exists
         id: check_branch
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { data: branches } = await github.git.listMatchingRefs({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/' + github.event.inputs.branch
-            });
-            core.setOutput('branch_exists', branches.length > 0 ? 'true' : 'false');
-            if (branches.length > 0) {
-              core.setOutput('branch_name', github.event.inputs.branch);
-            }
+            const response = await octokit.request('GET /repos/{owner}/{repo}/branches', {
+              owner: 'OWNER',
+              repo: 'REPO',
+              headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+              }
+            })
+            console.log(response);
+#            const { data: branches } = await github.git.listMatchingRefs({
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              ref: 'heads/' + github.event.inputs.branch
+#            });
+#            core.setOutput('branch_exists', branches.length > 0 ? 'true' : 'false');
+#            if (branches.length > 0) {
+#              core.setOutput('branch_name', github.event.inputs.branch);
+#            }
 
   deploy_origin:
     runs-on: ubuntu-latest
@@ -50,11 +58,11 @@ jobs:
     if: github.event.inputs.label == 'origin' && needs.check_branch_exists.outputs.branch_exists == 'true'
     steps:
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ needs.check_branch_exists.outputs.branch_name }}
 
