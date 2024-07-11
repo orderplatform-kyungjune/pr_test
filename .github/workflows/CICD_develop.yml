@@ -23,15 +23,22 @@ on:
 jobs:
   check_branch_exists:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 20.x ]
     outputs:
       branch_exists: ${{ steps.check_branch.outputs.branch_exists }}
       branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
       - name: Check if branch exists
         id: check_branch
         uses: actions/github-script@v6  # 최신 버전으로 업데이트
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
           script: |
             const { data: branches } = await github.git.listMatchingRefs({
               owner: context.repo.owner,
