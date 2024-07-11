@@ -34,14 +34,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const response = await octokit.request('GET /repos/{owner}/{repo}/branches', {
-              owner: 'OWNER',
-              repo: 'REPO',
-              headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-              }
-            })
-            console.log(response);
+            const branches = await github.repos.listBranches({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            console.log(branches.data);
 #            const { data: branches } = await github.git.listMatchingRefs({
 #              owner: context.repo.owner,
 #              repo: context.repo.repo,
