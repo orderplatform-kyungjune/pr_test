@@ -52,11 +52,6 @@ jobs:
     needs: check_branch_exists
     if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' && github.event.inputs.label == 'origin' }}
     steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
       - name: check out repository
         uses: actions/checkout@v3
         with:
