@@ -1,8 +1,8 @@
 name: FRONT 코드리뷰봇
 
 on:
-  issue_comment:
-    types: [created]
+  schedule:
+    - cron: '1 15 * * 0-4'
 
 # 작업 그룹화
 jobs:
