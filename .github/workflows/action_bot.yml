@@ -303,8 +303,14 @@ jobs:
             {
               "blocks": [
                 {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요",
+                  }
+                },
+                {
                   "type": "mrkdwn",
-                  "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요",
                   "attachments": [
                     {
                       "blocks": [
