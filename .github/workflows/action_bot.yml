@@ -301,23 +301,21 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "blocks": [
+              "text": `<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요`,
+              "attachments": [
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요"
-                  }
-                },
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ github.repository }}"
-                  }
-                },
-                {
-                  "type": "divider"
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.repository }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    }
+                  ]
                 },
                 ...${{ steps.get-prs.outputs.prBlocks }}
               ]
