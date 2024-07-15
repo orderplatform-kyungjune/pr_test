@@ -201,7 +201,7 @@ jobs:
   # "D-"로 시작하는 라벨이 있는 PR 목록 slack 채널로 알림
   notify-slack:
     runs-on: ubuntu-latest
-#    if: github.event.schedule == '59 22 * * 0-4'
+    #    if: github.event.schedule == '59 22 * * 0-4'
     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
     steps:
       - name: checkout repository
@@ -301,34 +301,23 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "blocks": [
+              "text": `<!here> *${{ steps.get-prs.outputs.prCount }}개*\n의 pull request가 여러분의 리뷰를 기다리고 있어요`,
+              "attachments": [
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요",
-                  }
-                },
-                {
-                  "type": "mrkdwn",
-                  "attachments": [
+                  "blocks": [
                     {
-                      "blocks": [
-                        {
-                          "type": "header",
-                          "text": {
-                            "type": "plain_text",
-                            "text": "${{ github.repository }}"
-                          }
-                        },
-                        {
-                          "type": "divider"
-                        }
-                      ]
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.repository }}"
+                      }
                     },
-                    ...${{ steps.get-prs.outputs.prBlocks }}
+                    {
+                      "type": "divider"
+                    }
                   ]
-                }
+                },
+                ...${{ steps.get-prs.outputs.prBlocks }}
               ]
             }
         env:
@@ -383,14 +372,14 @@ jobs:
           script: |
             // 이전 태그의 SHA 가져오기
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
-            
+
             // 이전 태그가 없을경우 PR이 없음을 표시
             if (!previousTagSha) {
               console.log('No previous tag found.');
               core.exportVariable('MERGED_PR_TITLES', '');
               return;
             }
-            
+
             // 이전 태그와 현재 커밋 사이의 모든 커밋정보 가져오기
             const { data: commitsData } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
