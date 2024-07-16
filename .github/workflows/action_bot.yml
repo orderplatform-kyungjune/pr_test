@@ -49,7 +49,7 @@ jobs:
   # D-DAY 라벨 삭제
   remove-label:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    if: github.event_name == 'pull_request_review' || github.event.schedule == '1 15 * * 0-4'
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
