@@ -52,19 +52,14 @@ jobs:
     if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' }}
     strategy:
       matrix:
+        label: [ALL, TORDER, UPLUS, BRAND1]
         include:
           - label: TORDER
             build_command: yarn origin:build:dev
-            aws_bucket: ${{ secrets.AWS_DEV_BUCKET_NAME }}
-            aws_distribution_id: ""
           - label: UPLUS
             build_command: yarn uplus:build:dev
-            aws_bucket: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
-            aws_distribution_id: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
           - label: BRAND1
             build_command: yarn brand1:build:dev
-            aws_bucket: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
-            aws_distribution_id: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
     steps:
       - name: Check out branch
         if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
@@ -89,14 +84,40 @@ jobs:
       - name: Install Dependencies
         run: yarn
 
+      - name: Set AWS Environment Variables
+        id: set-aws-env
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const inputLabel = '${{ github.event.inputs.label }}';
+            const label = '${{ matrix.label }}';
+            if (inputLabel === 'ALL' || inputLabel === label) {
+              let awsBucket, awsDistributionId;
+              if (label === 'TORDER') {
+                awsBucket = '${{ secrets.AWS_DEV_BUCKET_NAME }}';
+                awsDistributionId = '';
+              } else if (label === 'UPLUS') {
+                awsBucket = '${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}';
+                awsDistributionId = '${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}';
+              } else if (label === 'BRAND1') {
+                awsBucket = '${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}';
+                awsDistributionId = '${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}';
+              }
+              core.exportVariable('AWS_BUCKET_NAME', awsBucket);
+              core.exportVariable('AWS_DISTRIBUTION_ID', awsDistributionId);
+            }
+
       - name: Build
+        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
         run: ${{ matrix.build_command }}
 
       - name: Deploy
+        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_BUCKET_NAME: ${{ matrix.aws_bucket }}
+          AWS_BUCKET_NAME: ${{ env.AWS_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_DISTRIBUTION_ID: ${{ matrix.aws_distribution_id }}
+          AWS_DISTRIBUTION_ID: ${{ env.AWS_DISTRIBUTION_ID }}
         run: yarn deploy:action
