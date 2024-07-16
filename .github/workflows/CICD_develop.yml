@@ -54,20 +54,31 @@ jobs:
     steps:
       - name: Set Deployment Variables
         id: set-deployment-vars
-        run: |
-          echo "LABEL=${{ github.event.inputs.label }}" >> $GITHUB_ENV
-          if [ "${{ github.event.inputs.label }}" == "ALL" ] || [ "${{ github.event.inputs.label }}" == "TORDER" ]; then
-            echo "BUILD_COMMAND=yarn origin:build:dev" >> $GITHUB_ENV
-            echo "AWS_BUCKET_NAME=${{ secrets.AWS_DEV_BUCKET_NAME }}" >> $GITHUB_ENV
-            echo "AWS_DISTRIBUTION_ID=" >> $GITHUB_ENV
-          elif [ "${{ github.event.inputs.label }}" == "UPLUS" ]; then
-            echo "BUILD_COMMAND=yarn uplus:build:dev" >> $GITHUB_ENV
-            echo "AWS_BUCKET_NAME=${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}" >> $GITHUB_ENV
-            echo "AWS_DISTRIBUTION_ID=${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}" >> $GITHUB_ENV
-          elif [ "${{ github.event.inputs.label }}" == "BRAND1" ]; then
-            echo "BUILD_COMMAND=yarn brand1:build:dev" >> $GITHUB_ENV
-            echo "AWS_BUCKET_NAME=${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}" >> $GITHUB_ENV
-            echo "AWS_DISTRIBUTION_ID=${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}" >> $GITHUB_ENV
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const label = '${{ github.event.inputs.label }}';
+            let buildCommand, bucketName, distributionId;
+
+            if (label === "ALL" || label === "TORDER") {
+              buildCommand = "yarn origin:build:dev";
+              bucketName = "${{ secrets.AWS_DEV_BUCKET_NAME }}";
+              distributionId = "";
+            } else if (label === "UPLUS") {
+              buildCommand = "yarn uplus:build:dev";
+              bucketName = "${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}";
+              distributionId = "${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}";
+            } else if (label === "BRAND1") {
+              buildCommand = "yarn brand1:build:dev";
+              bucketName = "${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}";
+              distributionId = "${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}";
+            }
+
+            core.exportVariable('LABEL', label);
+            core.exportVariable('BUILD_COMMAND', buildCommand);
+            core.exportVariable('AWS_BUCKET_NAME', bucketName);
+            core.exportVariable('AWS_DISTRIBUTION_ID', distributionId);
 
       - name: Check out branch
         uses: actions/checkout@v3
