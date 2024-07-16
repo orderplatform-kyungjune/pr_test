@@ -91,18 +91,9 @@ jobs:
 #          echo "building for BRAND1"
 #          yarn brand1:build:dev
 
-      - name: check if build success
-        id: build_success
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            core.setOutput('build_success', 'true');
-
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ needs.setup.outputs.build_success == 'true' }}
     steps:
       - name: TORDER
         if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
