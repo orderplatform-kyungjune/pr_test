@@ -56,15 +56,15 @@ jobs:
         id: set-deployment-vars
         run: |
           echo "LABEL=${{ github.event.inputs.label }}" >> $GITHUB_ENV
-          if [[ "${{ github.event.inputs.label }}" == "ALL" || "${{ github.event.inputs.label }}" == "TORDER" ]]; then
+          if [ "${{ github.event.inputs.label }}" == "ALL" ] || [ "${{ github.event.inputs.label }}" == "TORDER" ]; then
             echo "BUILD_COMMAND=yarn origin:build:dev" >> $GITHUB_ENV
             echo "AWS_BUCKET_NAME=${{ secrets.AWS_DEV_BUCKET_NAME }}" >> $GITHUB_ENV
             echo "AWS_DISTRIBUTION_ID=" >> $GITHUB_ENV
-          elif [[ "${{ github.event.inputs.label }}" == "UPLUS" ]]; then
+          elif [ "${{ github.event.inputs.label }}" == "UPLUS" ]; then
             echo "BUILD_COMMAND=yarn uplus:build:dev" >> $GITHUB_ENV
             echo "AWS_BUCKET_NAME=${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}" >> $GITHUB_ENV
             echo "AWS_DISTRIBUTION_ID=${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}" >> $GITHUB_ENV
-          elif [[ "${{ github.event.inputs.label }}" == "BRAND1" ]]; then
+          elif [ "${{ github.event.inputs.label }}" == "BRAND1" ]; then
             echo "BUILD_COMMAND=yarn brand1:build:dev" >> $GITHUB_ENV
             echo "AWS_BUCKET_NAME=${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}" >> $GITHUB_ENV
             echo "AWS_DISTRIBUTION_ID=${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}" >> $GITHUB_ENV
