@@ -42,8 +42,10 @@ jobs:
             if (branch) {
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
-            } else {
-              core.setOutput('branch_exists', 'false');
+              return
+            }
+            
+            core.setOutput('branch_exists', 'false');
 
   deploy:
     runs-on: ubuntu-latest
