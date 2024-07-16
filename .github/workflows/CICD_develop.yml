@@ -68,10 +68,12 @@ jobs:
           ref: ${{ needs.check_branch_exists.outputs.branch_name }}
 
       - uses: actions/setup-node@v4
+        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
         with:
           node-version: "20.x"
 
       - name: Cache node modules
+        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
         id: node-cache
         uses: actions/cache@v4
         with:
@@ -82,9 +84,11 @@ jobs:
             ${{ runner.OS }}-
 
       - name: Install Dependencies
+        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
         run: yarn
 
       - name: Set AWS Environment Variables
+        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
         id: set-aws-env
         uses: actions/github-script@v7
         with:
