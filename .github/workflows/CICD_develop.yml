@@ -20,13 +20,13 @@ on:
           - BRAND1
 
 jobs:
-  check_branch_exists:
+  setup:
     runs-on: ubuntu-latest
     outputs:
       branch_exists: ${{ steps.check_branch.outputs.branch_exists }}
       branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
-      - name: Check if branch exists
+      - name: check if branch exists
         id: check_branch
         uses: actions/github-script@v7
         with:
@@ -42,17 +42,16 @@ jobs:
             if (branch) {
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
-              return
+            } else {
+              core.setOutput('branch_exists', 'false');
             }
-            
-            core.setOutput('branch_exists', 'false');
 
-  deploy:
+  build:
     runs-on: ubuntu-latest
     needs: check_branch_exists
     if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' }}
     steps:
-      - name: Check out branch
+      - name: check out branch
         uses: actions/checkout@v3
         with:
           ref: ${{ needs.check_branch_exists.outputs.branch_name }}
@@ -61,7 +60,7 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: Cache node modules
+      - name: cache node modules
         id: node-cache
         uses: actions/cache@v4
         with:
@@ -71,53 +70,64 @@ jobs:
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
 
-      - name: Install Dependencies
+      - name: install dependencies
         run: yarn
 
-      - name: Build and Deploy TORDER
+      - name: TORDER
+        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for TORDER"
+          yarn origin:build:dev
+
+      - name: UPLUS
+        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for UPLUS"
+          yarn uplus:build:dev
+
+      - name: BRAND1
+        if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for BRAND1"
+          yarn brand1:build:dev
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ needs.build.success }}
+    steps:
+      - name: TORDER
         if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
         env:
-          LABEL: TORDER
-          BUILD_COMMAND: yarn origin:build:dev
-          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BUCKET_NAME }}
-          AWS_DISTRIBUTION_ID: ''
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ''
         run: |
-          echo "Building for TORDER"
-          ${{ env.BUILD_COMMAND }}
-          echo "Deploying to TORDER"
+          echo "deploying to TORDER"
           yarn deploy:action
 
-      - name: Build and Deploy UPLUS
+      - name: UPLUS
         if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
         env:
-          LABEL: UPLUS
-          BUILD_COMMAND: yarn uplus:build:dev
-          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
-          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
         run: |
-          echo "Building for UPLUS"
-          ${{ env.BUILD_COMMAND }}
-          echo "Deploying to UPLUS"
+          echo "deploying to UPLUS"
           yarn deploy:action
 
-      - name: Build and Deploy BRAND1
+      - name: BRAND1
         if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
         env:
-          LABEL: BRAND1
-          BUILD_COMMAND: yarn brand1:build:dev
-          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
-          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
         run: |
-          echo "Building for BRAND1"
-          ${{ env.BUILD_COMMAND }}
-          echo "Deploying to BRAND1"
+          echo "deploying to BRAND1"
           yarn deploy:action
