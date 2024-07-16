@@ -49,7 +49,7 @@ jobs:
   # D-DAY 라벨 삭제
   remove-label:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request_review'
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
@@ -63,6 +63,7 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             async function removeLabels() {
+              console.log(context.payload.pull_request)
               const prNumber = context.payload.pull_request.number;
               const { owner, repo } = context.repo;
 
@@ -201,8 +202,7 @@ jobs:
   # "D-"로 시작하는 라벨이 있는 PR 목록 slack 채널로 알림
   notify-slack:
     runs-on: ubuntu-latest
-    #    if: github.event.schedule == '59 22 * * 0-4'
-    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    if: github.event.schedule == '59 22 * * 0-4'
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
@@ -372,14 +372,14 @@ jobs:
           script: |
             // 이전 태그의 SHA 가져오기
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
-
+            
             // 이전 태그가 없을경우 PR이 없음을 표시
             if (!previousTagSha) {
               console.log('No previous tag found.');
               core.exportVariable('MERGED_PR_TITLES', '');
               return;
             }
-
+            
             // 이전 태그와 현재 커밋 사이의 모든 커밋정보 가져오기
             const { data: commitsData } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
