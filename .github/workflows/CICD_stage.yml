@@ -1,4 +1,4 @@
-name: deploy develop
+name: deploy stage
 
 on:
   workflow_dispatch:
@@ -17,7 +17,6 @@ on:
           - ALL
           - TORDER
           - UPLUS
-          - BRAND1
 
 jobs:
   check_branch_exists:
@@ -55,16 +54,13 @@ jobs:
         label: [TORDER, UPLUS, BRAND1]
         include:
           - label: TORDER
-            build_command: yarn origin:build:dev
-            aws_bucket: ${{ secrets.AWS_DEV_BUCKET_NAME }}
+            run: yarn origin:build:stage
+            aws_bucket: ${{ secrets.AWS_STAGING_BUCKET_NAME }}
           - label: UPLUS
             build_command: yarn uplus:build:dev
-            aws_bucket: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
-            aws_distribution_id: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
-          - label: BRAND1
-            build_command: yarn brand1:build:dev
-            aws_bucket: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
-            aws_distribution_id: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
+            aws_bucket: ${{ secrets.AWS_STAGE_UPLUS_BUCKET_NAME }}
+            aws_distribution_id: ${{ secrets.AWS_STAGE_UPLUS_DISTRIBUTION_ID }}
+
     steps:
       - name: Check out branch
         if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label }}
