@@ -73,23 +73,23 @@ jobs:
       - name: install dependencies
         run: yarn
 
-#      - name: TORDER
-#        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
-#        run: |
-#          echo "building for TORDER"
-#          yarn origin:build:dev
-#
-#      - name: UPLUS
-#        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
-#        run: |
-#          echo "building for UPLUS"
-#          yarn uplus:build:dev
-#
-#      - name: BRAND1
-#        if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
-#        run: |
-#          echo "building for BRAND1"
-#          yarn brand1:build:dev
+      - name: TORDER
+        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for TORDER"
+          yarn origin:build:dev
+
+      - name: UPLUS
+        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for UPLUS"
+          yarn uplus:build:dev
+
+      - name: BRAND1
+        if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for BRAND1"
+          yarn brand1:build:dev
 
   deploy:
     runs-on: ubuntu-latest
