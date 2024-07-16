@@ -52,11 +52,11 @@ jobs:
     if: ${{ needs.check_branch_exists.outputs.branch_exists == 'true' }}
     strategy:
       matrix:
-        label: [TORDER, UPLUS, BRAND1]
         include:
           - label: TORDER
             build_command: yarn origin:build:dev
             aws_bucket: ${{ secrets.AWS_DEV_BUCKET_NAME }}
+            aws_distribution_id: ""
           - label: UPLUS
             build_command: yarn uplus:build:dev
             aws_bucket: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
@@ -98,5 +98,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_BUCKET_NAME: ${{ matrix.aws_bucket }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_DISTRIBUTION_ID: ${{ matrix.aws_distribution_id || '' }}
+          AWS_DISTRIBUTION_ID: ${{ matrix.aws_distribution_id }}
         run: yarn deploy:action
