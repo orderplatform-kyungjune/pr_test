@@ -91,14 +91,18 @@ jobs:
 #          echo "building for BRAND1"
 #          yarn brand1:build:dev
 
-      - name: Set branch exists flag
-        id: set_branch_exists
-        run: echo "::set-output name=build_success::true"
+      - name: check if build success
+        id: build_success
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            core.setOutput('build_success', 'true');
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ needs.build.outputs.build_success == 'true' }}
+    if: ${{ needs.setup.outputs.build_success == 'true' }}
     steps:
       - name: TORDER
         if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
