@@ -1,4 +1,4 @@
-name: CICD develop
+name: CICD development
 
 on:
   workflow_dispatch:

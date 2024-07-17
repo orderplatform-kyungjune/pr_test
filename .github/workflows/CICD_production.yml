@@ -1,4 +1,4 @@
-name: CICD live
+name: CICD production
 
 on:
   workflow_dispatch:
@@ -28,7 +28,6 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      tag_exists: ${{ steps.check_tag.outputs.tag_exists }}
       tag_name: ${{ steps.check_tag.outputs.tag_name }}
     steps:
       - name: Check if tag exists
@@ -47,23 +46,16 @@ jobs:
             });
 
             if (tag) {
-              core.setOutput('tag_exists', 'true');
               core.setOutput('tag_name', tagName);
-            } else {
-              core.setOutput('tag_exists', 'false');
             }
 
-  build:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: ${{ needs.setup.outputs.tag_exists == 'true' }}
-    steps:
       - name: check out branch
         uses: actions/checkout@v3
         with:
           ref: ${{ needs.setup.outputs.tag_name }}
 
-      - uses: actions/setup-node@v4
+      - name: setup node version
+        uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
@@ -80,48 +72,21 @@ jobs:
       - name: install dependencies
         run: yarn
 
-      - name: TORDER
-        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+#----------------------------------------------------------- torder
+  build_torder:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+    steps:
+      - name: build TORDER
         run: |
           echo "building for TORDER"
           yarn origin:build:live
-
-      - name: UPLUS
-        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
-        run: |
-          echo "building for UPLUS"
-          yarn uplus:build:live
-
-      - name: SINGAPORE
-        if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
-        run: |
-          echo "building for SINGAPORE"
-          yarn sg:build:live
-
-      - name: US1
-        if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
-        run: |
-          echo "building for US1"
-          yarn us_east:build:live
-
-      - name: SYDNEY
-        if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
-        run: |
-          echo "building for SYDNEY"
-          yarn sydney:build:live 
-
-      - name: PARTNERS
-        if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
-        run: |
-          echo "building for PARTNERS"
-          yarn partners:build:live     
-
-  deploy:
+  deploy_torder:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build_torder
     steps:
-      - name: TORDER
-        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+      - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -132,8 +97,21 @@ jobs:
           echo "deploying to TORDER"
           yarn deploy:action
 
-      - name: UPLUS
-        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
+#----------------------------------------------------------- uplus
+  build_uplus:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
+    steps:
+      - name: build UPLUS
+        run: |
+          echo "building for UPLUS"
+          yarn uplus:build:live
+  deploy_uplus:
+    runs-on: ubuntu-latest
+    needs: build_uplus
+    steps:
+      - name: deploy UPLUS
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -144,8 +122,21 @@ jobs:
           echo "deploying to UPLUS"
           yarn deploy:action
 
-      - name: SINGAPORE
-        if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+#----------------------------------------------------------- singapore
+  build_singapore:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+    steps:
+      - name: build SINGAPORE
+        run: |
+          echo "building for SINGAPORE"
+          yarn sg:build:live
+  deploy_singapore:
+    runs-on: ubuntu-latest
+    needs: build_singapore
+    steps:
+      - name: deploy SINGAPORE
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -156,8 +147,21 @@ jobs:
           echo "deploying to SINGAPORE"
           yarn deploy:action
 
-      - name: US1
-        if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+#----------------------------------------------------------- us1
+  build_us1:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+    steps:
+      - name: build US1
+        run: |
+          echo "building for US1"
+          yarn us_east:build:live
+  deploy_us1:
+    runs-on: ubuntu-latest
+    needs: build_us1
+    steps:
+      - name: deploy US1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -168,8 +172,21 @@ jobs:
           echo "deploying to US1"
           yarn deploy:action
 
-      - name: SYDNEY
-        if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+#----------------------------------------------------------- sydney
+  build_sydney:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+    steps:
+      - name: build SYDNEY
+        run: |
+          echo "building for SYDNEY"
+          yarn sydney:build:live
+  deploy_sydney:
+    runs-on: ubuntu-latest
+    needs: build_sydney
+    steps:
+      - name: deploy SYDNEY
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -180,8 +197,21 @@ jobs:
           echo "deploying to SYDNEY"
           yarn deploy:action
 
-      - name: PARTNERS
-        if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
+#----------------------------------------------------------- partners
+  build_partners:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
+    steps:
+      - name: build PARTNERS
+        run: |
+          echo "building for PARTNERS"
+          yarn partners:build:live
+  deploy_partners:
+    runs-on: ubuntu-latest
+    needs: build_partners
+    steps:
+      - name: deploy PARTNERS
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
