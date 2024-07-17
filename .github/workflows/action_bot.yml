@@ -350,7 +350,7 @@ jobs:
               return;
             }
             
-            const currentTag = tags[currentIndex].
+            const currentTag = tags[currentIndex];
             
             // 태그가 하나만 있는 경우
             if (tags.length === 1) {
