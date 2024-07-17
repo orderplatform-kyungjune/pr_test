@@ -84,37 +84,37 @@ jobs:
         if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
         run: |
           echo "building for TORDER"
-          yarn origin:build:live
-
-      - name: UPLUS
-        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
-        run: |
-          echo "building for UPLUS"
-          yarn uplus:build:live
-
-      - name: SINGAPORE
-        if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
-        run: |
-          echo "building for SINGAPORE"
-          yarn sg:build:live
-
-      - name: US1
-        if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
-        run: |
-          echo "building for US1"
-          yarn us_east:build:live
-
-      - name: SYDNEY
-        if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
-        run: |
-          echo "building for SYDNEY"
-          yarn sydney:build:live 
-
-      - name: PARTNERS
-        if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
-        run: |
-          echo "building for PARTNERS"
-          yarn partners:build:live         
+#          yarn origin:build:live
+#
+#      - name: UPLUS
+#        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
+#        run: |
+#          echo "building for UPLUS"
+#          yarn uplus:build:live
+#
+#      - name: SINGAPORE
+#        if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+#        run: |
+#          echo "building for SINGAPORE"
+#          yarn sg:build:live
+#
+#      - name: US1
+#        if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+#        run: |
+#          echo "building for US1"
+#          yarn us_east:build:live
+#
+#      - name: SYDNEY
+#        if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+#        run: |
+#          echo "building for SYDNEY"
+#          yarn sydney:build:live
+#
+#      - name: PARTNERS
+#        if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
+#        run: |
+#          echo "building for PARTNERS"
+#          yarn partners:build:live
           
   deploy:
     runs-on: ubuntu-latest
