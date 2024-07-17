@@ -22,7 +22,6 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      branch_exists: ${{ steps.check_branch.outputs.branch_exists }}
       branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
       - name: check if branch exists
