@@ -1,4 +1,4 @@
-name: deploy develop
+name: deploy staging
 
 on:
   workflow_dispatch:
@@ -17,7 +17,6 @@ on:
           - ALL
           - TORDER
           - UPLUS
-          - BRAND1
 
 jobs:
   setup:
@@ -46,51 +45,6 @@ jobs:
               core.setOutput('branch_exists', 'false');
             }
 
-  build:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: ${{ needs.setup.outputs.branch_exists == 'true' }}
-    steps:
-      - name: check out branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ needs.setup.outputs.branch_name }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-
-      - name: cache node modules
-        id: node-cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.OS }}-admin-build-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-
-      - name: install dependencies
-        run: yarn
-
-      - name: TORDER
-        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
-        run: |
-          echo "building for TORDER"
-          yarn origin:build:dev
-
-      - name: UPLUS
-        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
-        run: |
-          echo "building for UPLUS"
-          yarn uplus:build:dev
-
-      - name: BRAND1
-        if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
-        run: |
-          echo "building for BRAND1"
-          yarn brand1:build:dev
-
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -100,7 +54,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BUCKET_NAME }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_STAGING_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "deploying to TORDER"
@@ -111,21 +65,9 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_STAGE_UPLUS_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_STAGE_UPLUS_DISTRIBUTION_ID }}
         run: |
           echo "deploying to UPLUS"
-          yarn deploy:action
-
-      - name: BRAND1
-        if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
-        run: |
-          echo "deploying to BRAND1"
           yarn deploy:action
