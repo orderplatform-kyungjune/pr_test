@@ -16,16 +16,16 @@ on:
         options:
           - ALL
           - TORDER
-          - GLOBAL
           - SAAS
+          - GLOBAL
+          - UPLUS
           - SINGAPORE
           - US1
           - SYDNEY
-          - UPLUS
           - PARTNERS
 
 jobs:
-  check_tag_exists:
+  setup:
     runs-on: ubuntu-latest
     outputs:
       tag_exists: ${{ steps.check_tag.outputs.tag_exists }}
@@ -38,6 +38,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tagName = '${{ github.event.inputs.tag }}';
+            console.log('tagName',tagName)
+            
             const { data: tag } = await github.request('GET /repos/{owner}/{repo}/git/refs/tags/{tag}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -51,52 +53,21 @@ jobs:
               core.setOutput('tag_exists', 'false');
             }
 
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    needs: check_tag_exists
-    if: ${{ needs.check_tag_exists.outputs.tag_exists == 'true' }}
-    strategy:
-      matrix:
-        label: [TORDER, SINGAPORE, US1, SYDNEY, UPLUS]
-        include:
-          - label: TORDER
-            build_command: yarn origin:build:live
-            aws_bucket: ${{ secrets.AWS_LIVE_BUCKET_NAME }}
-            aws_region: ${{ secrets.AWS_REGION }}
-            aws_distribution_id: ${{ secrets.AWS_LIVE_DISTRIBUTION_ID }}
-          - label: SINGAPORE
-            build_command: yarn sg:build:live
-            aws_bucket: ${{ secrets.AWS_SG_BUCKET_NAME }}
-            aws_region: ${{ secrets.AWS_SG_REGION }}
-            aws_distribution_id: ${{ secrets.AWS_SG_DISTRIBUTION_ID }}
-          - label: US1
-            build_command: yarn us_east:build:live
-            aws_bucket: ${{ secrets.AWS_US_EAST_BUCKET_NAME }}
-            aws_region: ${{ secrets.AWS_US_EAST_REGION }}
-            aws_distribution_id: ${{ secrets.AWS_US_EAST_DISTRIBUTION_ID }}
-          - label: SYDNEY
-            build_command: yarn sydney:build:live
-            aws_bucket: ${{ secrets.AWS_SYDNEY_BUCKET_NAME }}
-            aws_region: ${{ secrets.AWS_SYDNEY_REGION }}
-            aws_distribution_id: ${{ secrets.AWS_SYDNEY_DISTRIBUTION_ID }}
-          - label: UPLUS
-            build_command: yarn uplus:build:live
-            aws_bucket: ${{ secrets.AWS_LIVE_UPLUS_BUCKET_NAME }}
-            aws_region: ${{ secrets.AWS_REGION }}
-            aws_distribution_id: ${{ secrets.AWS_LIVE_UPLUS_DISTRIBUTION_ID }}
-
+    needs: setup
+    if: ${{ needs.setup.outputs.tag_exists == 'true' }}
     steps:
-      - name: Check out tag
-        if: ${{ github.event.inputs.label == 'ALL' || matrix.label == github.event.inputs.label || (github.event.inputs.label == 'GLOBAL' && (matrix.label == 'SINGAPORE' || matrix.label == 'US_EAST' || matrix.label == 'SYDNEY')) || (github.event.inputs.label == 'SAAS' && matrix.label == 'UPLUS') }}
+      - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.check_tag_exists.outputs.tag_name }}
+          ref: ${{ needs.setup.outputs.tag_name }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: Cache node modules
+      - name: cache node modules
         id: node-cache
         uses: actions/cache@v4
         with:
@@ -106,18 +77,117 @@ jobs:
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
 
-      - name: Install Dependencies
-        if: ${{ steps.node-cache.outputs.cache-hit != 'true' }}
+      - name: install dependencies
         run: yarn
 
-      - name: Build
-        run: ${{ matrix.build_command }}
+      - name: TORDER
+        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for TORDER"
+          yarn origin:build:live
 
-      - name: Deploy
+      - name: UPLUS
+        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
+        run: |
+          echo "building for UPLUS"
+          yarn uplus:build:live
+
+      - name: SINGAPORE
+        if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+        run: |
+          echo "building for SINGAPORE"
+          yarn sg:build:live
+
+      - name: US1
+        if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+        run: |
+          echo "building for US1"
+          yarn us_east:build:live
+
+      - name: SYDNEY
+        if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+        run: |
+          echo "building for SYDNEY"
+          yarn sydney:build:live 
+
+      - name: PARTNERS
+        if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
+        run: |
+          echo "building for PARTNERS"
+          yarn partners:build:live         
+          
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: TORDER
+        if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_BUCKET_NAME: ${{ matrix.aws_bucket }}
-          AWS_REGION: ${{ matrix.aws_region }}
-          AWS_DISTRIBUTION_ID: ${{ matrix.aws_distribution_id || '' }}
-        run: yarn deploy:action
+          AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to TORDER"
+          yarn deploy:action
+
+      - name: UPLUS
+        if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_UPLUS_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_UPLUS_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to UPLUS"
+          yarn deploy:action
+
+      - name: SINGAPORE
+        if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_SG_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_SG_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_SG_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to SINGAPORE"
+          yarn deploy:action
+
+      - name: US1
+        if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_US1_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_US1_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to US1"
+          yarn deploy:action
+
+      - name: SYDNEY
+        if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_SYDNEY_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_SYDNEY_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_SYDNEY_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to SYDNEY"
+          yarn deploy:action
+
+      - name: PARTNERS
+        if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_US1_PARTNERS_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_US1_PARTNERS_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to PARTNERS"
+          yarn deploy:action
