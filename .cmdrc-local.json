@@ -1,0 +1,74 @@
+{
+  "test-a": {
+    "VITE_ENVIRONMENT": "development",
+    "VITE_SERVICE_TARGET": "origin",
+    "VITE_TAB_TITLE": "티오더 관리자 DEV",
+    "VITE_SHOP_ADMIN_URL": "http://dev.shop.torder.com",
+    "VITE_ADMIN_API_URL": "http://dev-api-admin-a.torder.co.kr",
+    "VITE_GATE_WAY_API_URL": "https://dev-apigw.torder.co.kr",
+    "VITE_LANG_S3_API_URL": "https://dev-torder-language.s3.ap-northeast-2.amazonaws.com/",
+    "VITE_REST_API_URL": "http://development.rest.torder.co.kr",
+    "VITE_PAYMENT_API_URL": "https://dev-sgw.torder.co.kr",
+    "VITE_WAITING_API_URL": "https://dev-wait.torder.com"
+  },
+  "test-b": {
+    "VITE_ENVIRONMENT": "development",
+    "VITE_SERVICE_TARGET": "origin",
+    "VITE_TAB_TITLE": "티오더 관리자 DEV",
+    "VITE_SHOP_ADMIN_URL": "http://dev.shop.torder.com",
+    "VITE_ADMIN_API_URL": "http://dev-api-admin-b.torder.co.kr",
+    "VITE_GATE_WAY_API_URL": "https://dev-apigw.torder.co.kr",
+    "VITE_LANG_S3_API_URL": "https://dev-torder-language.s3.ap-northeast-2.amazonaws.com/",
+    "VITE_REST_API_URL": "http://development.rest.torder.co.kr",
+    "VITE_PAYMENT_API_URL": "https://dev-sgw.torder.co.kr",
+    "VITE_WAITING_API_URL": "https://dev-wait.torder.com"
+  },
+  "test-c": {
+    "VITE_ENVIRONMENT": "development",
+    "VITE_SERVICE_TARGET": "origin",
+    "VITE_TAB_TITLE": "티오더 관리자 DEV",
+    "VITE_SHOP_ADMIN_URL": "http://dev.shop.torder.com",
+    "VITE_ADMIN_API_URL": "http://dev-api-admin-c.torder.co.kr",
+    "VITE_GATE_WAY_API_URL": "https://dev-apigw.torder.co.kr",
+    "VITE_LANG_S3_API_URL": "https://dev-torder-language.s3.ap-northeast-2.amazonaws.com/",
+    "VITE_REST_API_URL": "http://development.rest.torder.co.kr",
+    "VITE_PAYMENT_API_URL": "https://dev-sgw.torder.co.kr",
+    "VITE_WAITING_API_URL": "https://dev-wait.torder.com"
+  },
+  "test-d": {
+    "VITE_ENVIRONMENT": "development",
+    "VITE_SERVICE_TARGET": "origin",
+    "VITE_TAB_TITLE": "티오더 관리자 DEV",
+    "VITE_SHOP_ADMIN_URL": "http://dev.shop.torder.com",
+    "VITE_ADMIN_API_URL": "http://dev-api-admin-d.torder.co.kr",
+    "VITE_GATE_WAY_API_URL": "https://dev-apigw.torder.co.kr",
+    "VITE_LANG_S3_API_URL": "https://dev-torder-language.s3.ap-northeast-2.amazonaws.com/",
+    "VITE_REST_API_URL": "http://development.rest.torder.co.kr",
+    "VITE_PAYMENT_API_URL": "https://dev-sgw.torder.co.kr",
+    "VITE_WAITING_API_URL": "https://dev-wait.torder.com"
+  },
+  "test-e": {
+    "VITE_ENVIRONMENT": "development",
+    "VITE_SERVICE_TARGET": "origin",
+    "VITE_TAB_TITLE": "티오더 관리자 DEV",
+    "VITE_SHOP_ADMIN_URL": "http://dev.shop.torder.com",
+    "VITE_ADMIN_API_URL": "http://dev-api-admin-e.torder.co.kr",
+    "VITE_GATE_WAY_API_URL": "https://dev-apigw.torder.co.kr",
+    "VITE_LANG_S3_API_URL": "https://dev-torder-language.s3.ap-northeast-2.amazonaws.com/",
+    "VITE_REST_API_URL": "http://development.rest.torder.co.kr",
+    "VITE_PAYMENT_API_URL": "https://dev-sgw.torder.co.kr",
+    "VITE_WAITING_API_URL": "https://dev-wait.torder.com"
+  },
+  "test-f": {
+    "VITE_ENVIRONMENT": "development",
+    "VITE_SERVICE_TARGET": "origin",
+    "VITE_TAB_TITLE": "티오더 관리자 DEV",
+    "VITE_SHOP_ADMIN_URL": "http://dev.shop.torder.com",
+    "VITE_ADMIN_API_URL": "http://dev-api-admin-f.torder.co.kr",
+    "VITE_GATE_WAY_API_URL": "https://dev-apigw.torder.co.kr",
+    "VITE_LANG_S3_API_URL": "https://dev-torder-language.s3.ap-northeast-2.amazonaws.com/",
+    "VITE_REST_API_URL": "http://development.rest.torder.co.kr",
+    "VITE_PAYMENT_API_URL": "https://dev-sgw.torder.co.kr",
+    "VITE_WAITING_API_URL": "https://dev-wait.torder.com"
+  }
+}
