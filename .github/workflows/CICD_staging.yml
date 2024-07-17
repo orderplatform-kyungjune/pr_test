@@ -32,12 +32,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const branchName = '${{ github.event.inputs.branch }}';
+            console.log('branchName',branchName)
             const { data: branch } = await github.request('GET /repos/{owner}/{repo}/branches/{branch}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               branch: branchName
             });
-            
+            console.log('branch',branch)
             if (branch) {
               core.setOutput('branch_exists', 'true');
               core.setOutput('branch_name', branchName);
