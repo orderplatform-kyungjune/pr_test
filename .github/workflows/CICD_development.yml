@@ -67,11 +67,19 @@ jobs:
       - name: install dependencies
         run: yarn
 
-      - name: upload workspace as artifact
+      - name: upload necessary files as artifact
         uses: actions/upload-artifact@v3
         with:
           name: workspace
-          path: ./
+          path: |
+            package.json
+            yarn.lock
+            src/
+            public/
+            vue.config.js
+            .cmdrc-development.json
+            .cmdrc-staging.json
+            .cmdrc-production.json
 
   #----------------------------------------------------------- torder
   build_torder:
@@ -79,7 +87,7 @@ jobs:
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
     steps:
-      - name: download workspace artifact
+      - name: download necessary files artifact
         uses: actions/download-artifact@v3
         with:
           name: workspace
@@ -94,7 +102,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: torder-build
-          path: ./build
+          path: ./dist
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -104,7 +112,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: torder-build
-          path: ./build
+          path: ./dist
 
       - name: deploy TORDER
         env:
@@ -122,7 +130,7 @@ jobs:
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
     steps:
-      - name: download workspace artifact
+      - name: download necessary files artifact
         uses: actions/download-artifact@v3
         with:
           name: workspace
@@ -137,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: uplus-build
-          path: ./build
+          path: ./dist
 
   deploy_uplus:
     runs-on: ubuntu-latest
@@ -147,7 +155,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: uplus-build
-          path: ./build
+          path: ./dist
 
       - name: deploy UPLUS
         env:
@@ -166,7 +174,7 @@ jobs:
     needs: setup
     if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
     steps:
-      - name: download workspace artifact
+      - name: download necessary files artifact
         uses: actions/download-artifact@v3
         with:
           name: workspace
@@ -181,7 +189,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: brand1-build
-          path: ./build
+          path: ./dist
 
   deploy_brand1:
     runs-on: ubuntu-latest
@@ -191,7 +199,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: brand1-build
-          path: ./build
+          path: ./dist
 
       - name: deploy BRAND1
         env:
