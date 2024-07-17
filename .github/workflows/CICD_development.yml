@@ -74,6 +74,7 @@ jobs:
           path: |
             package.json
             yarn.lock
+            node_modules/
             src/
             public/
             vue.config.js
