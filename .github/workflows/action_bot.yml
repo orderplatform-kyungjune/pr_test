@@ -49,7 +49,7 @@ jobs:
   # D-DAY 라벨 삭제
   remove-label:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request_review' || github.event.schedule == '1 15 * * 0-4'
+    if: github.event_name == 'pull_request_review'
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
@@ -63,7 +63,6 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             async function removeLabels() {
-              console.log(context.payload.pull_request)
               const prNumber = context.payload.pull_request.number;
               const { owner, repo } = context.repo;
 
@@ -330,97 +329,96 @@ jobs:
     steps:
       - name: checkout repository
         uses: actions/checkout@v3
-
-      # 이전 태그의 sha 가져오기
+      
+      # 이전 tag와 현재 tag의 commit sha 가져오기
       - name: get previous tag
         id: get_previous_tag
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            // 최근 100개의 tag 가져오기
             const { data: tags } = await github.rest.repos.listTags({
               owner: context.repo.owner,
               repo: context.repo.repo,
               per_page: 100
             });
-
-            // 현재 태그 추출
             const currentTag = context.ref.replace('refs/tags/', '');
-            // 현재 태그 index 추출
             const currentIndex = tags.findIndex(tag => tag.name === currentTag);
-
-            // 현재 태그가 목록에 없거나 현재 태그가 가장 오래된 태그인 경우, 이전 태그가 없다고 판단
-            if (currentIndex === -1 || currentIndex === tags.length - 1) {
-              core.exportVariable('PREVIOUS_TAG_SHA', '');
-              console.log('No previous tag found or current tag is the oldest tag.');
-              return
-            }
-
-            const previousTag = tags[currentIndex + 1];
             
-            // 이전 태그의 커밋 SHA를 PREVIOUS_TAG_SHA 환경 변수로 설정
+            if (currentIndex === -1) {
+              core.setFailed('Current tag not found.');
+              return;
+            }
+            
+            const currentTag = tags[currentIndex].
+            
+            // 태그가 하나만 있는 경우
+            if (tags.length === 1) {
+              core.exportVariable('PREVIOUS_TAG_SHA', '');
+              core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
+              console.log('Only one tag found.');
+              return;
+            }
+            
+            const previousTag = tags[currentIndex + 1];
             core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
+            core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
             console.log('Previous Tag:', previousTag.name);
 
-      # 해당 태그의 병합된 PR 목록 가져오기
+      # merge된 PR 제목 목록을 가져와 release note를 string으로 생성
       - name: get merged pull requests
         id: get_merged_prs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            // 이전 태그의 SHA 가져오기
+            const currentTagSha = process.env.CURRENT_TAG_SHA;
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
+            let commitsData;
             
-            // 이전 태그가 없을경우 PR이 없음을 표시
             if (!previousTagSha) {
-              console.log('No previous tag found.');
-              core.exportVariable('MERGED_PR_TITLES', '');
-              return;
+              const { data: commits } = await github.rest.repos.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: currentTagSha,
+              });
+              commitsData = commits;
+            } else {
+              const { data } = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: previousTagSha,
+                head: context.sha
+              });
+              commitsData = data.commits;
             }
             
-            // 이전 태그와 현재 커밋 사이의 모든 커밋정보 가져오기
-            const { data: commitsData } = await github.rest.repos.compareCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              base: previousTagSha,
-              head: context.sha
-            });
-
             const mergedPRs = [];
-
-            // 이전 태그와 현재 커밋 사이의 모든 커밋을 확인
-            for (const commitData of commitsData.commits) {
-              // PR이 병합된 커밋인지 확인
+            
+            for (const commitData of commitsData) {
               if (commitData.commit.message.includes('Merge pull request')) {
-                // PR 번호 추출
                 const prNumber = commitData.commit.message.match(/#(\d+)/)[1];
-                // 해당 PR 정보 가져오기
                 const { data: pr } = await github.rest.pulls.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: prNumber
                 });
-                // 병합된 PR 목록에 추가
                 mergedPRs.push(pr);
               }
             }
-
+            
             if (mergedPRs.length === 0) {
               core.exportVariable('MERGED_PR_TITLES', '');
               console.log('No merged pull requests found.');
-              return
+              return;
             }
-
+            
             const featurePRs = [];
             const releasePRs = [];
             const etcPRs = [];
-
-            // PR을 유형별로 분류 (feature, release, etc)
+            
             for (const mergedPR of mergedPRs) {
-              const { number, title, user } = mergedPR
-
+              const { number, title, user } = mergedPR;
               if (title.includes('Feature/') || title.includes('feature/')) {
                 featurePRs.push(`- #${number} ${title} by @${user.login}`);
               } else if (title.includes('Release/') || title.includes('release/')) {
@@ -429,8 +427,7 @@ jobs:
                 etcPRs.push(`- #${number} ${title} by @${user.login}`);
               }
             }
-
-            // PR 제목 형식화
+            
             let prTitles = '';
             if (releasePRs.length > 0) {
               prTitles += `### RELEASE\n${releasePRs.join('\n')}\n\n`;
@@ -442,10 +439,9 @@ jobs:
               prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
             }
             
-            // 환경 변수에 저장
             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
-      # 빈 릴리즈 생성
+      # 빈 release note 생성
       - name: create release
         id: create_release
         uses: actions/create-release@v1
@@ -457,7 +453,7 @@ jobs:
           draft: false
           prerelease: false
 
-      # 릴리즈 노트 업데이트
+      # 생성된 빈 release note에 PR제목 목록으로 구성된 내용을 update
       - name: update release notes
         id: update_notes
         uses: actions/github-script@v7
@@ -469,23 +465,23 @@ jobs:
               console.log('No merged pull requests found.');
               return;
             }
-
+            
             const { data: release } = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag: context.ref.replace('refs/tags/', ''),
             });
-
+            
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.id,
               body: `${prTitles}`,
             });
-
+            
             core.exportVariable('RELEASE_URL', release.html_url);
 
-      # 릴리스 URL 출력
+      # release note url 제공
       - name: output release url
         run: |
           echo "Release URL: $RELEASE_URL"
