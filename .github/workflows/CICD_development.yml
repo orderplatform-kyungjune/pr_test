@@ -102,6 +102,11 @@ jobs:
           echo "Contents of .cmdrc-development.json:"
           cat .cmdrc-development.json
 
+      - name: add code to view env-cmd file
+        run: |
+          echo "Contents of /home/runner/work/pr_test/pr_test/node_modules/.bin/env-cmd:"
+          cat /home/runner/work/pr_test/pr_test/node_modules/.bin/env-cmd
+
       - name: build TORDER
         run: |
           echo "building for TORDER"
