@@ -92,7 +92,7 @@ jobs:
         run: unzip workspace.zip
 
       - name: install dependencies
-        run: yarn add env-cmd
+        run: yarn add env-cmd -W
 
       - name: build TORDER
         run: |
