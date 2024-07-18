@@ -1,5 +1,5 @@
 # 특정 yml 파일 실행
-name: call action_bot.yml
+name: call action bot
 
 # yml 파일 실행 조건
 on:

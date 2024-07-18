@@ -1,4 +1,4 @@
-name: github action bot
+name: action bot
 
 on:
   workflow_call:
