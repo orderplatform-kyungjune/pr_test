@@ -82,6 +82,11 @@ jobs:
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
     steps:
+      - name: setup node version
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
       - name: download necessary files artifact
         uses: actions/download-artifact@v3
         with:
@@ -90,22 +95,6 @@ jobs:
 
       - name: extract workspace
         run: unzip workspace.zip
-
-      - name: print working directory
-        run: pwd
-
-      - name: list node_modules directory
-        run: ls -al node_modules
-
-      - name: add code to view .cmdrc-development.json
-        run: |
-          echo "Contents of .cmdrc-development.json:"
-          cat .cmdrc-development.json
-
-      - name: add code to view env-cmd file
-        run: |
-          echo "Contents of /home/runner/work/pr_test/pr_test/node_modules/.bin/env-cmd:"
-          cat /home/runner/work/pr_test/pr_test/node_modules/.bin/env-cmd
 
       - name: build TORDER
         run: |
