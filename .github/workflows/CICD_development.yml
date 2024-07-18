@@ -98,6 +98,9 @@ jobs:
       - name: print working directory
         run: pwd
 
+      - name: list node_modules directory
+        run: ls -al node_modules
+
       - name: build TORDER
         run: |
           echo "building for TORDER"
