@@ -54,15 +54,27 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: install dependencies
-        run: yarn
-
-      - name: Cache entire workspace
-        id: workspace-cache
-        uses: actions/cache@v2
+      - name: cache node modules
+        id: node-cache
+        uses: actions/cache@v4
         with:
-          path: .
-          key: ${{ runner.os }}-workspace-${{ github.sha }}
+          path: node_modules
+          key: ${{ runner.OS }}-admin-build-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+
+      - name: install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: zip workspace
+        run: zip -r workspace.zip .
+
+      - name: upload zipped workspace as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: workspace
+          path: workspace.zip
 
   #----------------------------------------------------------- torder
   build_torder:
@@ -71,34 +83,34 @@ jobs:
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
     steps:
       - name: download necessary files artifact
-        id: download_workspace
-        uses: actions/cache@v2
+        uses: actions/download-artifact@v3
         with:
-          path: .
-          key: ${{ runner.os }}-workspace-${{ github.sha }}
+          name: workspace
+          path: ./
+
+      - name: extract workspace
+        run: unzip workspace.zip
 
       - name: build TORDER
         run: |
           echo "building for TORDER"
           yarn origin:build:dev
 
-      - name: Cache TORDER build artifact
-        id: torder-cache
-        uses: actions/cache@v2
+      - name: upload build as artifact
+        uses: actions/upload-artifact@v3
         with:
+          name: torder-build
           path: ./dist
-          key: ${{ runner.os }}-torder-build-${{ github.sha }}
 
   deploy_torder:
     runs-on: ubuntu-latest
     needs: build_torder
     steps:
-      - name: download TORDER build artifact
-        id: download_torder_build
-        uses: actions/cache@v2
+      - name: download build artifact
+        uses: actions/download-artifact@v3
         with:
+          name: torder-build
           path: ./dist
-          key: ${{ runner.os }}-torder-build-${{ github.sha }}
 
       - name: deploy TORDER
         env:
@@ -117,34 +129,34 @@ jobs:
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
     steps:
       - name: download necessary files artifact
-        id: download_workspace
-        uses: actions/cache@v2
+        uses: actions/download-artifact@v3
         with:
-          path: .
-          key: ${{ runner.os }}-workspace-${{ github.sha }}
+          name: workspace
+          path: ./
+
+      - name: extract workspace
+        run: unzip workspace.zip
 
       - name: build UPLUS
         run: |
           echo "building for UPLUS"
           yarn uplus:build:dev
 
-      - name: Cache UPLUS build artifact
-        id: uplus-cache
-        uses: actions/cache@v2
+      - name: upload build as artifact
+        uses: actions/upload-artifact@v3
         with:
+          name: uplus-build
           path: ./dist
-          key: ${{ runner.os }}-uplus-build-${{ github.sha }}
 
   deploy_uplus:
     runs-on: ubuntu-latest
     needs: build_uplus
     steps:
-      - name: download UPLUS build artifact
-        id: download_uplus_build
-        uses: actions/cache@v2
+      - name: download build artifact
+        uses: actions/download-artifact@v3
         with:
+          name: uplus-build
           path: ./dist
-          key: ${{ runner.os }}-uplus-build-${{ github.sha }}
 
       - name: deploy UPLUS
         env:
@@ -152,6 +164,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
         run: |
           echo "deploying to UPLUS"
           yarn deploy:action
@@ -163,34 +176,34 @@ jobs:
     if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
     steps:
       - name: download necessary files artifact
-        id: download_workspace
-        uses: actions/cache@v2
+        uses: actions/download-artifact@v3
         with:
-          path: .
-          key: ${{ runner.os }}-workspace-${{ github.sha }}
+          name: workspace
+          path: ./
+
+      - name: extract workspace
+        run: unzip workspace.zip
 
       - name: build BRAND1
         run: |
           echo "building for BRAND1"
           yarn brand1:build:dev
 
-      - name: Cache BRAND1 build artifact
-        id: brand1-cache
-        uses: actions/cache@v2
+      - name: upload build as artifact
+        uses: actions/upload-artifact@v3
         with:
+          name: brand1-build
           path: ./dist
-          key: ${{ runner.os }}-brand1-build-${{ github.sha }}
 
   deploy_brand1:
     runs-on: ubuntu-latest
     needs: build_brand1
     steps:
-      - name: download BRAND1 build artifact
-        id: download_brand1_build
-        uses: actions/cache@v2
+      - name: download build artifact
+        uses: actions/download-artifact@v3
         with:
+          name: brand1-build
           path: ./dist
-          key: ${{ runner.os }}-brand1-build-${{ github.sha }}
 
       - name: deploy BRAND1
         env:
@@ -198,6 +211,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
         run: |
           echo "deploying to BRAND1"
           yarn deploy:action
