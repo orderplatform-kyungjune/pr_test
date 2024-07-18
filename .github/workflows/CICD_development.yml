@@ -68,7 +68,7 @@ jobs:
         run: yarn
 
       - name: zip workspace
-        run: zip -r workspace.zip package.json yarn.lock node_modules src public vue.config.js .cmdrc-development.json .cmdrc-staging.json .cmdrc-production.json
+        run: zip -r workspace.zip .
 
       - name: upload zipped workspace as artifact
         uses: actions/upload-artifact@v3
