@@ -65,7 +65,7 @@ jobs:
             ${{ runner.OS }}-
 
       - name: install dependencies
-        run: yarn
+        run: yarn install
 
       - name: zip workspace
         run: zip -r workspace.zip .
@@ -90,9 +90,6 @@ jobs:
 
       - name: extract workspace
         run: unzip workspace.zip
-
-      - name: install dependencies
-        run: yarn add env-cmd -W
 
       - name: build TORDER
         run: |
