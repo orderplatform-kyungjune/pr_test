@@ -67,20 +67,14 @@ jobs:
       - name: install dependencies
         run: yarn
 
-      - name: upload necessary files as artifact
+      - name: zip workspace
+        run: zip -r workspace.zip package.json yarn.lock node_modules src public vue.config.js .cmdrc-development.json .cmdrc-staging.json .cmdrc-production.json
+
+      - name: upload zipped workspace as artifact
         uses: actions/upload-artifact@v3
         with:
           name: workspace
-          path: |
-            package.json
-            yarn.lock
-            node_modules/
-            src/
-            public/
-            vue.config.js
-            .cmdrc-development.json
-            .cmdrc-staging.json
-            .cmdrc-production.json
+          path: workspace.zip
 
   #----------------------------------------------------------- torder
   build_torder:
@@ -93,6 +87,9 @@ jobs:
         with:
           name: workspace
           path: ./
+
+      - name: extract workspace
+        run: unzip workspace.zip
 
       - name: build TORDER
         run: |
@@ -137,6 +134,9 @@ jobs:
           name: workspace
           path: ./
 
+      - name: extract workspace
+        run: unzip workspace.zip
+
       - name: build UPLUS
         run: |
           echo "building for UPLUS"
@@ -180,6 +180,9 @@ jobs:
         with:
           name: workspace
           path: ./
+
+      - name: extract workspace
+        run: unzip workspace.zip
 
       - name: build BRAND1
         run: |
