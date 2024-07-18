@@ -1,4 +1,4 @@
-name: CICD development
+name: alltogether
 
 on:
   workflow_dispatch:
@@ -81,7 +81,7 @@ jobs:
 
       - name: print working directory
         run: pwd
-          
+
       - name: build TORDER
         run: |
           echo "building for TORDER"

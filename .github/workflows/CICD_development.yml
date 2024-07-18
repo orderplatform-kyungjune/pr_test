@@ -116,6 +116,9 @@ jobs:
           name: torder-build
           path: ./dist
 
+      - name: print working directory
+        run: pwd
+
       - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
