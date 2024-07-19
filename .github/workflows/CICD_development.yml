@@ -109,7 +109,7 @@ jobs:
 
   deploy_torder:
     runs-on: ubuntu-latest
-    needs: build_torder
+    needs: [setup, build_torder]
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
@@ -172,7 +172,7 @@ jobs:
 
   deploy_uplus:
     runs-on: ubuntu-latest
-    needs: build_uplus
+    needs: [setup, build_uplus]
     steps:
       - name: check out branch
         uses: actions/checkout@v3
@@ -232,7 +232,7 @@ jobs:
 
   deploy_brand1:
     runs-on: ubuntu-latest
-    needs: build_brand1
+    needs: [setup, build_brand1]
     steps:
       - name: check out branch
         uses: actions/checkout@v3
