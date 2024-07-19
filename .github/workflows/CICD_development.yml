@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-build
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -108,13 +108,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-build
-          restore-keys: |
-            ${{ runner.os }}-dist-
-
-      - name: pwd
-        run: |
-          ls -al
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
 
       - name: deploy TORDER
         env:
@@ -124,4 +118,116 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "deploying to TORDER"
+          yarn deploy:action
+
+  #----------------------------------------------------------- uplus
+  build_uplus:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.check_branch.outputs.branch_name }}
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: build UPLUS
+        run: |
+          echo "building for UPLUS"
+          yarn uplus:build:dev
+
+      - name: Save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+  deploy_uplus:
+    runs-on: ubuntu-latest
+    needs: build_uplus
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.check_branch.outputs.branch_name }}
+
+      - name: Restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+      - name: deploy UPLUS
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_UPLUS_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to UPLUS"
+          yarn deploy:action
+
+  #----------------------------------------------------------- brand1
+  build_brand1:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.check_branch.outputs.branch_name }}
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: build BRAND1
+        run: |
+          echo "building for BRAND1"
+          yarn brand1:build:dev
+
+      - name: Save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+  deploy_brand1:
+    runs-on: ubuntu-latest
+    needs: build_brand1
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.check_branch.outputs.branch_name }}
+
+      - name: Restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+      - name: deploy BRAND1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_DEV_BRAND1_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
+        run: |
+          echo "deploying to BRAND1"
           yarn deploy:action
