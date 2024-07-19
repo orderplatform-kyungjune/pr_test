@@ -89,10 +89,33 @@ jobs:
           echo "building for TORDER"
           yarn origin:build:dev
 
+      - name: Save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-build
+
   deploy_torder:
     runs-on: ubuntu-latest
     needs: build_torder
     steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.check_branch.outputs.branch_name }}
+
+      - name: Restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-build
+          restore-keys: |
+            ${{ runner.os }}-dist-
+
+      - name: pwd
+        run: |
+          pwd
+
       - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
