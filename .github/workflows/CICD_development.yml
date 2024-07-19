@@ -91,6 +91,9 @@ jobs:
       - name: extract workspace
         run: unzip workspace.zip
 
+      - name: show
+        run: ls -al
+
       - name: build TORDER
         run: |
           echo "building for TORDER"
@@ -117,9 +120,6 @@ jobs:
 
       - name: extract build
         run: unzip build.zip
-
-      - name: show
-        run: ls -al
 
       - name: deploy TORDER
         env:
