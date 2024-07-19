@@ -25,6 +25,7 @@ jobs:
     outputs:
       branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
+      # 입력한 브랜치 존재 여부 확인
       - name: check if branch exists
         id: check_branch
         uses: actions/github-script@v7
@@ -44,26 +45,35 @@ jobs:
               core.setOutput('branch_name', branchName);
             }
 
+      # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
+      # 노드 버전 세팅
       - name: setup node version
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
+      # node_modules 캐시 복원
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
+      # node_modules 설치
       - name: install dependencies
         run: yarn
+
+      # node_modules 캐시 저장
+      - name: Save node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
   #----------------------------------------------------------- torder
   build_torder:
@@ -71,25 +81,27 @@ jobs:
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
     steps:
+      # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
-      - name: Restore node_modules cache
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
+      # build
       - name: build TORDER
         run: |
           echo "building for TORDER"
           yarn origin:build:dev
 
-      - name: Save dist cache
+      # dist 폴더 캐시 저장
+      - name: save dist cache
         uses: actions/cache@v4
         with:
           path: dist
@@ -99,17 +111,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_torder
     steps:
+      # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
-      - name: Restore dist cache
+      # dist 폴더 캐시 복원
+      - name: restore dist cache
         uses: actions/cache@v4
         with:
           path: dist
           key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
 
+      # 배포
       - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -131,20 +146,18 @@ jobs:
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
-      - name: Restore node_modules cache
+      - name: restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: build UPLUS
         run: |
           echo "building for UPLUS"
           yarn uplus:build:dev
 
-      - name: Save dist cache
+      - name: save dist cache
         uses: actions/cache@v4
         with:
           path: dist
@@ -159,7 +172,7 @@ jobs:
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
-      - name: Restore dist cache
+      - name: restore dist cache
         uses: actions/cache@v4
         with:
           path: dist
@@ -187,20 +200,18 @@ jobs:
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
-      - name: Restore node_modules cache
+      - name: restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: build BRAND1
         run: |
           echo "building for BRAND1"
           yarn brand1:build:dev
 
-      - name: Save dist cache
+      - name: save dist cache
         uses: actions/cache@v4
         with:
           path: dist
@@ -215,7 +226,7 @@ jobs:
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
-      - name: Restore dist cache
+      - name: restore dist cache
         uses: actions/cache@v4
         with:
           path: dist
