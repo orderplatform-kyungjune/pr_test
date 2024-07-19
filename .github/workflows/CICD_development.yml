@@ -114,7 +114,7 @@ jobs:
 
       - name: pwd
         run: |
-          pwd
+          ls -al
 
       - name: deploy TORDER
         env:
