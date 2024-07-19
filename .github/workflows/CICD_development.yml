@@ -94,6 +94,9 @@ jobs:
       - name: show
         run: ls -al
 
+      - name: show
+        run: pwd
+
       - name: build TORDER
         run: |
           echo "building for TORDER"
