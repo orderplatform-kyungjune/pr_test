@@ -118,6 +118,9 @@ jobs:
       - name: extract build
         run: unzip build.zip
 
+      - name: show
+        run: ls -al
+
       - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
