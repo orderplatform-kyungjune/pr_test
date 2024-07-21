@@ -24,62 +24,115 @@ jobs:
     outputs:
       branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
+      # 입력한 브랜치 존재 여부 확인
       - name: check if branch exists
         id: check_branch
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
           script: |
             const branchName = '${{ github.event.inputs.branch }}';
-            console.log('branchName',branchName)
+            console.log('branchName', branchName);
             
             const { data: branch } = await github.request('GET /repos/{owner}/{repo}/branches/{branch}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               branch: branchName
             });
-
+            
             if (branch) {
               core.setOutput('branch_name', branchName);
             }
 
+      # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
           ref: ${{ steps.check_branch.outputs.branch_name }}
 
+      # 노드 버전 세팅
       - name: setup node version
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: cache node modules
-        id: node-cache
+      # node_modules 캐시 복원
+      - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.OS }}-admin-build-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
+      # node_modules 설치
       - name: install dependencies
         run: yarn
+
+      # node_modules 캐시 저장
+      - name: Save node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
 #----------------------------------------------------------- torder
   build_torder:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+    outputs:
+      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
+      # 선택한 브랜치로 체크아웃
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.setup.outputs.branch_name }}
+
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      # build
       - name: build TORDER
         run: |
           echo "building for TORDER"
           yarn origin:build:staging
+
+      # dist 폴더 캐시 저장
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_torder:
     runs-on: ubuntu-latest
     needs: build_torder
     steps:
+      # 선택한 브랜치로 체크아웃
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.build_torder.outputs.branch_name }}
+
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      # dist 폴더 캐시 복원
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+      # 배포
       - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -88,22 +141,59 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "deploying to TORDER"
-          yarn deploy:action
+          yarn deploy:action    
 
 #----------------------------------------------------------- uplus
   build_uplus:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
+    outputs:
+      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.setup.outputs.branch_name }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
       - name: build UPLUS
         run: |
           echo "building for UPLUS"
           yarn uplus:build:staging
+
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_uplus:
     runs-on: ubuntu-latest
     needs: build_uplus
     steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.build_uplus.outputs.branch_name }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
       - name: deploy UPLUS
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
