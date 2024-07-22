@@ -134,6 +134,8 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "deploying to TORDER"
+          echo "Cache key for restore dist cache: ${{ steps.restore_dist_cache.outputs.cache-hit }}"
+          ls -l dist/assets
           yarn deploy:action
 
   #---------------------------------- uplus
@@ -194,6 +196,8 @@ jobs:
           AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
         run: |
           echo "deploying to UPLUS"
+          echo "Cache key for restore dist cache: ${{ steps.restore_dist_cache.outputs.cache-hit }}"
+          ls -l dist/assets
           yarn deploy:action
 
   #---------------------------------- brand1
@@ -254,4 +258,6 @@ jobs:
           AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
         run: |
           echo "deploying to BRAND1"
+          echo "Cache key for restore dist cache: ${{ steps.restore_dist_cache.outputs.cache-hit }}"
+          ls -l dist/assets
           yarn deploy:action
