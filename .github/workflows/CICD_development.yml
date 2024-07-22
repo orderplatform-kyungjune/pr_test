@@ -52,8 +52,8 @@ jobs:
           node-version: "20.x"
 
       # node_modules 캐시 복원
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -63,8 +63,8 @@ jobs:
         run: yarn
 
       # node_modules 캐시 저장
-      - name: Save node_modules cache
-        uses: actions/cache@v4
+      - name: save node_modules cache
+        uses: actions/cache/save@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -83,7 +83,7 @@ jobs:
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -96,7 +96,7 @@ jobs:
 
       # dist 폴더 캐시 저장
       - name: save dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: dist
           key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
@@ -113,14 +113,14 @@ jobs:
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       # dist 폴더 캐시 복원
       - name: restore dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: dist
           key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
@@ -148,7 +148,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -159,7 +159,7 @@ jobs:
           yarn uplus:build:dev
 
       - name: save dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: dist
           key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
@@ -174,13 +174,13 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       - name: restore dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: dist
           key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
@@ -208,7 +208,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -219,7 +219,7 @@ jobs:
           yarn brand1:build:dev
 
       - name: save dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: dist
           key: brand1-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
@@ -234,13 +234,13 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       - name: restore dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: dist
           key: brand1-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
