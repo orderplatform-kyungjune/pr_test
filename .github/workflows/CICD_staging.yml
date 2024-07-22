@@ -208,7 +208,7 @@ jobs:
   #---------------------------------- Slack Notification
   notification:
     runs-on: ubuntu-latest
-    needs: [build_torder, build_uplus, build_brand1]
+    needs: [build_torder, build_uplus]
     if: ${{ always() }}
     steps:
       - name: Notify Slack
