@@ -450,33 +450,28 @@ jobs:
     needs: [deploy_torder, deploy_uplus, deploy_singapore, deploy_us1, deploy_sydney, deploy_partners]
     if: ${{ always() }}
     steps:
-      # 실패한 job 이 있는지 확인
+      # job 성공 여부 체크
       - name: check workflow status
         id: workflow_status
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const checkAllJobsStatus = async () => {
-              const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: context.runId
-              });
-              console.log('jobs', jobs)
-              // 모든 잡의 상태를 체크
-              let allJobsSuccess = true;
-              for (const job of jobs.jobs) {
-                if (job.conclusion === 'failure') {
-                  allJobsSuccess = false;
-                  break;
-                }
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+          
+            let status = 'success';
+            for (const job of jobs.jobs) {
+              if (job.conclusion === 'failure' || job.conclusion === 'cancelled' || job.conclusion === 'neutral') {
+                status = job.conclusion;
+                break;
               }
-              console.log('allJobsSuccess', allJobsSuccess)
-              return allJobsSuccess ? 'success' : 'failure';
-            };
-
-            return await checkAllJobsStatus();
+            }
+            
+            core.setOutput('status', status);
 
       # slack 알림
       - name: slack notification
@@ -488,7 +483,7 @@ jobs:
             {
               "attachments": [
                 {
-                  "color": '${{ steps.workflow_status.outputs.result }}' === 'success' ? '#52BF90' : '#FF240D',
+                  "color": '${{ steps.workflow_status.outputs.status }}' === 'success' ? '#52BF90' : '#FF240D',
                   "blocks": [
                     {
                       "type": "header",
@@ -505,15 +500,6 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*담당자*\n${{ github.event.sender.login }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
                           "text": "*라벨*\n${{ github.event.inputs.label }}"
                         }
                       ]
@@ -524,6 +510,24 @@ jobs:
                         {
                           "type": "mrkdwn",
                           "text": "*태그*\n${{ github.event.inputs.tag }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*상태*\n${{ steps.workflow_status.outputs.status }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*담당자*\n${{ github.event.sender.login }}"
                         }
                       ]
                     },
