@@ -235,15 +235,15 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*담당자:*\n${{ github.event.sender.login }}"
+                          "text": "*담당자:* ${{ github.event.sender.login }}"
                         },
                         {
                           "type": "mrkdwn",
-                          "text": "*라벨:*\n${{ github.event.inputs.label }}"
+                          "text": "*라벨:* ${{ github.event.inputs.label }}"
                         },
                         {
                           "type": "mrkdwn",
-                          "text": "*브랜치:*\n${{ needs.setup.outputs.branch_name }}"
+                          "text": "*브랜치:* ${{ github.event.inputs.branch }}"
                         }
                       ]
                     }
