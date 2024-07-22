@@ -21,8 +21,6 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    outputs:
-      branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
       # 입력한 브랜치 존재 여부 확인
       - name: check if branch exists
@@ -39,16 +37,12 @@ jobs:
               repo: context.repo.repo,
               branch: branchName
             });
-            
-            if (branch) {
-              core.setOutput('branch_name', branchName);
-            }
 
       # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.check_branch.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       # 노드 버전 세팅
       - name: setup node version
@@ -79,14 +73,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
-    outputs:
-      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
@@ -108,31 +100,31 @@ jobs:
           path: dist
           key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
 
-#  deploy_torder:
-#    runs-on: ubuntu-latest
-#    needs: build_torder
-#    steps:
-#      # 선택한 브랜치로 체크아웃
-#      - name: check out branch
-#        uses: actions/checkout@v3
-#        with:
-#          ref: ${{ needs.build_torder.outputs.branch_name }}
-#
-#      # node_modules 캐시 복원
-#      - name: restore node_modules cache
-#        uses: actions/cache@v4
-#        with:
-#          path: node_modules
-#          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-#
-#      # dist 폴더 캐시 복원
-#      - name: restore dist cache
-#        uses: actions/cache@v4
-#        with:
-#          path: dist
-#          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
-#
-#      # 배포
+  deploy_torder:
+    runs-on: ubuntu-latest
+    needs: build_torder
+    steps:
+      # 선택한 브랜치로 체크아웃
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      # dist 폴더 캐시 복원
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+      # 배포
 #      - name: deploy TORDER
 #        env:
 #          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -148,13 +140,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
-    outputs:
-      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
         uses: actions/cache@v4
@@ -173,27 +163,27 @@ jobs:
           path: dist
           key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
 
-#  deploy_uplus:
-#    runs-on: ubuntu-latest
-#    needs: build_uplus
-#    steps:
-#      - name: check out branch
-#        uses: actions/checkout@v3
-#        with:
-#          ref: ${{ needs.build_uplus.outputs.branch_name }}
-#
-#      - name: restore node_modules cache
-#        uses: actions/cache@v4
-#        with:
-#          path: node_modules
-#          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-#
-#      - name: restore dist cache
-#        uses: actions/cache@v4
-#        with:
-#          path: dist
-#          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
-#
+  deploy_uplus:
+    runs-on: ubuntu-latest
+    needs: build_uplus
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
 #      - name: deploy UPLUS
 #        env:
 #          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -205,10 +195,10 @@ jobs:
 #          echo "deploying to UPLUS"
 #          yarn deploy:action
 
-  #---------------------------------- Slack Notification
+  # slack 알림
   notification:
     runs-on: ubuntu-latest
-    needs: [build_torder, build_uplus]
+    needs: [deploy_torder, deploy_uplus]
     if: ${{ always() }}
     steps:
       - name: Notify Slack
