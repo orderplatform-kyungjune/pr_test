@@ -99,7 +99,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -123,7 +123,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       # 배포
       - name: deploy TORDER
@@ -134,7 +134,6 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "deploying to TORDER"
-          echo "Cache key for restore dist cache: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}"
           ls -l dist/assets
           yarn deploy:action
 
@@ -164,7 +163,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_uplus:
     runs-on: ubuntu-latest
@@ -185,7 +184,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy UPLUS
         env:
@@ -196,7 +195,6 @@ jobs:
           AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_UPLUS_DISTRIBUTION_ID }}
         run: |
           echo "deploying to UPLUS"
-          echo "Cache key for restore dist cache: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}"
           ls -l dist/assets
           yarn deploy:action
 
@@ -226,7 +224,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: brand1-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_brand1:
     runs-on: ubuntu-latest
@@ -247,7 +245,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: brand1-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy BRAND1
         env:
@@ -258,6 +256,5 @@ jobs:
           AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DEV_BRAND1_DISTRIBUTION_ID }}
         run: |
           echo "deploying to BRAND1"
-          echo "Cache key for restore dist cache: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}"
           ls -l dist/assets
           yarn deploy:action
