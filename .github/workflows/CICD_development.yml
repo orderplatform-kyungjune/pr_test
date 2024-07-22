@@ -100,6 +100,8 @@ jobs:
         with:
           path: dist
           key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          run: |
+            echo "GITHUB: ${{ github }}"
 
   deploy_torder:
     runs-on: ubuntu-latest
