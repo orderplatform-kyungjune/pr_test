@@ -22,8 +22,6 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    outputs:
-      branch_name: ${{ steps.check_branch.outputs.branch_name }}
     steps:
       # 입력한 브랜치 존재 여부 확인
       - name: check if branch exists
@@ -40,16 +38,12 @@ jobs:
               repo: context.repo.repo,
               branch: branchName
             });
-            
-            if (branch) {
-              core.setOutput('branch_name', branchName);
-            }
 
       # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.check_branch.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       # 노드 버전 세팅
       - name: setup node version
@@ -80,14 +74,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
-    outputs:
-      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
@@ -117,7 +109,7 @@ jobs:
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.build_torder.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
@@ -149,13 +141,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
-    outputs:
-      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
         uses: actions/cache@v4
@@ -181,7 +171,7 @@ jobs:
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.build_uplus.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
         uses: actions/cache@v4
@@ -211,13 +201,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
-    outputs:
-      branch_name: ${{ needs.setup.outputs.branch_name }}
     steps:
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
         uses: actions/cache@v4
@@ -243,7 +231,7 @@ jobs:
       - name: check out branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.build_brand1.outputs.branch_name }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
         uses: actions/cache@v4

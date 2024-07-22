@@ -201,42 +201,54 @@ jobs:
     needs: [deploy_torder, deploy_uplus]
     if: ${{ always() }}
     steps:
-      - name: Notify Slack
+      - name: slack notification
         uses: 8398a7/action-slack@v3
         with:
           status: custom
-          fields: workflow,job,commit,repo,ref,author,took
-          mention: "here"
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
           custom_payload: |
             {
-              "text": `<!here> *배포 완료 알림*`,
               "attachments": [
                 {
+                  "color": '${{ job.status }}' === 'success' ? '#52BF90' : '${{ job.status }}' === 'failure' ? '#FF240D' : '#FFC000',
                   "blocks": [
                     {
                       "type": "header",
                       "text": {
                         "type": "plain_text",
-                        "text": "ADMIN 배포 알림"
+                        "text": ":t'order: 어드민 UPDATE 알림"
                       }
+                    },
+                    {
+                      "type": "divider"
                     },
                     {
                       "type": "section",
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*담당자:* ${{ github.event.sender.login }}"
-                        },
-                        {
-                          "type": "mrkdwn",
-                          "text": "*라벨:* ${{ github.event.inputs.label }}"
-                        },
-                        {
-                          "type": "mrkdwn",
-                          "text": "*브랜치:* ${{ github.event.inputs.branch }}"
+                          "text": "*담당자*\n${{ github.event.sender.login }}"
                         }
                       ]
-                    }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*라벨*\n${{ github.event.inputs.label }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*브랜치*\n${{ github.event.inputs.branch }}"
+                        }
+                      ]
+                    },
                   ]
                 }
               ]
