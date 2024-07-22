@@ -450,6 +450,7 @@ jobs:
     needs: [deploy_torder, deploy_uplus, deploy_singapore, deploy_us1, deploy_sydney, deploy_partners]
     if: ${{ always() }}
     steps:
+      # 실패한 job 이 있는지 확인
       - name: check workflow status
         id: workflow_status
         uses: actions/github-script@v7
@@ -477,6 +478,7 @@ jobs:
 
             return await checkAllJobsStatus();
 
+      # slack 알림
       - name: slack notification
         uses: 8398a7/action-slack@v3
         with:
