@@ -450,6 +450,36 @@ jobs:
     needs: [deploy_torder, deploy_uplus, deploy_singapore, deploy_us1, deploy_sydney, deploy_partners]
     if: ${{ always() }}
     steps:
+      - name: check workflow status
+        id: workflow_status
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 전체 잡 상태를 확인하기 위한 함수 정의
+            const checkAllJobsStatus = async () => {
+              const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId
+              });
+              
+              console.log('잡들', jobs)
+              
+              // 모든 잡의 상태를 체크
+              let allJobsSuccess = true;
+              for (const job of jobs.jobs) {
+                if (job.conclusion !== 'success') {
+                  allJobsSuccess = false;
+                  break;
+                }
+              }
+
+              return allJobsSuccess ? 'success' : 'failure';
+            };
+
+            return await checkAllJobsStatus();
+
       - name: slack notification
         uses: 8398a7/action-slack@v3
         with:
@@ -459,7 +489,7 @@ jobs:
             {
               "attachments": [
                 {
-                  "color": '${{ job.status }}' === 'success' ? '#52BF90' : '#FF240D',
+                  "color": '${{ steps.workflow_status.outputs.result }}' === 'success' ? '#52BF90' : '#FF240D',
                   "blocks": [
                     {
                       "type": "header",
@@ -494,7 +524,7 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*브랜치*\n${{ github.event.inputs.branch }}"
+                          "text": "*태그*\n${{ github.event.inputs.tag }}"
                         }
                       ]
                     },
