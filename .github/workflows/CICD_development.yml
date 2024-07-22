@@ -70,7 +70,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
   #---------------------------------- torder
-  deploy_torder:
+  build_torder:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
@@ -94,6 +94,50 @@ jobs:
           echo "building for TORDER"
           yarn origin:build:dev
 
+      # dist 폴더 캐시 저장
+      - name: save dist cache
+        uses: actions/cache/save@v4
+        with:
+          path: dist
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+
+      - name: show github
+        run: |
+          echo "Event Name: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Ref: ${{ github.ref }}"
+          branch_name=$(git rev-parse --abbrev-ref HEAD)
+          latest_commit_sha=$(git rev-parse HEAD)
+          echo "Current Branch: $branch_name"
+          echo "Latest Commit SHA: $latest_commit_sha"
+
+  deploy_torder:
+    runs-on: ubuntu-latest
+    needs: build_torder
+    steps:
+      # 선택한 브랜치로 체크아웃
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      # dist 폴더 캐시 복원
+      - name: restore dist cache
+        uses: actions/cache/restore@v4
+        with:
+          path: dist
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+
       # 배포
       - name: deploy TORDER
         env:
@@ -106,7 +150,7 @@ jobs:
           yarn deploy:action
 
   #---------------------------------- uplus
-  deploy_uplus:
+  build_uplus:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
@@ -127,6 +171,33 @@ jobs:
           echo "building for UPLUS"
           yarn uplus:build:dev
 
+      - name: save dist cache
+        uses: actions/cache/save@v4
+        with:
+          path: dist
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+
+  deploy_uplus:
+    runs-on: ubuntu-latest
+    needs: build_uplus
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache/restore@v4
+        with:
+          path: dist
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+
       - name: deploy UPLUS
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -139,7 +210,7 @@ jobs:
           yarn deploy:action
 
   #---------------------------------- brand1
-  deploy_brand1:
+  build_brand1:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'BRAND1' || github.event.inputs.label == 'ALL' }}
@@ -159,6 +230,33 @@ jobs:
         run: |
           echo "building for BRAND1"
           yarn brand1:build:dev
+
+      - name: save dist cache
+        uses: actions/cache/save@v4
+        with:
+          path: dist
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+
+  deploy_brand1:
+    runs-on: ubuntu-latest
+    needs: build_brand1
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache/restore@v4
+        with:
+          path: dist
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy BRAND1
         env:
