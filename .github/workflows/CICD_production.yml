@@ -30,7 +30,8 @@ jobs:
     outputs:
       tag_name: ${{ steps.check_tag.outputs.tag_name }}
     steps:
-      - name: Check if tag exists
+      # 입력한 태그 존재 여부 확인
+      - name: check if tag exists
         id: check_tag
         uses: actions/github-script@v7
         with:
@@ -45,47 +46,93 @@ jobs:
               tag: tagName
             });
 
-            if (tag) {
-              core.setOutput('tag_name', tagName);
-            }
-
-      - name: check out branch
+      # 선택한 태그로 체크아웃
+      - name: check out tag
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.tag_name }}
+          ref: ${{ github.event.inputs.tag }}
 
+      # 노드 버전 세팅
       - name: setup node version
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
 
-      - name: cache node modules
-        id: node-cache
+      # node_modules 캐시 복원
+      - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.OS }}-admin-build-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
+      # node_modules 설치
       - name: install dependencies
         run: yarn
 
-#----------------------------------------------------------- torder
+      # node_modules 캐시 저장
+      - name: Save node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+  #---------------------------------- torder
   build_torder:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
     steps:
+      # 선택한 태그로 체크아웃
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      # build
       - name: build TORDER
         run: |
           echo "building for TORDER"
           yarn origin:build:live
+
+      # dist 폴더 캐시 저장
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_torder:
     runs-on: ubuntu-latest
     needs: build_torder
     steps:
+      # 선택한 태그로 체크아웃
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      # node_modules 캐시 복원
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      # dist 폴더 캐시 복원
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
+      # 배포
       - name: deploy TORDER
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -97,20 +144,55 @@ jobs:
           echo "deploying to TORDER"
           yarn deploy:action
 
-#----------------------------------------------------------- uplus
+  #---------------------------------- uplus
   build_uplus:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'SAAS' }}
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
       - name: build UPLUS
         run: |
           echo "building for UPLUS"
           yarn uplus:build:live
+
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_uplus:
     runs-on: ubuntu-latest
     needs: build_uplus
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
       - name: deploy UPLUS
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -122,20 +204,55 @@ jobs:
           echo "deploying to UPLUS"
           yarn deploy:action
 
-#----------------------------------------------------------- singapore
+  #---------------------------------- singapore
   build_singapore:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
       - name: build SINGAPORE
         run: |
           echo "building for SINGAPORE"
           yarn sg:build:live
+
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_singapore:
     runs-on: ubuntu-latest
     needs: build_singapore
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
       - name: deploy SINGAPORE
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -147,20 +264,55 @@ jobs:
           echo "deploying to SINGAPORE"
           yarn deploy:action
 
-#----------------------------------------------------------- us1
+  #---------------------------------- us1
   build_us1:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
       - name: build US1
         run: |
           echo "building for US1"
           yarn us_east:build:live
+
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_us1:
     runs-on: ubuntu-latest
     needs: build_us1
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
       - name: deploy US1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -172,20 +324,55 @@ jobs:
           echo "deploying to US1"
           yarn deploy:action
 
-#----------------------------------------------------------- sydney
+  #---------------------------------- sydney
   build_sydney:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'ALL' || github.event.inputs.label == 'GLOBAL' }}
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
       - name: build SYDNEY
         run: |
           echo "building for SYDNEY"
           yarn sydney:build:live
+
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_sydney:
     runs-on: ubuntu-latest
     needs: build_sydney
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
       - name: deploy SYDNEY
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -197,20 +384,55 @@ jobs:
           echo "deploying to SYDNEY"
           yarn deploy:action
 
-#----------------------------------------------------------- partners
+  #---------------------------------- partners
   build_partners:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'ALL' }}
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
       - name: build PARTNERS
         run: |
           echo "building for PARTNERS"
           yarn partners:build:live
+
+      - name: save dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
   deploy_partners:
     runs-on: ubuntu-latest
     needs: build_partners
     steps:
+      - name: check out tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+
+      - name: restore dist cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+
       - name: deploy PARTNERS
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -221,3 +443,64 @@ jobs:
         run: |
           echo "deploying to PARTNERS"
           yarn deploy:action
+
+  # slack 알림
+  slack_notification:
+    runs-on: ubuntu-latest
+    needs: [deploy_torder, deploy_uplus, deploy_singapore, deploy_us1, deploy_sydney, deploy_partners]
+    if: ${{ always() }}
+    steps:
+      - name: slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "color": '${{ job.status }}' === 'success' ? '#52BF90' : '#FF240D',
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": ":t'order: 어드민 LIVE UPDATE 알림"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*담당자*\n${{ github.event.sender.login }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*라벨*\n${{ github.event.inputs.label }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*브랜치*\n${{ github.event.inputs.branch }}"
+                        }
+                      ]
+                    },
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
