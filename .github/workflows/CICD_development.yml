@@ -75,7 +75,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
-  #----------------------------------------------------------- torder
+  #---------------------------------- torder
   build_torder:
     runs-on: ubuntu-latest
     needs: setup
@@ -144,7 +144,7 @@ jobs:
           echo "deploying to TORDER"
           yarn deploy:action
 
-  #----------------------------------------------------------- uplus
+  #---------------------------------- uplus
   build_uplus:
     runs-on: ubuntu-latest
     needs: setup
@@ -206,7 +206,7 @@ jobs:
           echo "deploying to UPLUS"
           yarn deploy:action
 
-  #----------------------------------------------------------- brand1
+  #---------------------------------- brand1
   build_brand1:
     runs-on: ubuntu-latest
     needs: setup
