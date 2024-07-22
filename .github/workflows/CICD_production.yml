@@ -456,7 +456,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // 전체 잡 상태를 확인하기 위한 함수 정의
             const checkAllJobsStatus = async () => {
               const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
                 owner: context.repo.owner,
@@ -464,12 +463,10 @@ jobs:
                 run_id: context.runId
               });
               
-              console.log('잡들', jobs)
-              
               // 모든 잡의 상태를 체크
               let allJobsSuccess = true;
               for (const job of jobs.jobs) {
-                if (job.conclusion !== 'success') {
+                if (job.conclusion === 'failure') {
                   allJobsSuccess = false;
                   break;
                 }
