@@ -102,11 +102,8 @@ jobs:
           key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: show github
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.TOKEN }}
-          script: |
-            console.log(github);
+        run: |
+          echo "GITHUB_SHA: ${{ github.sha }}"
 
   deploy_torder:
     runs-on: ubuntu-latest
