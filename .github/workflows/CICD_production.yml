@@ -463,7 +463,7 @@ jobs:
                 repo: context.repo.repo,
                 run_id: context.runId
               });
-              
+              console.log('jobs', jobs)
               // 모든 잡의 상태를 체크
               let allJobsSuccess = true;
               for (const job of jobs.jobs) {
@@ -472,7 +472,7 @@ jobs:
                   break;
                 }
               }
-
+              console.log('allJobsSuccess', allJobsSuccess)
               return allJobsSuccess ? 'success' : 'failure';
             };
 
