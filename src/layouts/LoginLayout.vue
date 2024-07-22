@@ -152,7 +152,7 @@ const getAdminLogin = async () => {
       v-model="isSaveId"
       @change="deleteSaveId"
     >
-      아이디 기억하기.
+      아이디 기억하기
     </el-checkbox>
     <el-button
       class="login-bt mt-10"

@@ -106,7 +106,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -130,7 +130,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       # 배포
       - name: deploy TORDER
@@ -170,7 +170,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_uplus:
     runs-on: ubuntu-latest
@@ -191,7 +191,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy UPLUS
         env:
@@ -230,7 +230,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: singapore-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_singapore:
     runs-on: ubuntu-latest
@@ -251,7 +251,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: singapore-dist-${{ runner.os }}-${{ github.sha }}--${{ github.workflow }}
 
       - name: deploy SINGAPORE
         env:
@@ -290,7 +290,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: us1-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_us1:
     runs-on: ubuntu-latest
@@ -311,7 +311,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: us1-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy US1
         env:
@@ -350,7 +350,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: sydney-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_sydney:
     runs-on: ubuntu-latest
@@ -371,7 +371,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: sydney-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy SYDNEY
         env:
@@ -410,7 +410,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: partners-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
   deploy_partners:
     runs-on: ubuntu-latest
@@ -431,7 +431,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ runner.os }}-dist-${{ github.sha }}-${{ job.name }}-${{ github.workflow }}
+          key: partners-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
 
       - name: deploy PARTNERS
         env:
