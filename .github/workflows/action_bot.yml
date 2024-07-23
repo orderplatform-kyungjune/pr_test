@@ -497,7 +497,6 @@ jobs:
     if: ${{
       (github.event_name == 'pull_request' && github.event.action == 'opened') ||
       (github.event_name == 'pull_request' &&  github.event.action == 'closed' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'issue_comment' && (github.event.action == 'created' || github.event.action == 'edited')) ||
       (github.event_name == 'pull_request_review' && github.event.action == 'submitted')
       }}
     steps:
@@ -535,7 +534,6 @@ jobs:
                           "text": "*상태*\n${{ 
                             (github.event_name == 'pull_request' && github.event.action == 'opened' && '요청 :rotating_light:') ||
                             (github.event_name == 'pull_request' && github.event.action == 'closed' && '병합 :white_check_mark:') ||
-                            (github.event_name == 'issue_comment' && github.event.action == 'created' && '코멘트 :speech_balloon:') ||
                             (github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && '승인 :+1:') ||
                             (github.event_name == 'pull_request_review' && github.event.action != 'approved' && '코멘트 :speech_balloon:') ||
                             '없음'
