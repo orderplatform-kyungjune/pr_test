@@ -495,7 +495,8 @@ jobs:
   slack-pr:
     runs-on: ubuntu-latest
     if: ${{
-      (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'closed')) ||
+      (github.event_name == 'pull_request' && github.event.action == 'opened') ||
+      (github.event_name == 'pull_request' &&  github.event.action == 'closed' && github.event.pull_request.merged == true) ||
       (github.event_name == 'issue_comment' && (github.event.action == 'created' || github.event.action == 'edited')) ||
       (github.event_name == 'pull_request_review' && github.event.action == 'submitted')
       }}
@@ -537,7 +538,7 @@ jobs:
                             (github.event_name == 'issue_comment' && github.event.action == 'created' && '코멘트 :speech_balloon:') ||
                             (github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && '승인 :+1:') ||
                             (github.event_name == 'pull_request_review' && github.event.action != 'approved' && '코멘트 :speech_balloon:') ||
-                            '알 수 없는 상태'
+                            '없음'
                           }}"
                         }
                       ]
@@ -547,7 +548,7 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*테스트코드*\n${{ github.event.review.state }}${{github.event_name}}${{github.event.action}}"
+                          "text": "*테스트코드*\n${{ github.event_name }}-${{github.event.action}}-${{github.event.review.state}}"
                         }
                       ]
                     },
