@@ -44,7 +44,6 @@ jobs:
             });
             
             if (tag) {
-              console.log(tag);
               core.setOutput('sha', tag.object.sha);
             }
 
@@ -259,7 +258,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: singapore-dist-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
+          key: singapore-dist-${{ runner.os }}-${{ needs.build_singapore.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy SINGAPORE
         env:
@@ -321,7 +320,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: us1-dist-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
+          key: us1-dist-${{ runner.os }}-${{ needs.build_us1.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy US1
         env:
@@ -383,7 +382,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: sydney-dist-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
+          key: sydney-dist-${{ runner.os }}-${{ needs.build_sydney.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy SYDNEY
         env:
@@ -445,7 +444,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: partners-dist-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
+          key: partners-dist-${{ runner.os }}-${{ needs.build_partners.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy PARTNERS
         env:
