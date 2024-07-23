@@ -21,26 +21,29 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.check_branch.outputs.sha }}
     steps:
-      # 입력한 브랜치 존재 여부 확인
+      # 입력한 브랜치 존재 여부 확인 및 commit sha 저장
       - name: check if branch exists
         id: check_branch
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            const branchName = '${{ github.event.inputs.branch }}';
-            console.log('branchName', branchName);
-            
             const { data: branch } = await github.request('GET /repos/{owner}/{repo}/branches/{branch}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              branch: branchName
+              branch: '${{ github.event.inputs.branch }}'
             });
+            
+            if (branch) {
+              core.setOutput('sha', branch.commit.sha);
+            }
 
       # 선택한 브랜치로 체크아웃
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -51,8 +54,8 @@ jobs:
           node-version: "20.x"
 
       # node_modules 캐시 복원
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -62,8 +65,8 @@ jobs:
         run: yarn
 
       # node_modules 캐시 저장
-      - name: Save node_modules cache
-        uses: actions/cache@v4
+      - name: save node_modules cache
+        uses: actions/cache/save@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -73,16 +76,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+    outputs:
+      sha: ${{ needs.setup.outputs.sha }}
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -95,10 +100,10 @@ jobs:
 
       # dist 폴더 캐시 저장
       - name: save dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: dist
-          key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: torder-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -106,23 +111,23 @@ jobs:
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
       # node_modules 캐시 복원
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       # dist 폴더 캐시 복원
       - name: restore dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: dist
-          key: torder-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: torder-dist-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
 
       # 배포
       - name: deploy TORDER
@@ -140,14 +145,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
+    outputs:
+      sha: ${{ needs.setup.outputs.sha }}
     steps:
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
@@ -158,31 +165,31 @@ jobs:
           yarn uplus:build:staging
 
       - name: save dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: dist
-          key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
   deploy_uplus:
     runs-on: ubuntu-latest
     needs: build_uplus
     steps:
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
       - name: restore node_modules cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       - name: restore dist cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: dist
-          key: uplus-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ needs.build_uplus.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy UPLUS
         env:
