@@ -22,6 +22,8 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.check_branch.outputs.sha }}
     steps:
       # 입력한 브랜치 존재 여부 확인
       - name: check if branch exists
@@ -30,14 +32,15 @@ jobs:
         with:
           github-token: ${{ secrets.TOKEN }}
           script: |
-            const branchName = '${{ github.event.inputs.branch }}';
-            console.log('branchName', branchName);
-            
             const { data: branch } = await github.request('GET /repos/{owner}/{repo}/branches/{branch}', {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              branch: branchName
+              branch: '${{ github.event.inputs.branch }}'
             });
+            
+            if (branch) {
+              core.setOutput('sha', branch.commit.sha);
+            }
 
       # 선택한 브랜치로 체크아웃
       - name: check out branch
@@ -99,20 +102,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
-
-      - name: show github
-        run: |
-          echo "Event Name: ${{ github.event_name }}"
-          echo "Repository: ${{ github.repository }}"
-          echo "Actor: ${{ github.actor }}"
-          echo "SHA: ${{ github.sha }}"
-          echo "Workflow: ${{ github.workflow }}"
-          echo "Ref: ${{ github.ref }}"
-          branch_name=$(git rev-parse --abbrev-ref HEAD)
-          latest_commit_sha=$(git rev-parse HEAD)
-          echo "Current Branch: $branch_name"
-          echo "Latest Commit SHA: $latest_commit_sha"
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -136,7 +126,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
       # 배포
       - name: deploy TORDER
@@ -175,7 +165,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
   deploy_uplus:
     runs-on: ubuntu-latest
@@ -196,7 +186,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy UPLUS
         env:
@@ -235,7 +225,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
   deploy_brand1:
     runs-on: ubuntu-latest
@@ -256,7 +246,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ github.sha }}-${{ github.workflow }}
+          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy BRAND1
         env:
