@@ -44,7 +44,7 @@ jobs:
 
       # 선택한 브랜치로 체크아웃
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -82,7 +82,7 @@ jobs:
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -112,7 +112,7 @@ jobs:
     steps:
       # 선택한 브랜치로 체크아웃
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -150,7 +150,7 @@ jobs:
       sha: ${{ needs.setup.outputs.sha }}
     steps:
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -176,7 +176,7 @@ jobs:
     needs: build_uplus
     steps:
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -212,7 +212,7 @@ jobs:
       sha: ${{ needs.setup.outputs.sha }}
     steps:
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
@@ -238,7 +238,7 @@ jobs:
     needs: build_brand1
     steps:
       - name: check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
 
