@@ -542,6 +542,15 @@ jobs:
                         }
                       ]
                     },
+            {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*테스트코드*\n${{ github.event.review.state }}"
+                        }
+                      ]
+                    },
                     {
                       "type": "section",
                       "fields": [
