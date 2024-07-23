@@ -546,11 +546,11 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*요청자*\n${{ github.event.pull_request.user.login || github.event.issue.assignee.login }}"
+                          "text": "*요청자*\n${{ github.event.pull_request.user.login || github.event.issue.assignee.login || '없음' }}"
                         },
                         {
                           "type": "mrkdwn",
-                          "text": "*리뷰어*\n${{ github.event.review.user.login || github.event.comment.user.login }}"
+                          "text": "*리뷰어*\n${{ github.event.review.user.login || github.event.comment.user.login || '없음' }}"
                         }
                       ]
                     },
@@ -559,7 +559,7 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*코멘트*\n${{ github.event.review.body || github.event.comment.body }}"
+                          "text": "*코멘트*\n${{ github.event.review.body || github.event.comment.body || '없음'}}"
                         }
                       ]
                     },
@@ -579,7 +579,7 @@ jobs:
                           "text": ":github:",
                           "emoji": true
                         },
-                        "url": "${{ github.event.pull_request.html_url || github.event.comment.html_url }}"
+                        "url": "${{ github.event.pull_request.html_url || github.event.comment.html_url || '없음' }}"
                       }
                     }
                   ]
