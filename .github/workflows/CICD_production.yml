@@ -45,7 +45,7 @@ jobs:
             
             if (tag) {
               console.log(tag);
-              core.setOutput('sha', tag.commit.sha);
+              core.setOutput('sha', tag.object.sha);
             }
 
       # 선택한 태그로 체크아웃
