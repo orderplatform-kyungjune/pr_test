@@ -102,7 +102,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: ${{ job.id }}-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
   deploy_torder:
     runs-on: ubuntu-latest
@@ -126,7 +126,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: ${{ job.id }}-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       # 배포
       - name: deploy TORDER
@@ -165,7 +165,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: ${{ job.id }}-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
   deploy_uplus:
     runs-on: ubuntu-latest
@@ -186,7 +186,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: ${{ job.id }}-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy UPLUS
         env:
@@ -225,7 +225,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: ${{ job.id }}-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
   deploy_brand1:
     runs-on: ubuntu-latest
@@ -246,7 +246,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: ${{ job.name }}-dist-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: ${{ job.id }}-dist-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy BRAND1
         env:
