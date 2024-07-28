@@ -300,7 +300,7 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "This is *bold* text",
+              "text": "This is *bold* bold text??",
               "blocks": [
                 {
                   "type": "section",
