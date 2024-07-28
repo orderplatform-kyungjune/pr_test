@@ -287,7 +287,7 @@ jobs:
             } else {
               core.setOutput('hasPrs', 'true');
               core.setOutput('prBlocks', JSON.stringify(prBlocks.map(prBlock => prBlock.block)));
-              core.setOutput('prCount', prBlocks.length);
+              core.setOutput('prCount', `${prBlocks.length}개의`);
             }
 
       # 가져온 PR 목록을 슬랙 채널에 알림
@@ -300,7 +300,7 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}*개의 PR이 여러분의 리뷰를 기다리고 있어요?",
+              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}* PR이 여러분의 리뷰를 기다리고 있어요",
               "attachments": [
                 {
                   "blocks": [
