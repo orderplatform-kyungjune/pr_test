@@ -196,7 +196,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: dist
-          key: uplus-dist-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
+          key: uplus-dist-${{ runner.os }}-${{ needs.build_uplus.outputs.sha }}-${{ github.workflow }}
 
       - name: deploy UPLUS
         env:
