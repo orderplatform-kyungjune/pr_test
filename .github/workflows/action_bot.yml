@@ -300,40 +300,25 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "12개의 *pull* request가 여러분의 리뷰를 기다리고 있어요?",
+              "text": `<!here> .*${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요`,
               "attachments": [
                 {
                   "blocks": [
                     {
-                      "type": "section",
+                      "type": "header",
                       "text": {
-                        "type": "mrkdwn",
-                        "text": "This is *bold* text?"
-                      } 
+                        "type": "plain_text",
+                        "text": "${{ github.repository }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
                     }
                   ]
-                }
+                },
+                ...${{ steps.get-prs.outputs.prBlocks }}
               ]
             }
-#            {
-#              "attachments": [
-#                {
-#                  "blocks": [
-#                    {
-#                      "type": "header",
-#                      "text": {
-#                        "type": "mrkdwn",
-#                        "text": "${{ github.repository }}"
-#                      }
-#                    },
-#                    {
-#                      "type": "divider"
-#                    }
-#                  ]
-#                },
-#                ...${{ steps.get-prs.outputs.prBlocks }}
-#              ]
-#            }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
