@@ -301,7 +301,7 @@ jobs:
           custom_payload: |
             {
               "text": "This is *bold* bold text??",
-              "text": "*${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요?",
+              "text": "<!here> *12개*의 pull request가 여러분의 리뷰를 기다리고 있어요?",
               "attachments": [
                 {
                   "blocks": [
