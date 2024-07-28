@@ -301,13 +301,17 @@ jobs:
           custom_payload: |
             {
               "text": "This is *bold* bold text??",
-              "blocks": [
+              "attachments": [
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "This is *bold* text?"
-                  }
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "This is *bold* text?"
+                      } 
+                    }
+                  ]
                 }
               ]
             }
