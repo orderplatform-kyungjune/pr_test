@@ -300,25 +300,37 @@ jobs:
           mention: "here"
           custom_payload: |
             {
-              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요?",
-              "attachments": [
+              "text": "*This is bold text*",
+              "blocks": [
                 {
-                  "blocks": [
-                    {
-                      "type": "header",
-                      "text": {
-                        "type": "mrkdwn",
-                        "text": "${{ github.repository }}"
-                      }
-                    },
-                    {
-                      "type": "divider"
-                    }
-                  ]
-                },
-                ...${{ steps.get-prs.outputs.prBlocks }}
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*This is bold text*"
+                  }
+                }
               ]
             }
+#            {
+#              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개*의 pull request가 여러분의 리뷰를 기다리고 있어요?",
+#              "attachments": [
+#                {
+#                  "blocks": [
+#                    {
+#                      "type": "header",
+#                      "text": {
+#                        "type": "mrkdwn",
+#                        "text": "${{ github.repository }}"
+#                      }
+#                    },
+#                    {
+#                      "type": "divider"
+#                    }
+#                  ]
+#                },
+#                ...${{ steps.get-prs.outputs.prBlocks }}
+#              ]
+#            }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
