@@ -1,4 +1,4 @@
-name: action bot
+name: github action bot
 
 on:
   workflow_call:
@@ -45,8 +45,6 @@ jobs:
               }
             };
             addLabel();
-
-
 
   # D-DAY 라벨 삭제
   remove-label:
@@ -114,8 +112,6 @@ jobs:
               console.error('Error removing labels:', error);
               process.exit(1);
             });
-
-
 
   # D-DAY label 업데이트 (ex. D-5 => D-4)
   update-label:
@@ -203,7 +199,7 @@ jobs:
           LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
 
   # "D-"로 시작하는 라벨이 있는 PR 목록 slack 채널로 알림
-  slack-pr-list:
+  notify-slack:
     runs-on: ubuntu-latest
     if: github.event.schedule == '59 22 * * 0-4'
     steps:
@@ -489,102 +485,3 @@ jobs:
       - name: output release url
         run: |
           echo "Release URL: $RELEASE_URL"
-
-
-  # PR event 감지하여 slack 채널에 알림
-  slack-pr:
-    runs-on: ubuntu-latest
-    if: ${{
-      (github.event_name == 'pull_request' && github.event.action == 'opened') ||
-      (github.event_name == 'pull_request' &&  github.event.action == 'closed' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'pull_request_review' && github.event.action == 'submitted')
-      }}
-    steps:
-      - name: Send Slack Notification
-        uses: 8398a7/action-slack@v3.14.0
-        with:
-          status: custom
-          fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
-          mention: "channel"
-          if_mention: always
-          custom_payload: |
-            {
-              "attachments": [
-                {
-                  "blocks": [
-                    {
-                      "type": "header",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "${{ github.event.pull_request.title || github.event.issue.title }}"
-                      }
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*프로덕트*\n<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>"
-                        },
-                        {
-                          "type": "mrkdwn",
-                          "text": "*상태*\n${{ 
-                            (github.event_name == 'pull_request' && github.event.action == 'opened' && '요청 :rotating_light:') ||
-                            (github.event_name == 'pull_request' && github.event.action == 'closed' && '병합 :white_check_mark:') ||
-                            (github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && '승인 :+1:') ||
-                            (github.event_name == 'pull_request_review' && github.event.action != 'approved' && '코멘트 :speech_balloon:') ||
-                            '없음'
-                          }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*요청자*\n${{ github.event.pull_request.user.login || github.event.issue.assignee.login || '없음' }}"
-                        },
-                        {
-                          "type": "mrkdwn",
-                          "text": "*리뷰어*\n${{ github.event.review.user.login || github.event.comment.user.login || '없음' }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*코멘트*\n${{ github.event.review.body || github.event.comment.body || '없음'}}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "section",
-                      "text": {
-                        "type": "mrkdwn",
-                        "text": "이동하기"
-                      },
-                      "accessory": {
-                        "type": "button",
-                        "text": {
-                          "type": "plain_text",
-                          "text": ":github:",
-                          "emoji": true
-                        },
-                        "url": "${{ github.event.pull_request.html_url || github.event.comment.html_url || '없음' }}"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

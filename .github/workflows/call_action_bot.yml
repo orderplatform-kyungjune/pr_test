@@ -1,10 +1,10 @@
 # 특정 yml 파일 실행
-name: call action bot
+name: call action_bot.yml
 
 # yml 파일 실행 조건
 on:
   pull_request: # PR 생성/재생성시에 D-DAY label 추가
-    types: [opened, reopened, closed]
+    types: [opened, reopened]
   pull_request_review: # PR 리뷰 상태를 감지하여 D-DAY label 삭제
     types: [submitted, edited, dismissed]
   schedule:
