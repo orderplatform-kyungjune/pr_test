@@ -68,7 +68,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
+          key: node-modules-${{ runner.os }}-${{ steps.check_tag.outputs.sha }}-${{ github.workflow }}
 
   #---------------------------------- torder
   build_torder:
