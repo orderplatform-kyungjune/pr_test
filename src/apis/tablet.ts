@@ -182,14 +182,13 @@ export const requestApkUpdate = (data: postApkUpdateParamsType) => {
  * @param data api 요청 body
  */
 export const requestPostAppForceUpdate = (data: PostAppForceUpdateType) =>
-  setAxiosApi<{ result: boolean; code: number }>({
-    instance: adminTokenApi,
-    config: {
+  setAxiosApi(
+    adminTokenApi({
       method: 'POST',
       url: endpoints.tablet.force_update,
       data,
-    },
-  });
+    }),
+  );
 
 /** 선택 매장 전체 태블릿 새로고침 */
 export const requestTabletRefresh = (data: tabletRefreshParamsType) => {

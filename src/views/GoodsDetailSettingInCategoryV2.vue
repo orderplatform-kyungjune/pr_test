@@ -37,6 +37,7 @@ import {
   WarningFilled,
   ZoomIn,
 } from '@element-plus/icons-vue';
+import UnlimitedOptionStepsModal from '@containers/UnlimitedOptionStepsModal/index.vue';
 import {
   AddOrderOneOptionGroupModal,
   AddOrderTwoOptionGroupModal,
@@ -60,6 +61,7 @@ import {
   DELETE_OPTION_GROUP,
   IMPORT_OPTION_GROUP,
   LANGUAGE_TRANSLATE,
+  UNLIMITED_OPTION_STEPS,
   PRODUCT_DETAIL_SETTING,
   UPDATE_ORDER_ONE_OPTION_MENU,
   UPDATE_ORDER_TWO_OPTION_MENU,
@@ -146,6 +148,14 @@ const productDetailData: Ref<productDetailInfoDataType> = ref({
 /** 매장 API 2.0버전 및 테마 체크 */
 const isStoreApi2: Ref<boolean> = ref(false);
 const isCustomTheme: Ref<boolean> = ref(false);
+
+/** N차옵션 사용가능 여부(상점 api 2.0, 커스텀테마, 미들웨어 버전 0.8이상) * */
+const isUnLimitedOptionStepEnabled = computed(
+  () =>
+    isCustomTheme.value &&
+    isStoreApi2.value &&
+    Number(productDetailData.value.middleWareVersion) >= 0.8,
+);
 
 /** 상품 상세 티오더 1 옵션 그룹 */
 const orderOneOptionGroupList: Ref<productDetailInfoDataOptionType[]> = ref(
@@ -471,7 +481,6 @@ const getProductDetailInfo = async () => {
     if (!typeError) {
       if (res.data.code === 200) {
         productDetailData.value = res.data.data;
-
         useLock.value = res.data.data.useLock;
         saleLock.value = res.data.data.saleLock;
         imageLock.value = res.data.data.imageLock;
@@ -1403,6 +1412,29 @@ const getDetailInfoCardStyle = () => ({
   'goods-detail-info-card-wrap-long': isStoreApi2.value && isCustomTheme.value,
 });
 
+const showUnlimitedOptionStepsModal = () => {
+  openModalWithData(UNLIMITED_OPTION_STEPS, {
+    goodsName: productDetailData.value.goodDpName,
+    onClose: async () => {
+      // 1단계 옵션그룹 목록 api 요청
+      await postOrderTwoOptionGroupList();
+      if (orderTwoOptionGroupList.value.length < 1) {
+        return;
+      }
+
+      // 옵션그룹 목록의 현재 선택 index 설정
+      orderTwoOptionGroupTabsIndex.value =
+        orderTwoOptionGroupList.value.length <=
+        orderTwoOptionGroupTabsIndex.value
+          ? orderTwoOptionGroupTabsIndex.value - 1
+          : orderTwoOptionGroupTabsIndex.value;
+
+      // 현재 선택 되어있는 옵션그룹의 하위 옵션 목록 요청
+      await postOrderTwoOptionMenuList(orderTwoOptionGroupTabsIndex.value);
+    },
+  });
+};
+
 onMounted(async () => {
   await getProductDetailInfo();
   await getChildCategoryList();
@@ -1537,6 +1569,7 @@ onMounted(async () => {
     v-if="flag.languageTranslate"
     :requestProductDetail="getProductDetailInfo"
   />
+  <UnlimitedOptionStepsModal v-if="flag.unLimitedOptionSteps" />
   <AddOrderOneOptionGroupModal
     v-if="flag.addOrderOneOptionGroup"
     :productInfo="productPropsData"
@@ -1843,7 +1876,7 @@ onMounted(async () => {
             </el-row>
           </el-col>
           <el-col :span="10">
-            <div>상품 코드</div>
+            <div>상품코드</div>
             <el-select
               v-model="productDetailData.goodCode"
               class="tablet-goods-name-input mt-10"
@@ -2131,7 +2164,7 @@ onMounted(async () => {
     align="middle"
     class="mb-10 title-text"
   >
-    <span class="ml-10"> 분류 정보 ㆍ 직원 호출 서비스 상품 </span>
+    <span class="ml-10"> 분류 정보 ㆍ 직원 호출 서비스 상품</span>
   </el-row>
   <el-card
     class="mb-20"
@@ -2644,6 +2677,7 @@ onMounted(async () => {
             옵션 그룹 순서변경
           </el-button>
         </div>
+
         <div
           v-else
           class="detail-info-card-option-setting ml-10"
@@ -2660,10 +2694,20 @@ onMounted(async () => {
               <el-radio label="N"> 옵션 미사용</el-radio>
             </el-radio-group>
           </el-row>
+
+          <div class="detail-info-card-option-desc">
+            <span class="guide-text">
+              1단계 옵션 그룹: 상품바로 아래에 위치하여 다양한 옵션을 하나로
+              묶어 제공하는 그룹입니다.<br />
+              2단계 옵션 그룹: 1단계 옵션 선택 후 추가적인 세부 옵션을 제공하는
+              그룹입니다.
+            </span>
+          </div>
           <el-divider />
+
           <div class="detail-info-card-option-desc">
             <span> 옵션 그룹 생성 </span>
-            <span class="guide-text mt-5"> 단일 옵션 그룹을 생성합니다. </span>
+            <span class="guide-text mt-5"> 1단계 옵션 그룹을 생성합니다. </span>
           </div>
           <el-button
             class="mt-20 mb-20"
@@ -2673,11 +2717,26 @@ onMounted(async () => {
           >
             옵션 그룹 생성
           </el-button>
+
           <div class="detail-info-card-option-desc">
             <span> 옵션 그룹 삭제 </span>
-            <span class="guide-text mt-5"> 단일 옵션 그룹을 삭제합니다. </span>
+            <span class="guide-text mt-5"> 1단계 옵션 그룹을 삭제합니다. </span>
           </div>
+          <el-tooltip
+            v-if="isUnLimitedOptionStepEnabled"
+            content="옵션 그룹 삭제는 옵션 단계 설정 > 삭제 버튼을 누르면 할 수 있습니다."
+            placement="top-start"
+          >
+            <el-button
+              class="mt-20 mb-20"
+              type="primary"
+              :disabled="true"
+            >
+              옵션 그룹 삭제
+            </el-button>
+          </el-tooltip>
           <el-button
+            v-else
             class="mt-20 mb-20"
             plain
             type="primary"
@@ -2685,20 +2744,58 @@ onMounted(async () => {
           >
             옵션 그룹 삭제
           </el-button>
+
           <div class="detail-info-card-option-desc">
-            <span> 상품에 등록된 옵션 그룹 전체삭제 </span>
+            <span> 다른 상품의 옵션 그룹 가져오기 </span>
             <span class="guide-text mt-5">
-              상품의 모든 옵션들을 삭제합니다.
+              다른 상품에서 사용하는 1단계 옵션 그룹을 가져옵니다.
             </span>
           </div>
           <el-button
             class="mt-20 mb-20"
             plain
-            type="danger"
-            @click="postDeleteAllOption"
+            type="primary"
+            @click="() => openImportOptionModal('add')"
           >
-            옵션 그룹 전체삭제
+            옵션 그룹 가져오기
           </el-button>
+
+          <div class="detail-info-card-option-desc">
+            <span> 옵션 그룹의 순서 변경하기 </span>
+            <span class="guide-text mt-5">
+              1단계 옵션 그룹의 순서를 변경합니다.
+            </span>
+          </div>
+          <el-button
+            class="mt-20"
+            plain
+            type="primary"
+            @click="openModal(ARRANGE_ORDER_TWO_OPTION_GROUP)"
+          >
+            옵션 그룹 순서변경
+          </el-button>
+          <el-divider />
+
+          <div>
+            <div class="detail-info-card-option-desc">
+              <span> 옵션 단계 설정</span>
+              <span class="guide-text mt-5">
+                상품의 옵션의 단계를 설정합니다.<br />
+                미들웨어 버전 0.8.0, 티오더2 커스텀테마만 사용 가능합니다.
+              </span>
+            </div>
+            <el-button
+              class="mt-20"
+              plain
+              type="primary"
+              :disabled="!isUnLimitedOptionStepEnabled"
+              @click="showUnlimitedOptionStepsModal"
+            >
+              옵션 단계 설정
+            </el-button>
+          </div>
+          <el-divider />
+
           <div class="detail-info-card-option-desc">
             <span> 다른 상품의 옵션 그룹 덮어쓰기 </span>
             <span class="guide-text mt-5">
@@ -2714,34 +2811,20 @@ onMounted(async () => {
           >
             옵션 그룹 덮어쓰기
           </el-button>
+
           <div class="detail-info-card-option-desc">
-            <span> 다른 상품의 옵션 그룹 추가하기 </span>
+            <span> 상품에 등록된 옵션 그룹 전체삭제 </span>
             <span class="guide-text mt-5">
-              기존 옵션 그룹 그대로 사용하며 다른 상품에서 사용하는 옵션 그룹을
-              가져와 추가합니다.
+              상품의 모든 옵션들을 삭제합니다.
             </span>
           </div>
           <el-button
             class="mt-20 mb-20"
             plain
-            type="primary"
-            @click="() => openImportOptionModal('add')"
+            type="danger"
+            @click="postDeleteAllOption"
           >
-            옵션 그룹 추가하기
-          </el-button>
-          <div class="detail-info-card-option-desc">
-            <span> 옵션 그룹의 순서 변경하기 </span>
-            <span class="guide-text mt-5">
-              옵션 그룹의 순서를 변경합니다.
-            </span>
-          </div>
-          <el-button
-            class="mt-20 mb-20"
-            plain
-            type="primary"
-            @click="openModal(ARRANGE_ORDER_TWO_OPTION_GROUP)"
-          >
-            옵션 그룹 순서변경
+            옵션 그룹 전체삭제
           </el-button>
         </div>
       </el-card>
@@ -2753,12 +2836,10 @@ onMounted(async () => {
         shadow="never"
       >
         <template #header>
-          <el-row
-            align="middle"
-            justify="space-between"
-          >
-            <span> 옵션 정보 </span>
-          </el-row>
+          <span> 옵션 정보 </span>
+          <span class="guide-text mt-5">
+            해당 상품의 1단계 옵션 그룹만 노출 합니다.
+          </span>
         </template>
         <el-tabs
           v-if="getValueLength(orderOneOptionGroupList) && !isStoreApi2"
@@ -2968,7 +3049,20 @@ onMounted(async () => {
               justify="space-between"
             >
               <span>선택된 옵션 상품</span>
+              <el-tooltip
+                v-if="isUnLimitedOptionStepEnabled"
+                content="옵션 그룹 변경은 옵션 단계 설정 > 수정 버튼을 누르면 할 수 있습니다."
+                placement="top-start"
+              >
+                <el-button
+                  type="primary"
+                  :disabled="true"
+                >
+                  옵션 그룹 변경
+                </el-button>
+              </el-tooltip>
               <el-button
+                v-else
                 type="primary"
                 @click="openEditOrderTwoOptionModal(optionInfo)"
               >
@@ -3024,9 +3118,14 @@ onMounted(async () => {
                     </el-upload>
                     <div class="option-list-info">
                       <div class="info-row">
-                        <span>
-                          {{ element.T_order_store_good_option_name }}
-                        </span>
+                        <el-row align="middle">
+                          <span class="mr-5">
+                            {{ element.T_order_store_good_option_name }}
+                          </span>
+                          <el-tag v-if="element.preset_yn === 'Y'">
+                            기본구성
+                          </el-tag>
+                        </el-row>
                         <span>
                           {{
                             element.T_order_store_good_option_price?.toLocaleString()
@@ -3043,7 +3142,51 @@ onMounted(async () => {
                         </span>
                       </div>
                     </div>
-                    <div class="option-radio-wrapper">
+                    <div
+                      v-if="element.preset_yn === 'Y'"
+                      class="option-radio-wrapper"
+                    >
+                      <el-tooltip
+                        content="기본 구성 메뉴/옵션은 판매, 품절상태를 변경할 수 없습니다."
+                        placement="top"
+                      >
+                        <el-switch
+                          v-model="element.T_order_store_good_option_use"
+                          active-text="판매중"
+                          active-value="Y"
+                          class="ml-10"
+                          inactive-text="중지"
+                          inactive-value="N"
+                          style="
+                            --el-switch-on-color: #13ce66;
+                            --el-switch-off-color: #f56c6c;
+                          "
+                          disabled
+                        />
+                      </el-tooltip>
+                      <el-tooltip
+                        content="기본 구성 메뉴/옵션은 판매, 품절상태를 변경할 수 없습니다."
+                        placement="top"
+                      >
+                        <el-switch
+                          v-model="element.T_order_store_good_option_isSale"
+                          active-text="판매중"
+                          active-value="N"
+                          class="ml-10"
+                          inactive-text="품절"
+                          inactive-value="Y"
+                          style="
+                            --el-switch-on-color: #13ce66;
+                            --el-switch-off-color: #e6a23c;
+                          "
+                          disabled
+                        />
+                      </el-tooltip>
+                    </div>
+                    <div
+                      v-else
+                      class="option-radio-wrapper"
+                    >
                       <el-switch
                         v-model="element.T_order_store_good_option_use"
                         active-text="판매중"

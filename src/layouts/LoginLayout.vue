@@ -110,7 +110,7 @@ const getAdminLogin = async () => {
       addTagsData(getOriginLnbData('S1001'));
     }
   } catch (error) {
-    ElMessage.error('오류가 발생하였습니다.');
+    ElMessage.error('오류가 발생하였습니다. ');
     console.log(error);
   }
 };

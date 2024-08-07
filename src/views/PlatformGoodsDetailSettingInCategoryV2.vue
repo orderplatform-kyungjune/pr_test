@@ -33,6 +33,7 @@ import {
   WarningFilled,
   ZoomIn,
 } from '@element-plus/icons-vue';
+import UnlimitedOptionStepsModal from '@containers/UnlimitedOptionStepsModal/index.vue';
 import {
   AddOrderOneOptionGroupModal,
   AddOrderTwoOptionGroupModal,
@@ -56,6 +57,7 @@ import {
   DELETE_OPTION_GROUP,
   IMPORT_OPTION_GROUP,
   PRODUCT_DETAIL_SETTING,
+  UNLIMITED_OPTION_STEPS,
   UPDATE_ORDER_ONE_OPTION_MENU,
   UPDATE_ORDER_TWO_OPTION_MENU,
 } from '@common/string';
@@ -97,13 +99,13 @@ const { orderTwoOptionGroupListCodec, orderTwoOptionMenuListCodec } =
 
 const { responseEachBigChildCategoryListCodec } = categoryCodec;
 
-const { flag, openModal } = useModalStore();
+const { flag, openModal, openModalWithData } = useModalStore();
 
 const { getCategoryList } = useCategoryStore();
 
 const { convertToEllipsis } = etcUtils;
 
-/** 상품 상세 정보 데이터 */
+/** 메뉴 상세 정보 데이터 */
 const productDetailData: Ref<productDetailInfoDataPlatformType> = ref({
   useLock: '',
   imageLock: '',
@@ -132,11 +134,19 @@ const productDetailData: Ref<productDetailInfoDataPlatformType> = ref({
   },
 } as productDetailInfoDataPlatformType);
 
-/** 매장 API 2.0버전 및 테마 체크 */
+/** 상점 API 2.0버전 및 테마 체크 */
 const isStoreApi2: Ref<boolean> = ref(true);
 const isCustomTheme: Ref<boolean> = ref(false);
 
-/** 상품 상세 티오더 1 옵션 그룹 */
+/** N차옵션 사용가능 여부(상점 api 2.0, 커스텀테마, 미들웨어 버전 0.8이상) * */
+const isUnLimitedOptionStepEnabled = computed(
+  () =>
+    isCustomTheme.value &&
+    isStoreApi2.value &&
+    Number(productDetailData.value.middleWareVersion) >= 0.8,
+);
+
+/** 메뉴 상세 티오더 1 옵션 그룹 */
 const orderOneOptionGroupList: Ref<productDetailInfoDataOptionPlatformType[]> =
   ref([] as productDetailInfoDataOptionPlatformType[]);
 
@@ -176,7 +186,7 @@ const isGoodPosStop = computed(() =>
   isOn(productDetailData.value.goodPosStopUse),
 );
 
-/** 상품 커스텀 코드 불러오기 */
+/** 메뉴 커스텀 코드 불러오기 */
 const getCustomProductCode = async () => {
   try {
     const res = (await requestCustomProductCode()) as AxiosResponse;
@@ -242,7 +252,7 @@ const openArrangeProductModal = (
 
 const optionLoading: Ref<boolean> = ref(false);
 
-/** 상품 상세 + 옵션 정보 불러오기 */
+/** 메뉴 상세 + 옵션 정보 불러오기 */
 const getProductDetailInfo = async () => {
   const data = {
     posGoodCode: route.query.posGoodCode as string,
@@ -319,8 +329,8 @@ const onCheckRightTransfer = (value: number[], movedKeys: number[]) => {
   if (isTopGoods.length) {
     const title = `선택한 분류를 이동 처리할 수 없습니다.
 
-      선택한 분류에서 상품을 이동을 원할 경우,
-      상품 최상단 고정 기능을 해지를 해주세요.`;
+      선택한 분류에서 메뉴를 이동을 원할 경우,
+      메뉴 최상단 고정 기능을 해지를 해주세요.`;
 
     ElMessageBox.alert('경고', {
       confirmButtonText: '확인',
@@ -352,7 +362,7 @@ const onChangeCategoryInfoTransfer = (
   }
 };
 
-/** 상품 이미지 변경 */
+/** 메뉴 이미지 변경 */
 const changeProductImage = async (response: any) => {
   const requestUpdateImageData = {
     storeCode: route.query.code as string,
@@ -448,7 +458,7 @@ const onSpicyChange = () => {
   }
 };
 
-/** 상품 정보 수정하기 */
+/** 메뉴 정보 수정하기 */
 const postGoodsInfoUpdate = async (requestData: updateProductType) => {
   try {
     const res = (await requestUpdateProduct(requestData)) as AxiosResponse;
@@ -490,10 +500,10 @@ const failGoodsPriceValidationAlert = () => {
   });
 };
 
-/** 상품 상세 설명 보이기 설정 시, 상품 상세 설명 내용이 없을 경우, alert message */
+/** 메뉴 상세 설명 보이기 설정 시, 메뉴 상세 설명 내용이 없을 경우, alert message */
 const failGoodsDetailValidationAlert = () => {
   ElMessageBox.alert(
-    '상품 상세 설명 내용이 없으면 보이기 설정이 불가능합니다.',
+    '메뉴 상세 설명 내용이 없으면 보이기 설정이 불가능합니다.',
     '실패',
     {
       callback: () => {
@@ -511,7 +521,7 @@ const failGoodsDetailValidationAlert = () => {
 /** 최대 주문 수량이 0이 아니고 최대 수량보다 최소 수량이 작을 때 alert message */
 const failGoodsQtyValidationAlert = () => {
   ElMessageBox.alert(
-    '상품의 최소 주문 수량이 최대 주문 수량보다 큽니다. 확인 후 다시 진행 해주세요.',
+    '메뉴의 최소 주문 수량이 최대 주문 수량보다 큽니다. 확인 후 다시 진행 해주세요.',
     '실패',
     {
       confirmButtonText: '취소',
@@ -560,7 +570,7 @@ const saveGoodsDetail = (
     return;
   }
 
-  // 상품 상세 설명 보이기 설정 시, 상품 상세 설명 내용이 없을 경우
+  // 메뉴 상세 설명 보이기 설정 시, 메뉴 상세 설명 내용이 없을 경우
   if (
     productDetailDataValue.goodDetailOpen === 'Y' &&
     productDetailDataValue.goodHtml === ''
@@ -763,7 +773,7 @@ const setSortOptionData = async (
   }
 };
 
-/** 상품 이미지 업로드 */
+/** 메뉴 이미지 업로드 */
 const setProductImage = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response: any,
@@ -890,7 +900,7 @@ const postOrderTwoOptionGroupList = async () => {
   }
 };
 
-/** 티오더 2 옵션 상품 리스트 불러오기 */
+/** 티오더 2 옵션 메뉴 리스트 불러오기 */
 const orderTwoOptionMenuList = ref<orderTwoOptionMenuDataPlatformType[]>([]);
 const postOrderTwoOptionMenuList = async (index: number) => {
   if (orderTwoOptionGroupList.value.length === 0) return;
@@ -928,7 +938,7 @@ const postOrderTwoOptionMenuList = async (index: number) => {
   }
 };
 
-/** 티오더 2 옵션 상품 순서 변경 */
+/** 티오더 2 옵션 메뉴 순서 변경 */
 const postSortOrderTwoOptionMenu = async () => {
   const getOptionArr = () => {
     const newArr: number[] = [];
@@ -989,7 +999,7 @@ const postOptionGroupList = async () => {
   }
 };
 
-/** 티오더 2 옵션 상품 수정하기 */
+/** 티오더 2 옵션 메뉴 수정하기 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const postOptionMenuUpdate = async (
   target: orderTwoOptionMenuDataPlatformType,
@@ -1176,6 +1186,12 @@ const getDetailInfoCardStyle = () => ({
   'goods-detail-info-card-wrap-long': isStoreApi2.value && isCustomTheme.value,
 });
 
+const showUnlimitedOptionStepsModal = () => {
+  openModalWithData(UNLIMITED_OPTION_STEPS, {
+    goodsName: productDetailData.value.goodDpName,
+  });
+};
+
 onMounted(async () => {
   await getProductDetailInfo();
   await getChildCategoryList();
@@ -1202,7 +1218,7 @@ onMounted(async () => {
   <div id="scroll-top"></div>
   <BreadcrumbHeader :propsHeader="goodsDetailSettingInCategoryHeader" />
   <el-tag class="mt-5">
-    단일 상품에 대한 설정을 할 수 있습니다. (상품 이미지, 상품정보, 옵션 등)
+    단일 메뉴에 대한 설정을 할 수 있습니다. (메뉴 이미지, 메뉴정보, 옵션 등)
   </el-tag>
   <StoreNameBox />
   <!-- 이미지 미리보기 dialog -->
@@ -1225,6 +1241,7 @@ onMounted(async () => {
     v-if="flag.languageTranslate"
     :requestProductDetail="getProductDetailInfo"
   />
+  <UnlimitedOptionStepsModal v-if="flag.unLimitedOptionSteps" />
   <AddOrderOneOptionGroupModal
     v-if="flag.addOrderOneOptionGroup"
     :productInfo="productPropsData"
@@ -1303,7 +1320,7 @@ onMounted(async () => {
         size="large"
         @click="setMoveTargetPosition('category-setting')"
       >
-        분류 정보 ㆍ 직원 호출 서비스 상품
+        분류 정보 ㆍ 직원 호출 서비스 메뉴
       </el-button>
       <el-button
         class="flex-1"
@@ -1325,7 +1342,7 @@ onMounted(async () => {
         size="large"
         @click="setMoveTargetPosition('goods-option')"
       >
-        상품 옵션
+        메뉴 옵션
       </el-button>
     </div>
   </el-affix>
@@ -1389,7 +1406,7 @@ onMounted(async () => {
               class="width-100 goods-pos-stop-dim"
               justify="center"
             >
-              포스에서 삭제된 상품입니다.
+              포스에서 삭제된 메뉴입니다.
             </el-row>
           </div>
           <el-row>
@@ -1416,7 +1433,7 @@ onMounted(async () => {
           justify="space-between"
         >
           <el-col :span="12">
-            <span> 태블릿 노출 상품명 </span>
+            <span> 태블릿 노출 메뉴명 </span>
             <el-row
               align="middle"
               class="mt-10"
@@ -1428,7 +1445,7 @@ onMounted(async () => {
             </el-row>
           </el-col>
           <el-col :span="10">
-            <div>상품 코드</div>
+            <div>메뉴 코드</div>
             <el-select
               v-model="productDetailData.goodCode"
               class="tablet-goods-name-input mt-10"
@@ -1447,7 +1464,7 @@ onMounted(async () => {
           justify="space-between"
         >
           <el-col :span="12">
-            <span class="mr-5"> 상품 판매 상태 </span>
+            <span class="mr-5"> 메뉴 판매 상태 </span>
             <span>
               <el-tag
                 v-if="
@@ -1516,9 +1533,9 @@ onMounted(async () => {
         >
           <el-col :span="10">
             <el-row>
-              <span class="mr-5 mb-5"> 상품 가격 </span>
+              <span class="mr-5 mb-5"> 메뉴 가격 </span>
               <span class="guide-text">
-                상품 가격은 POS에서 수정 가능합니다.
+                메뉴 가격은 POS에서 수정 가능합니다.
               </span>
             </el-row>
             <el-input
@@ -1574,7 +1591,7 @@ onMounted(async () => {
                 class="goods-price-discount-info"
                 size="small"
               >
-                상품 가격은 POS에서 수정 가능합니다.
+                메뉴 가격은 POS에서 수정 가능합니다.
               </el-text>
             </el-col>
             <el-col :span="12">
@@ -1669,9 +1686,9 @@ onMounted(async () => {
     >
       <div class="flex-1 mr-20">
         <el-row align="middle">
-          <span class="mr-10"> 포스 상품명 </span>
+          <span class="mr-10"> 포스 메뉴명 </span>
           <span class="pos-name-guide-text">
-            상품 이름은 POS에서 수정 가능합니다.
+            메뉴 이름은 POS에서 수정 가능합니다.
           </span>
         </el-row>
         <el-input
@@ -1712,7 +1729,7 @@ onMounted(async () => {
     align="middle"
     class="mb-10 title-text"
   >
-    <span class="ml-10"> 분류 정보 ㆍ 직원 호출 서비스 상품 </span>
+    <span class="ml-10"> 분류 정보 ㆍ 직원 호출 서비스 메뉴 </span>
   </el-row>
   <el-card
     class="mb-20"
@@ -1750,7 +1767,7 @@ onMounted(async () => {
       </template>
     </el-transfer>
     <el-row class="mt-20">
-      <el-col class="mb-10"> 상품 순서</el-col>
+      <el-col class="mb-10"> 메뉴 순서</el-col>
       <el-col>
         <el-table
           :data="productDetailData.goodCategoryList"
@@ -1772,7 +1789,7 @@ onMounted(async () => {
                 </span>
                 <el-tooltip
                   v-if="row.top === 'Y'"
-                  content="해당 분류에서 상품이 최상단 고정 되어있습니다."
+                  content="해당 분류에서 메뉴가 최상단 고정 되어있습니다."
                   effect="dark"
                   placement="top"
                 >
@@ -1786,7 +1803,7 @@ onMounted(async () => {
           <el-table-column
             align="center"
             header-align="center"
-            label="상품 순서 변경"
+            label="메뉴 순서 변경"
             width="150"
           >
             <template #default="{ row }">
@@ -1795,7 +1812,7 @@ onMounted(async () => {
                 type="warning"
                 @click="openArrangeProductModal(row)"
               >
-                상품 순서 변경
+                메뉴 순서 변경
               </el-button>
             </template>
           </el-table-column>
@@ -1947,7 +1964,7 @@ onMounted(async () => {
             :disabled="isDisabled(productDetailData.goodDetailOpen)"
             :rows="6"
             class="good-html-input mt-10"
-            placeholder="상품 상세 설명을 작성해주세요."
+            placeholder="메뉴 상세 설명을 작성해주세요."
             type="textarea"
           />
         </el-row>
@@ -1987,7 +2004,7 @@ onMounted(async () => {
               :disabled="isDisabled(productDetailData.goodDetailOpen)"
               :rows="6"
               class="good-html-input mt-10"
-              placeholder="상품 상세 설명을 작성해주세요."
+              placeholder="메뉴 상세 설명을 작성해주세요."
               type="textarea"
             />
           </el-col>
@@ -2084,7 +2101,7 @@ onMounted(async () => {
     align="middle"
     class="mb-10 title-text"
   >
-    <span class="ml-10"> 상품 옵션 설정 </span>
+    <span class="ml-10"> 메뉴 옵션 설정 </span>
   </el-row>
   <el-row
     :gutter="10"
@@ -2102,7 +2119,7 @@ onMounted(async () => {
           <div class="detail-info-card-option-desc">
             <span> 옵션 사용 여부 </span>
             <span class="guide-text mt-5">
-              해당 상품의 옵션을 사용 여부를 선택합니다.
+              해당 메뉴의 옵션을 사용 여부를 선택합니다.
             </span>
           </div>
           <el-row class="mt-10">
@@ -2137,9 +2154,9 @@ onMounted(async () => {
             옵션 그룹 삭제
           </el-button>
           <div class="detail-info-card-option-desc">
-            <span> 상품에 등록된 옵션 그룹 전체삭제 </span>
+            <span> 메뉴에 등록된 옵션 그룹 전체삭제 </span>
             <span class="guide-text mt-5">
-              상품의 모든 옵션들을 삭제합니다.
+              메뉴의 모든 옵션들을 삭제합니다.
             </span>
           </div>
           <el-button
@@ -2151,9 +2168,9 @@ onMounted(async () => {
             옵션 그룹 전체삭제
           </el-button>
           <div class="detail-info-card-option-desc">
-            <span> 다른 상품의 옵션 그룹 덮어쓰기 </span>
+            <span> 다른 메뉴의 옵션 그룹 덮어쓰기 </span>
             <span class="guide-text mt-5">
-              기존 옵션 그룹은 삭제되고 다른 상품에서 사용하는 옵션 그룹을
+              기존 옵션 그룹은 삭제되고 다른 메뉴에서 사용하는 옵션 그룹을
               복사하여 덮어씁니다.
             </span>
           </div>
@@ -2166,9 +2183,9 @@ onMounted(async () => {
             옵션 그룹 덮어쓰기
           </el-button>
           <div class="detail-info-card-option-desc">
-            <span> 다른 상품의 옵션 그룹 추가하기 </span>
+            <span> 다른 메뉴의 옵션 그룹 추가하기 </span>
             <span class="guide-text mt-5">
-              기존 옵션 그룹 그대로 사용하며 다른 상품에서 사용하는 옵션 그룹을
+              기존 옵션 그룹 그대로 사용하며 다른 메뉴에서 사용하는 옵션 그룹을
               가져와 추가합니다.
             </span>
           </div>
@@ -2202,7 +2219,7 @@ onMounted(async () => {
           <div class="detail-info-card-option-desc">
             <span> 옵션 사용 여부 </span>
             <span class="guide-text mt-5">
-              해당 상품의 옵션을 사용 여부를 선택합니다.
+              해당 메뉴의 옵션을 사용 여부를 선택합니다.
             </span>
           </div>
           <el-row class="mt-10">
@@ -2211,10 +2228,20 @@ onMounted(async () => {
               <el-radio label="N"> 옵션 미사용</el-radio>
             </el-radio-group>
           </el-row>
+
+          <div class="detail-info-card-option-desc">
+            <span class="guide-text">
+              1단계 옵션 그룹: 메뉴 바로 아래에 위치하여 다양한 옵션을 하나로
+              묶어 제공하는 그룹입니다.<br />
+              2단계 옵션 그룹: 1단계 옵션 선택 후 추가적인 세부 옵션을 제공하는
+              그룹입니다.
+            </span>
+          </div>
           <el-divider />
+
           <div class="detail-info-card-option-desc">
             <span> 옵션 그룹 생성 </span>
-            <span class="guide-text mt-5"> 단일 옵션 그룹을 생성합니다. </span>
+            <span class="guide-text mt-5"> 1단계 옵션 그룹을 생성합니다. </span>
           </div>
           <el-button
             class="mt-20 mb-20"
@@ -2224,11 +2251,26 @@ onMounted(async () => {
           >
             옵션 그룹 생성
           </el-button>
+
           <div class="detail-info-card-option-desc">
             <span> 옵션 그룹 삭제 </span>
-            <span class="guide-text mt-5"> 단일 옵션 그룹을 삭제합니다. </span>
+            <span class="guide-text mt-5"> 1단계 옵션 그룹을 삭제합니다. </span>
           </div>
+          <el-tooltip
+            v-if="isUnLimitedOptionStepEnabled"
+            content="옵션 그룹 삭제는 옵션 단계 설정 > 삭제 버튼을 누르면 할 수 있습니다."
+            placement="top-start"
+          >
+            <el-button
+              class="mt-20 mb-20"
+              type="primary"
+              :disabled="true"
+            >
+              옵션 그룹 삭제
+            </el-button>
+          </el-tooltip>
           <el-button
+            v-else
             class="mt-20 mb-20"
             plain
             type="primary"
@@ -2236,24 +2278,62 @@ onMounted(async () => {
           >
             옵션 그룹 삭제
           </el-button>
+
           <div class="detail-info-card-option-desc">
-            <span> 상품에 등록된 옵션 그룹 전체삭제 </span>
+            <span> 다른 메뉴의 옵션 그룹 가져오기 </span>
             <span class="guide-text mt-5">
-              상품의 모든 옵션들을 삭제합니다.
+              다른 메뉴에서 사용하는 1단계 옵션 그룹을 가져옵니다.
             </span>
           </div>
           <el-button
             class="mt-20 mb-20"
             plain
-            type="danger"
-            @click="postDeleteAllOption"
+            type="primary"
+            @click="() => openImportOptionModal('add')"
           >
-            옵션 그룹 전체삭제
+            옵션 그룹 가져오기
           </el-button>
+
           <div class="detail-info-card-option-desc">
-            <span> 다른 상품의 옵션 그룹 덮어쓰기 </span>
+            <span> 옵션 그룹의 순서 변경하기 </span>
             <span class="guide-text mt-5">
-              기존 옵션 그룹은 삭제되고 다른 상품에서 사용하는 옵션 그룹을
+              1단계 옵션 그룹의 순서를 변경합니다.
+            </span>
+          </div>
+          <el-button
+            class="mt-20"
+            plain
+            type="primary"
+            @click="openModal(ARRANGE_ORDER_TWO_OPTION_GROUP)"
+          >
+            옵션 그룹 순서변경
+          </el-button>
+          <el-divider />
+
+          <div>
+            <div class="detail-info-card-option-desc">
+              <span> 옵션 단계 설정</span>
+              <span class="guide-text mt-5">
+                메뉴의 옵션의 단계를 설정합니다.<br />
+                미들웨어 버전 0.8.0, 티오더2 커스텀테마만 사용 가능합니다.
+              </span>
+            </div>
+            <el-button
+              class="mt-20"
+              plain
+              type="primary"
+              :disabled="!isUnLimitedOptionStepEnabled"
+              @click="showUnlimitedOptionStepsModal"
+            >
+              옵션 단계 설정
+            </el-button>
+          </div>
+          <el-divider />
+
+          <div class="detail-info-card-option-desc">
+            <span> 다른 메뉴의 옵션 그룹 덮어쓰기 </span>
+            <span class="guide-text mt-5">
+              기존 옵션 그룹은 삭제되고 다른 메뉴에서 사용하는 옵션 그룹을
               복사하여 덮어씁니다.
             </span>
           </div>
@@ -2265,34 +2345,20 @@ onMounted(async () => {
           >
             옵션 그룹 덮어쓰기
           </el-button>
+
           <div class="detail-info-card-option-desc">
-            <span> 다른 상품의 옵션 그룹 추가하기 </span>
+            <span> 메뉴에 등록된 옵션 그룹 전체삭제 </span>
             <span class="guide-text mt-5">
-              기존 옵션 그룹 그대로 사용하며 다른 상품에서 사용하는 옵션 그룹을
-              가져와 추가합니다.
+              메뉴의 모든 옵션들을 삭제합니다.
             </span>
           </div>
           <el-button
             class="mt-20 mb-20"
             plain
-            type="primary"
-            @click="() => openImportOptionModal('add')"
+            type="danger"
+            @click="postDeleteAllOption"
           >
-            옵션 그룹 추가하기
-          </el-button>
-          <div class="detail-info-card-option-desc">
-            <span> 옵션 그룹의 순서 변경하기 </span>
-            <span class="guide-text mt-5">
-              옵션 그룹의 순서를 변경합니다.
-            </span>
-          </div>
-          <el-button
-            class="mt-20 mb-20"
-            plain
-            type="primary"
-            @click="openModal(ARRANGE_ORDER_TWO_OPTION_GROUP)"
-          >
-            옵션 그룹 순서변경
+            옵션 그룹 전체삭제
           </el-button>
         </div>
       </el-card>
@@ -2304,12 +2370,10 @@ onMounted(async () => {
         shadow="never"
       >
         <template #header>
-          <el-row
-            align="middle"
-            justify="space-between"
-          >
-            <span> 옵션 정보 </span>
-          </el-row>
+          <span> 옵션 정보 </span>
+          <span class="guide-text mt-5">
+            해당 메뉴의 1단계 옵션 그룹만 노출 합니다.
+          </span>
         </template>
         <el-tabs
           v-if="getValueLength(orderOneOptionGroupList) && !isStoreApi2"
@@ -2356,7 +2420,7 @@ onMounted(async () => {
               class="mb-20"
               justify="space-between"
             >
-              <span>선택된 옵션 상품</span>
+              <span>선택된 옵션 메뉴</span>
               <el-button
                 type="primary"
                 @click="openEditOrderOneOptionModal(target)"
@@ -2466,7 +2530,7 @@ onMounted(async () => {
                 v-else
                 class="option-group-item-list-empty"
               >
-                옵션 상품이 없습니다.
+                옵션 메뉴가 없습니다.
               </div>
             </el-scrollbar>
           </el-tab-pane>
@@ -2518,8 +2582,21 @@ onMounted(async () => {
               class="mb-20"
               justify="space-between"
             >
-              <span>선택된 옵션 상품</span>
+              <span>선택된 옵션 메뉴</span>
+              <el-tooltip
+                v-if="isUnLimitedOptionStepEnabled"
+                content="옵션 그룹 변경은 옵션 단계 설정 > 수정 버튼을 누르면 할 수 있습니다."
+                placement="top-start"
+              >
+                <el-button
+                  type="primary"
+                  :disabled="true"
+                >
+                  옵션 그룹 변경
+                </el-button>
+              </el-tooltip>
               <el-button
+                v-else
                 type="primary"
                 @click="openEditOrderTwoOptionModal(optionInfo)"
               >
@@ -2575,9 +2652,14 @@ onMounted(async () => {
                     </el-upload>
                     <div class="option-list-info">
                       <div class="info-row">
-                        <span>
-                          {{ element.platform_store_good_option_name }}
-                        </span>
+                        <el-row align="middle">
+                          <span class="mr-5">
+                            {{ element.platform_store_good_option_name }}
+                          </span>
+                          <el-tag v-if="element.preset_yn === 'Y'">
+                            기본구성
+                          </el-tag>
+                        </el-row>
                         <span>
                           {{
                             element.platform_store_good_option_price?.toLocaleString()
@@ -2594,7 +2676,53 @@ onMounted(async () => {
                         </span>
                       </div>
                     </div>
-                    <div class="option-radio-wrapper">
+                    <div
+                      v-if="element.preset_yn === 'Y'"
+                      class="option-radio-wrapper"
+                    >
+                      <el-tooltip
+                        content="기본 구성 메뉴/옵션은 판매, 품절상태를 변경할 수 없습니다."
+                        effect="dark"
+                        placement="top"
+                      >
+                        <el-switch
+                          v-model="element.platform_store_good_option_use"
+                          active-text="판매중"
+                          active-value="Y"
+                          class="ml-10"
+                          inactive-text="중지"
+                          inactive-value="N"
+                          style="
+                            --el-switch-on-color: #13ce66;
+                            --el-switch-off-color: #f56c6c;
+                          "
+                          disabled
+                        />
+                      </el-tooltip>
+                      <el-tooltip
+                        content="기본 구성 메뉴/옵션은 판매, 품절상태를 변경할 수 없습니다."
+                        effect="dark"
+                        placement="top"
+                      >
+                        <el-switch
+                          v-model="element.platform_store_good_option_isSale"
+                          active-text="판매중"
+                          active-value="N"
+                          class="ml-10"
+                          inactive-text="품절"
+                          inactive-value="Y"
+                          style="
+                            --el-switch-on-color: #13ce66;
+                            --el-switch-off-color: #e6a23c;
+                          "
+                          disabled
+                        />
+                      </el-tooltip>
+                    </div>
+                    <div
+                      v-else
+                      class="option-radio-wrapper"
+                    >
                       <el-switch
                         v-model="element.platform_store_good_option_use"
                         active-text="판매중"
@@ -2629,7 +2757,7 @@ onMounted(async () => {
                 v-else
                 class="option-group-item-list-empty"
               >
-                옵션 상품이 없습니다.
+                옵션 메뉴가 없습니다.
               </div>
             </el-scrollbar>
           </el-tab-pane>
@@ -2651,7 +2779,7 @@ onMounted(async () => {
         size="large"
         @click="router.back()"
       >
-        상품 목록으로 이동
+        메뉴 목록으로 이동
       </el-button>
       <el-button
         :icon="Top"

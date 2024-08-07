@@ -6,8 +6,8 @@ import { authentication, etcUtils, runtimeCheckHelper } from '@utils';
 import useModalStore from '@store/storeModal';
 import {
   orderTwoOptionGroupDataPlatformType,
-  orderTwoOptionMenuDataPlatformType,
   responseOptionGroupListType,
+  orderTwoOptionMenuDataPlatformType,
 } from '@interface/orderTwoOption';
 import { requestPosInitDataType } from '@interface/option';
 import { RefreshRight, Search } from '@element-plus/icons-vue';
@@ -53,7 +53,7 @@ const searchOptionMenu: Ref<string> = ref('');
 /** 변경하기 API 데이터 */
 const selectedOptionList: Ref<string[]> = ref([]);
 
-/** 티오더2 옵션 상품 리스트 */
+/** 티오더2 옵션 메뉴 리스트 */
 const optionMenuList: Ref<orderTwoOptionMenuDataPlatformType[]> = ref([]);
 
 /** 티오더2 옵션 그룹 정보 (현 order2에서는 is_type 값이 G든 I든 상관없는 값이 됨.) */
@@ -71,7 +71,7 @@ const countRadioState = reactive({
 
 const hasOptionLimitSelect = ref(false);
 
-/** 티오더2 옵션 상품 리스트 불러오기 */
+/** 티오더2 옵션 메뉴 리스트 불러오기 */
 const postOptionMenuList = async () => {
   const requestData = {
     storeCode: props.productInfo.storeCode,
@@ -189,7 +189,7 @@ const searchOption = () => {
   if (searchedOptionList.value?.length < 1) {
     ElMessage({
       type: 'warning',
-      message: `검색하신 ${searchOptionMenu.value}와(과) 일치한 상품이 존재하지 않습니다.`,
+      message: `검색하신 ${searchOptionMenu.value}와(과) 일치한 메뉴가 존재하지 않습니다.`,
     });
   }
 };
@@ -257,7 +257,7 @@ const postUpdateOptionGroup = async (
       (init: requestPosInitDataType) => init.O_id === code,
     );
 
-  // 포스에서 제거된 상품을 제외하고 서버에 요청하기 위한 로직
+  // 포스에서 제거된 메뉴를 제외하고 서버에 요청하기 위한 로직
   selectedOptionList.value.forEach((code: string) => {
     const target = getInitTarget(code);
     if (target) newOptionArr.push(target?.O_id as string);
@@ -366,7 +366,7 @@ const postUpdateOptionGroup = async (
         ElMessage({
           type: 'success',
           message:
-            '옵션 그룹 내 선택 종류 초기화 및 옵션 상품 변경이 완료되었습니다.',
+            '옵션 그룹 내 선택 종류 초기화 및 옵션 메뉴 변경이 완료되었습니다.',
         });
         await postOptionMenuList();
         return;
@@ -378,7 +378,7 @@ const postUpdateOptionGroup = async (
       closeModal(UPDATE_ORDER_TWO_OPTION_MENU);
       ElMessage({
         type: 'success',
-        message: '옵션 상품이 변경되었습니다.',
+        message: '옵션 메뉴가 변경되었습니다.',
       });
     }
   } catch (error) {
@@ -409,7 +409,7 @@ const changeCheckbox = (value: string[]) => {
   isIndeterminate.value = checkedCount > 0 && checkedCount < allData.length;
 };
 
-// 기존 상품 카운트 설정
+// 기존 메뉴 카운트 설정
 const setCheckedItemSelectCount = () => {
   selectedOptionList.value.forEach((selectedOptionCode) => {
     const targetInfo = optionGroupData.value.item.find(
@@ -496,11 +496,11 @@ onMounted(async () => {
         v-model="optionGroupData.option_require"
         class="mb-20"
       >
-        <el-radio label="Y"> 필수</el-radio>
-        <el-radio label="N"> 선택</el-radio>
+        <el-radio label="Y"> 필수 </el-radio>
+        <el-radio label="N"> 선택 </el-radio>
       </el-radio-group>
 
-      <!-- 옵션 종류 값이 설정되어져있는 상품일 경우에만 활성화 -->
+      <!-- 옵션 종류 값이 설정되어져있는 메뉴일 경우에만 활성화 -->
       <el-row
         v-if="hasOptionLimitSelect"
         class="mb-20"
@@ -564,7 +564,7 @@ onMounted(async () => {
         <el-row class="mb-10 width-100">
           <span class="option-title"> 옵션 그룹 내 선택 가능 개수 </span>
           <span class="guide-text ml-10">
-            * 한 그룹 안에서 선택할 수 있는 총 옵션 상품의 최소/최대 개수를
+            * 한 그룹 안에서 선택할 수 있는 총 옵션 메뉴의 최소/최대 개수를
             설정합니다.
           </span>
         </el-row>
@@ -580,17 +580,18 @@ onMounted(async () => {
           </div>
           <div class="option-max-min-count-item">
             <span>최대 선택 개수</span>
-            <el-radio-group v-model="countRadioState.qty">
-              <el-radio :label="false"> 제한없음</el-radio>
-              <el-radio :label="true">
-                <el-input-number
-                  v-model="optionGroupData.max_limit_qty"
-                  :disabled="!countRadioState.qty"
-                  :min="1"
-                  :value-on-clear="1"
-                />
-              </el-radio>
-            </el-radio-group>
+            <div>
+              <el-radio-group v-model="countRadioState.qty">
+                <el-radio :label="false"> 제한없음 </el-radio>
+                <el-radio :label="true"><span></span></el-radio>
+              </el-radio-group>
+              <el-input-number
+                v-model="optionGroupData.max_limit_qty"
+                :disabled="!countRadioState.qty"
+                :min="1"
+                :value-on-clear="1"
+              />
+            </div>
             <span>개 이하로 제한</span>
           </div>
         </div>
@@ -606,7 +607,7 @@ onMounted(async () => {
             v-model="searchOptionMenu"
             class="mt-10 flex-1"
             clearable
-            placeholder="검색할 상품명 및 상품코드를 입력해주세요."
+            placeholder="검색할 메뉴명 및 메뉴코드를 입력해주세요."
             @keydown.enter="searchOption"
           />
           <div>
@@ -684,7 +685,7 @@ onMounted(async () => {
           v-if="searchedOptionList?.length < 1 && !optionInfoLoading"
           class="none-data-alarm"
         >
-          옵션 상품이 존재하지 않습니다.
+          옵션 메뉴가 존재하지 않습니다.
         </el-row>
       </div>
     </div>
@@ -697,7 +698,7 @@ onMounted(async () => {
       </el-button>
       <el-tooltip
         v-if="selectedOptionList?.length < 1"
-        content="옵션 상품을 선택해주세요."
+        content="옵션 메뉴를 선택해주세요."
         effect="dark"
         placement="top"
       >

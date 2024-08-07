@@ -2,7 +2,6 @@
 import { useRoute } from 'vue-router';
 import { h, reactive, Ref, ref } from 'vue';
 import { ElMessage, ElMessageBox, ElTable } from 'element-plus';
-import { AxiosResponse } from 'axios';
 import { etcUtils, formattingUtils } from '@utils/index';
 import useModalStore from '@store/storeModal';
 import {
@@ -12,7 +11,11 @@ import {
   requestUpdateRegisterStateType,
 } from '@interface/memberRegister';
 import { ZoomIn } from '@element-plus/icons-vue';
-import { MemberRegisterHistoryModal, MemberRegisterStoreMatchingModal } from '@containers';
+import {
+  MemberRegisterHistoryModal,
+  MemberRegisterStoreMatchingModal,
+} from '@containers';
+import apiErrorDialogHandler from '@composables/apiErrorDialogHandler';
 import { BreadcrumbHeader } from '@components';
 import {
   MEMBER_REGISTER_HISTORY,
@@ -26,21 +29,19 @@ import { memberRegister } from '@apis';
 
 const { replaceEmptyString } = etcUtils;
 const { flag, openModal, openModalWithData, closeModal } = useModalStore();
-const {
-  maskAllNumber,
-  isAllMasked,
-  formatTaxId,
-  formatPhoneNumber,
-} = formattingUtils;
-const {
-  requestMemberRegister,
-  requestUpdateMemberRegisterState,
-} = memberRegister;
+const { maskAllNumber, isAllMasked, formatTaxId, formatPhoneNumber } =
+  formattingUtils;
+const { requestMemberRegister, requestUpdateMemberRegisterState } =
+  memberRegister;
 
-const headerProp = reactive([{ name: SYSTEM_CONTROL }, { name: MEMBER_REGISTER_MANAGE }, { name: MEMBER_REGISTER_MANAGE_DETAIL }]);
+const headerProp = reactive([
+  { name: SYSTEM_CONTROL },
+  { name: MEMBER_REGISTER_MANAGE },
+  { name: MEMBER_REGISTER_MANAGE_DETAIL },
+]);
 
 const route = useRoute();
-const registerId = ref(route.query?.registerId as string || '');
+const registerId = ref((route.query?.registerId as string) || '');
 
 const applyInfo: Ref<memberRegisterDetailType> = ref(
   {} as memberRegisterDetailType,
@@ -83,19 +84,27 @@ const getRegisterMatchingInfo = async (withinSearchTxt?: string) => {
       id: Number(registerId.value),
       withinSearchTxt,
     };
-    const res = (await requestMemberRegister(data)) as AxiosResponse;
+    const res = await requestMemberRegister(data);
 
     searchStoreList.value = [];
-    applyInfo.value = res.data.data;
-    applyInfo.value.displayTaxId = maskAllNumber(formatTaxId(applyInfo.value.taxId));
-    applyInfo.value.displayUserTel = maskAllNumber(formatPhoneNumber(applyInfo.value.userTel));
+    applyInfo.value = res.data;
+    applyInfo.value.displayTaxId = maskAllNumber(
+      formatTaxId(applyInfo.value.taxId),
+    );
+    applyInfo.value.displayUserTel = maskAllNumber(
+      formatPhoneNumber(applyInfo.value.userTel),
+    );
 
     if (applyInfo.value.matchingStoreInfo?.length > 0) {
-      applyInfo.value.matchingStoreInfo[0].displayTaxId = maskAllNumber(formatTaxId(applyInfo.value.matchingStoreInfo[0].taxId));
-      applyInfo.value.matchingStoreInfo[0].displayUserTel = maskAllNumber(formatPhoneNumber(applyInfo.value.matchingStoreInfo[0].userTel));
+      applyInfo.value.matchingStoreInfo[0].displayTaxId = maskAllNumber(
+        formatTaxId(applyInfo.value.matchingStoreInfo[0].taxId),
+      );
+      applyInfo.value.matchingStoreInfo[0].displayUserTel = maskAllNumber(
+        formatPhoneNumber(applyInfo.value.matchingStoreInfo[0].userTel),
+      );
     }
 
-    const searchStoreInfo = res.data.data?.searchStoreInfo;
+    const searchStoreInfo = res.data?.searchStoreInfo;
     Object.keys(searchStoreInfo).forEach((storeCode: string) => {
       const item: memberRegisterSearchStoreInfoType = {
         ...searchStoreInfo[storeCode],
@@ -108,20 +117,15 @@ const getRegisterMatchingInfo = async (withinSearchTxt?: string) => {
 
     // 개별 매장 팝업이 띄워진 경우, 선택된 매장 정보 업데이트
     if (selectedStoreInfo.value.storeCode) {
-      const openedStore = searchStoreList.value?.find((store) => store.storeCode === selectedStoreInfo.value.storeCode);
+      const openedStore = searchStoreList.value?.find(
+        (store) => store.storeCode === selectedStoreInfo.value.storeCode,
+      );
       if (openedStore) {
         selectedStoreInfo.value = openedStore;
       }
     }
-  } catch (error: any) {
-    if (error.status === 400) {
-      await ElMessageBox.alert(error.message, '실패', {
-        confirmButtonText: '확인',
-        type: 'error',
-      });
-    } else {
-      console.warn(error);
-    }
+  } catch (error) {
+    apiErrorDialogHandler({ error });
   } finally {
     isLoadingStores.value = false;
   }
@@ -195,47 +199,54 @@ const approveModalData: memberRegisterApproveModalDataType = reactive({
     memoPlaceholder: '',
     memoBytes: 0,
   },
-  onDismiss: () => {
-  },
-  onSubmit: () => {
-  },
+  onDismiss: () => {},
+  onSubmit: () => {},
 });
 
 /**
  * 신청 정보 승인 상태 관리: 승인, 보류, 거절, 매칭 취소
  *  @param statePayload 승인 타입 값
  * */
-const putMemberRegisterStateUpdate = async (statePayload: requestUpdateRegisterStateType) => {
+const putMemberRegisterStateUpdate = async (
+  statePayload: requestUpdateRegisterStateType,
+) => {
   try {
     await requestUpdateMemberRegisterState(statePayload);
 
     if (approveModalData.isOpen) approveModalData.isOpen = false;
-    if (flag.memberRegisterSingleStoreInfo) closeModal(MEMBER_REGISTER_SINGLE_STORE_INFO);
+    if (flag.memberRegisterSingleStoreInfo) {
+      closeModal(MEMBER_REGISTER_SINGLE_STORE_INFO);
+    }
     ElMessage({
       message: '왼료되었습니다.',
       type: 'success',
     });
     await getRegisterMatchingInfo();
-  } catch (error: any) {
-    if (error.status === 400) {
-      await ElMessageBox.alert(error.message, '실패', {
-        confirmButtonText: '확인',
-        type: 'error',
-      });
-    } else {
-      console.warn(error);
-    }
+  } catch (error) {
+    apiErrorDialogHandler({ error });
   }
 };
 
 /** 매칭 취소 버튼 클릭 시 확인 팝업 * */
 const onClickMatchingCancel = () => {
   ElMessageBox.confirm(
-    h('div', { style: 'display: flex; flex-direction: column;', class: 'font-thin' }, [
-      h('span', null, '매칭 된 매장 연결을 취소합니다.'),
-      h('p', null, '통합 인증 승인 요청 건과 매장을 오 매칭 한 경우에만 사용해주세요.'),
-      h('p', null, '오매칭 해제 후 원 해당 승인정보로 이후 업무 진행바랍니다.'),
-    ]),
+    h(
+      'div',
+      { style: 'display: flex; flex-direction: column;', class: 'font-thin' },
+      [
+        h('span', null, '매칭 된 매장 연결을 취소합니다.'),
+        h(
+          'p',
+          null,
+          '통합 인증 승인 요청 건과 매장을 오 매칭 한 경우에만 사용해주세요.',
+        ),
+        h(
+          'p',
+          null,
+          '오매칭 해제 후 원 해당 승인정보로 이후 업무 진행바랍니다.',
+        ),
+      ],
+    ),
     undefined,
     {
       confirmButtonText: '계속',
@@ -244,7 +255,11 @@ const onClickMatchingCancel = () => {
   ).then(() => {
     ElMessageBox.confirm(
       h('div', { style: 'display: flex; flex-direction: column;' }, [
-        h('span', { style: getConfirmTitleStyle('red') }, '주의! 매장 매칭이 취소(연결 해제) 됩니다.'),
+        h(
+          'span',
+          { style: getConfirmTitleStyle('red') },
+          '주의! 매장 매칭이 취소(연결 해제) 됩니다.',
+        ),
         h('p', null, '[확인] 버튼 클릭 시 매칭 된 매장 연결이 해제됩니다.'),
         h('p', null, '진행을 취소 하시려면 [취소] 버튼을 눌러주세요.'),
       ]),
@@ -299,7 +314,9 @@ const calculateMemoBytes = (inputText: string): string => {
  */
 const inputDisapproveMemo = (inputText: string) => {
   approveModalData.message.memo = calculateMemoBytes(inputText);
-  approveModalData.message.memoBytes = new TextEncoder().encode(approveModalData.message.memo).length;
+  approveModalData.message.memoBytes = new TextEncoder().encode(
+    approveModalData.message.memo,
+  ).length;
 };
 
 /** 상세사유 modal close 시 data 초기화 * */
@@ -314,10 +331,8 @@ const resetApproveModalData = () => {
   approveModalData.message.msgArr = [];
   approveModalData.message.memo = '';
   approveModalData.message.memoBytes = 0;
-  approveModalData.onDismiss = () => {
-  };
-  approveModalData.onSubmit = () => {
-  };
+  approveModalData.onDismiss = () => {};
+  approveModalData.onSubmit = () => {};
 };
 
 /** 신청 거절 종류에 따른 컨펌창 * */
@@ -325,21 +340,28 @@ const showDisapprovalConfirmByApproveType = () => {
   // 처리 불가: '기타'이면서 상세 사유 없는 경우
   if (approveModalData.approveType === undefined) {
     // 거절 사유(approveType) 미선택
-    ElMessageBox.confirm(h('div', { style: 'display: flex; flex-direction: column;' }, [
-      h('span', { style: getConfirmTitleStyle('red') }, '거절 사유 미선택!'),
-      h('p', null, '거절 사유가 없는 경우 승인 거절이 불가합니다.'),
-      h('p', null, '사유를 선택해 주세요.'),
-      h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
-    ]));
+    ElMessageBox.confirm(
+      h('div', { style: 'display: flex; flex-direction: column;' }, [
+        h('span', { style: getConfirmTitleStyle('red') }, '거절 사유 미선택!'),
+        h('p', null, '거절 사유가 없는 경우 승인 거절이 불가합니다.'),
+        h('p', null, '사유를 선택해 주세요.'),
+        h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
+      ]),
+    );
     return;
   }
-  if (approveModalData.approveType === 3 && approveModalData.message.memo === '') {
-    ElMessageBox.confirm(h('div', { style: 'display: flex; flex-direction: column;' }, [
-      h('span', { style: getConfirmTitleStyle('red') }, '처리 불가!'),
-      h('p', null, '상세내용을 입력해주세요.'),
-      h('p', null, '기타 선택 시 상세내용 입력은 필수입니다.'),
-      h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
-    ]));
+  if (
+    approveModalData.approveType === 3 &&
+    approveModalData.message.memo === ''
+  ) {
+    ElMessageBox.confirm(
+      h('div', { style: 'display: flex; flex-direction: column;' }, [
+        h('span', { style: getConfirmTitleStyle('red') }, '처리 불가!'),
+        h('p', null, '상세내용을 입력해주세요.'),
+        h('p', null, '기타 선택 시 상세내용 입력은 필수입니다.'),
+        h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
+      ]),
+    );
     return;
   }
 
@@ -347,22 +369,45 @@ const showDisapprovalConfirmByApproveType = () => {
   let confirmMessageData;
   if (approveModalData.approveType === 3) {
     // '기타' && 상세설명 O
-    confirmMessageData = h('div', { style: 'display: flex; flex-direction: column;' }, [
-      h('span', { style: getConfirmTitleStyle('red') }, '기타를 선택하셨습니다.'),
-      h('p', { style: 'word-break: break-all;' }, `{${approveModalData.message.memo}}`),
-      h('p', { style: getConfirmTitleStyle('red') }, '위 사유로 승인이 거절 되었습니다.'),
-      h('p', null, '확인 버튼 클릭 시 상세 내용으로 승인 거절 처리 및'),
-      h('p', null, '고객에게 {메시지/알림톡} 이 발송 됩니다.'),
-      h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
-    ]);
+    confirmMessageData = h(
+      'div',
+      { style: 'display: flex; flex-direction: column;' },
+      [
+        h(
+          'span',
+          { style: getConfirmTitleStyle('red') },
+          '기타를 선택하셨습니다.',
+        ),
+        h(
+          'p',
+          { style: 'word-break: break-all;' },
+          `{${approveModalData.message.memo}}`,
+        ),
+        h(
+          'p',
+          { style: getConfirmTitleStyle('red') },
+          '위 사유로 승인이 거절 되었습니다.',
+        ),
+        h('p', null, '확인 버튼 클릭 시 상세 내용으로 승인 거절 처리 및'),
+        h('p', null, '고객에게 {메시지/알림톡} 이 발송 됩니다.'),
+        h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
+      ],
+    );
   } else {
-    const rejectReasonTxt = rejectReasonOptionList.find((reasonItem) => reasonItem.type === approveModalData.approveType)?.label ?? '';
-    confirmMessageData = h('div', { style: 'display: flex; flex-direction: column;' }, [
-      h('span', { style: getConfirmTitleStyle('red') }, `${rejectReasonTxt}`),
-      h('p', null, '확인 버튼 클릭 시 선택 사유로 승인 거절 처리 및'),
-      h('p', null, '고객에게 {메시지/알림톡} 이 발송 됩니다.'),
-      h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
-    ]);
+    const rejectReasonTxt =
+      rejectReasonOptionList.find(
+        (reasonItem) => reasonItem.type === approveModalData.approveType,
+      )?.label ?? '';
+    confirmMessageData = h(
+      'div',
+      { style: 'display: flex; flex-direction: column;' },
+      [
+        h('span', { style: getConfirmTitleStyle('red') }, `${rejectReasonTxt}`),
+        h('p', null, '확인 버튼 클릭 시 선택 사유로 승인 거절 처리 및'),
+        h('p', null, '고객에게 {메시지/알림톡} 이 발송 됩니다.'),
+        h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
+      ],
+    );
   }
 
   ElMessageBox.confirm(confirmMessageData).then(() => {
@@ -384,7 +429,9 @@ const openDisapprovalModal = (fromTotal?: boolean) => {
   approveModalData.message.title = '승인 거절';
 
   if (fromTotal) {
-    approveModalData.disapproveReasonList = rejectReasonOptionList.filter((reason) => reason.type > 0);
+    approveModalData.disapproveReasonList = rejectReasonOptionList.filter(
+      (reason) => reason.type > 0,
+    );
   } else {
     approveModalData.disapproveReasonList = rejectReasonOptionList;
   }
@@ -406,7 +453,10 @@ const openDisapprovalModal = (fromTotal?: boolean) => {
 /** 신청 정보 승인: 상세사유 modal 출력* */
 const openApprovalModal = () => {
   // 불일치 정보 개수
-  const diffCount = Object.values(selectedStoreInfo.value.checker)?.filter((data: string) => data === 'diff')?.length ?? 0;
+  const diffCount =
+    Object.values(selectedStoreInfo.value.checker)?.filter(
+      (data: string) => data === 'diff',
+    )?.length ?? 0;
 
   if (diffCount > 0) {
     approveModalData.message.title = '매장 정보 불일치!!';
@@ -445,12 +495,18 @@ const openApprovalModal = () => {
 
 /** 신청 보류: 상세사유 modal 단계 생략 * */
 const requestHoldingState = () => {
-  ElMessageBox.confirm(h('div', { style: 'display: flex; flex-direction: column;' }, [
-    h('span', { style: getConfirmTitleStyle('red') }, '가입 보류를 선택하셨습니다.'),
-    h('p', null, '티오더 계약 완료, 매장 설치 전 매장으로'),
-    h('p', null, '승인 대기 상태로 전환됩니다.'),
-    h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
-  ])).then(() => {
+  ElMessageBox.confirm(
+    h('div', { style: 'display: flex; flex-direction: column;' }, [
+      h(
+        'span',
+        { style: getConfirmTitleStyle('red') },
+        '가입 보류를 선택하셨습니다.',
+      ),
+      h('p', null, '티오더 계약 완료, 매장 설치 전 매장으로'),
+      h('p', null, '승인 대기 상태로 전환됩니다.'),
+      h('p', null, '전 단계로 가시려면 [취소] 버튼을 눌러주세요.'),
+    ]),
+  ).then(() => {
     const holdingPayload: requestUpdateRegisterStateType = {
       id: Number(registerId.value),
       approveState: 2, // 보류는 거절의 종류
@@ -472,11 +528,11 @@ const getForcedStoreList = async (withinSearchTxt?: string) => {
       searchTxt: forcedMatchingTxt.value,
       withinSearchTxt,
     };
-    const res = (await requestForcedStoreList(data)) as AxiosResponse;
+    const res = await requestForcedStoreList(data);
 
     searchStoreList.value = [];
-    applyInfo.value = res.data.data;
-    const searchStoreInfo = res.data.data?.searchStoreInfo;
+    applyInfo.value = res.data;
+    const searchStoreInfo = res.data?.searchStoreInfo;
     Object.keys(searchStoreInfo).forEach((storeCode: string) => {
       const item: memberRegisterSearchStoreInfoType = {
         ...searchStoreInfo[storeCode],
@@ -486,15 +542,8 @@ const getForcedStoreList = async (withinSearchTxt?: string) => {
       item.info.displayTaxId = maskAllNumber(formatTaxId(item.info.taxId));
       searchStoreList.value.push(item);
     });
-  } catch (error: any) {
-    if (error.status === 400) {
-      await ElMessageBox.alert(error.message, '실패', {
-        confirmButtonText: '확인',
-        type: 'error',
-      });
-    } else {
-      console.warn(error);
-    }
+  } catch (error) {
+    apiErrorDialogHandler({ error });
   } finally {
     isLoadingStores.value = false;
   }
@@ -504,7 +553,11 @@ const onClickForcedMatching = () => {
   ElMessageBox.confirm(
     h('div', { style: 'display: flex; flex-direction: column;' }, [
       h('div', { class: 'mt-10 mb-10' }, [
-        h('span', { style: getConfirmTitleStyle('blue') }, `${forcedMatchingTxt.value}`),
+        h(
+          'span',
+          { style: getConfirmTitleStyle('blue') },
+          `${forcedMatchingTxt.value}`,
+        ),
         h('span', null, ' 을/를 입력하셨습니다.'),
       ]),
       h('p', { class: 'mt-10' }, '위 매장정보로 불러오기 하시겠습니까?'),
@@ -522,8 +575,11 @@ const onClickForcedMatching = () => {
 
 /** 매장 리스트 결과 내 검색 * */
 const onClickInnerSearching = () => {
-  if (searchingType.value === 'matching') getRegisterMatchingInfo(withinSearchTxt.value);
-  else if (searchingType.value === 'forced') getForcedStoreList(withinSearchTxt.value);
+  if (searchingType.value === 'matching') {
+    getRegisterMatchingInfo(withinSearchTxt.value);
+  } else if (searchingType.value === 'forced') {
+    getForcedStoreList(withinSearchTxt.value);
+  }
 };
 
 /** 강제 매칭 검색 초기화 * */
@@ -536,9 +592,11 @@ const onClickResetSearchData = () => {
 };
 
 /** 매장리스트 내 기매칭여부 텍스트  * */
-const getMatchingStatusTextInList = (storeMatched: 'Y' | 'N') => storeMatched === 'Y' ? '매칭완료' : '-';
+const getMatchingStatusTextInList = (storeMatched: 'Y' | 'N') =>
+  storeMatched === 'Y' ? '매칭완료' : '-';
 /** 매장리스트 내 기매칭여부 스타일  * */
-const getMatchingStatusStyleInList = (storeMatched: 'Y' | 'N') => storeMatched === 'Y' ? 'danger' : '';
+const getMatchingStatusStyleInList = (storeMatched: 'Y' | 'N') =>
+  storeMatched === 'Y' ? 'danger' : '';
 
 /** 매장리스트 중 특정 매장 선택 * */
 const showSingleStoreDetailModal = (row: any) => {
@@ -570,26 +628,48 @@ const toggleMaskingApplyTaxId = () => {
 
 /** 마스킹 토글: 매칭정보 - 휴대전화번호 * */
 const toggleMaskingMatchingUserTel = () => {
-  const isBlankMatchingUserTel = applyInfo.value.matchingStoreInfo.length > 0 ? applyInfo.value.matchingStoreInfo?.[0].displayUserTel === '-' : true;
+  const isBlankMatchingUserTel =
+    applyInfo.value.matchingStoreInfo.length > 0
+      ? applyInfo.value.matchingStoreInfo?.[0].displayUserTel === '-'
+      : true;
   if (isBlankMatchingUserTel) return;
 
-  const originalUserTel = formatPhoneNumber(applyInfo.value.matchingStoreInfo[0].userTel);
-  const isDisplayingMasked = isAllMasked(applyInfo.value.matchingStoreInfo?.[0].displayUserTel);
+  const originalUserTel = formatPhoneNumber(
+    applyInfo.value.matchingStoreInfo[0].userTel,
+  );
+  const isDisplayingMasked = isAllMasked(
+    applyInfo.value.matchingStoreInfo?.[0].displayUserTel,
+  );
 
-  if (isDisplayingMasked) applyInfo.value.matchingStoreInfo[0].displayUserTel = originalUserTel;
-  else applyInfo.value.matchingStoreInfo[0].displayUserTel = maskAllNumber(originalUserTel);
+  if (isDisplayingMasked) {
+    applyInfo.value.matchingStoreInfo[0].displayUserTel = originalUserTel;
+  } else {
+    applyInfo.value.matchingStoreInfo[0].displayUserTel =
+      maskAllNumber(originalUserTel);
+  }
 };
 
 /** 마스킹 토글: 매칭정보 - 사업자등록정보 * */
 const toggleMaskingMatchingTaxId = () => {
-  const isBlankMatchingTaxId = applyInfo.value.matchingStoreInfo.length > 0 ? applyInfo.value.matchingStoreInfo?.[0].displayTaxId === '-' : true;
+  const isBlankMatchingTaxId =
+    applyInfo.value.matchingStoreInfo.length > 0
+      ? applyInfo.value.matchingStoreInfo?.[0].displayTaxId === '-'
+      : true;
   if (isBlankMatchingTaxId) return;
 
-  const originalTaxId = formatPhoneNumber(applyInfo.value.matchingStoreInfo[0].taxId);
-  const isDisplayingMasked = isAllMasked(applyInfo.value.matchingStoreInfo?.[0].displayTaxId);
+  const originalTaxId = formatPhoneNumber(
+    applyInfo.value.matchingStoreInfo[0].taxId,
+  );
+  const isDisplayingMasked = isAllMasked(
+    applyInfo.value.matchingStoreInfo?.[0].displayTaxId,
+  );
 
-  if (isDisplayingMasked) applyInfo.value.matchingStoreInfo[0].displayTaxId = originalTaxId;
-  else applyInfo.value.matchingStoreInfo[0].displayTaxId = maskAllNumber(originalTaxId);
+  if (isDisplayingMasked) {
+    applyInfo.value.matchingStoreInfo[0].displayTaxId = originalTaxId;
+  } else {
+    applyInfo.value.matchingStoreInfo[0].displayTaxId =
+      maskAllNumber(originalTaxId);
+  }
 };
 
 getRegisterMatchingInfo();
@@ -606,9 +686,7 @@ getRegisterMatchingInfo();
     :requestHoldingState="requestHoldingState"
     :selectedStoreInfo="selectedStoreInfo"
   />
-  <MemberRegisterHistoryModal
-    v-if="flag.memberRegisterHistory"
-  />
+  <MemberRegisterHistoryModal v-if="flag.memberRegisterHistory" />
   <el-dialog
     v-model="approveModalData.isOpen"
     align-center
@@ -667,9 +745,7 @@ getRegisterMatchingInfo();
       </el-row>
     </div>
     <template #footer>
-      <el-button @click="approveModalData.onDismiss">
-        취소
-      </el-button>
+      <el-button @click="approveModalData.onDismiss"> 취소 </el-button>
       <el-button
         type="primary"
         @click="approveModalData.onSubmit"
@@ -696,7 +772,7 @@ getRegisterMatchingInfo();
         :src="imagePreviewData.src"
         :zoom-rate="1.2"
         fit="contain"
-        style="max-width: 500px; max-height: 700px;"
+        style="max-width: 500px; max-height: 700px"
       />
     </el-row>
     <template #footer>
@@ -715,9 +791,7 @@ getRegisterMatchingInfo();
       class="mb-10"
       justify="space-between"
     >
-      <p>
-        | 요청 정보
-      </p>
+      <p>| 요청 정보</p>
       <el-button
         type="success"
         @click="openModalWithData(MEMBER_REGISTER_HISTORY, { registerId })"
@@ -809,9 +883,7 @@ getRegisterMatchingInfo();
       class="mb-10"
       justify="space-between"
     >
-      <p>
-        | 매칭 정보
-      </p>
+      <p>| 매칭 정보</p>
       <el-button
         :disabled="applyInfo.matchingStoreInfo?.length === 0"
         color="#D50000"
@@ -840,7 +912,9 @@ getRegisterMatchingInfo();
         label-align="center"
         width="14%"
       >
-        {{ replaceEmptyString(applyInfo.matchingStoreInfo?.[0]?.storeAreaName) }}
+        {{
+          replaceEmptyString(applyInfo.matchingStoreInfo?.[0]?.storeAreaName)
+        }}
       </el-descriptions-item>
       <el-descriptions-item
         align="center"
@@ -857,7 +931,9 @@ getRegisterMatchingInfo();
         width="12%"
       >
         <p @click="toggleMaskingMatchingUserTel">
-          {{ replaceEmptyString(applyInfo.matchingStoreInfo?.[0]?.displayUserTel) }}
+          {{
+            replaceEmptyString(applyInfo.matchingStoreInfo?.[0]?.displayUserTel)
+          }}
         </p>
       </el-descriptions-item>
       <el-descriptions-item
@@ -875,7 +951,9 @@ getRegisterMatchingInfo();
         width="15%"
       >
         <p @click="toggleMaskingMatchingTaxId">
-          {{ replaceEmptyString(applyInfo.matchingStoreInfo?.[0]?.displayTaxId) }}
+          {{
+            replaceEmptyString(applyInfo.matchingStoreInfo?.[0]?.displayTaxId)
+          }}
         </p>
       </el-descriptions-item>
       <el-descriptions-item
@@ -891,9 +969,7 @@ getRegisterMatchingInfo();
       align="bottom"
       class="mb-10"
     >
-      <p>
-        | 매장 검색 (강제 매칭)
-      </p>
+      <p>| 매장 검색 (강제 매칭)</p>
       <span class="ml-10 font-small font-thin">
         (검색 결과에 해당하는 매장이 없을 경우 직접 검색하여 진행합니다.)
       </span>
@@ -928,11 +1004,10 @@ getRegisterMatchingInfo();
       align="bottom"
       class="mb-10"
     >
-      <p>
-        | 매장 리스트
-      </p>
+      <p>| 매장 리스트</p>
       <span class="ml-10 font-small font-thin">
-        (승인 요청 정보 기준 조건에 부합하는 매장 리스트 입니다, 매장리스트는 버튼 클릭 시마다 새로고침 되어 검색 됩니다.)
+        (승인 요청 정보 기준 조건에 부합하는 매장 리스트 입니다, 매장리스트는
+        버튼 클릭 시마다 새로고침 되어 검색 됩니다.)
       </span>
     </el-row>
     <el-row>
@@ -1094,5 +1169,4 @@ getRegisterMatchingInfo();
 .flex-col {
   flex-direction: column;
 }
-
 </style>

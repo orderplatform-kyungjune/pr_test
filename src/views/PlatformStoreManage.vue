@@ -6,6 +6,7 @@ import { AxiosResponse } from 'axios';
 import { authentication, etcUtils, runtimeCheckHelper } from '@utils';
 import useTagsStore from '@store/storeTags';
 import useModalStore from '@store/storeModal';
+import { requestCustomTemplateList } from '@src/apis/store';
 import {
   bannerManage,
   categorizeManageTabletV2,
@@ -19,6 +20,7 @@ import {
   storeBannerInfoPlatformType,
   storeInfoCreditPaymentMethodType,
   storeInfoCreditPaymentType,
+  storeInfoDataCustomStyleType,
   storeInfoDataStoreLanguageListType,
   storeInfoDataStorePlatformType,
   storeInfoOfStoreManagePlatformType,
@@ -36,6 +38,7 @@ import { RefreshTabletModal } from '@containers';
 import { BreadcrumbHeader, StoreNameBox } from '@components';
 import {
   CUSTOM_THEME_CODE,
+  DEFAULT_CUSTOM_THEME,
   REFRESH_TABLET,
   STORE_LIST,
   STORE_SETTING,
@@ -94,6 +97,11 @@ const storeDetailData = ref({
   platform_store_pwd: '',
   platform_store_pwd_re: '',
 } as storeInfoDataStorePlatformType);
+
+/** 태블릿 테마 원본 데이터 */
+const tabletThemeData = ref({
+  themeData: '',
+});
 
 /** 중복검사: 저장된 매장 데이터 */
 const savedData = reactive({
@@ -275,6 +283,7 @@ const getStoreInfo = async () => {
     if (!typeError) {
       if (res.data.code === 200) {
         storeDetailData.value = res.data.data.store;
+        tabletThemeData.value.themeData = res.data.data.store.platform_store_tablet_custom_style;
         beforeModificationStoreName.value =
           res.data.data.store?.platform_store_name;
         storeBannerData.value = res.data.data.banner;
@@ -455,6 +464,8 @@ const restoreScrollPosition = () => {
   }
 };
 
+const isCustomTheme = (value:string) => value === CUSTOM_THEME_CODE;
+
 /** 매장 수정 */
 const postStoreUpdate = async () => {
   const storeCode = { storeCode: pathQuery.code as string };
@@ -476,7 +487,11 @@ const postStoreUpdate = async () => {
   delete requestStoreData.platform_store_logo;
   delete requestStoreData.platform_store_background;
   delete requestStoreData.platform_store_restroom_img;
-  delete requestStoreData.platform_store_tablet_custom_style;
+
+  if (!isCustomTheme(requestStoreData.platform_store_Theme)) {
+    delete requestStoreData.platform_store_tablet_custom_style;
+  }
+
   const requestEditData = Object.assign(
     requestStoreData,
     storeCode,
@@ -735,14 +750,50 @@ const isSameAsDefaultLanguage = (langInList: string) => {
   );
 };
 
+/** 커스텀 테마 템플릿 리스트 */
+const allCustomTemplateList: Ref<storeInfoDataCustomStyleType[]> = ref([]);
+
+const getCustomTemplateList = async () => {
+  try {
+    const res = (await requestCustomTemplateList()) as AxiosResponse;
+
+    if (res.data.code === 400) {
+      await ElMessageBox.alert(res.data.msg, '실패', {
+        confirmButtonText: '확인',
+        type: 'error',
+      });
+    }
+    if (res.data.code === 401) {
+      failAuthenticationAlert();
+    }
+    if (res.data.code === 200) {
+      allCustomTemplateList.value = res.data.data;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+/** 커스텀테마 default 스타일 설정 */
+const setDefaultCustomStyle = () => {
+  if (allCustomTemplateList.value.length !== 0) {
+        storeDetailData.value.platform_store_tablet_custom_style = allCustomTemplateList.value.find(
+      (templateItem: storeInfoDataCustomStyleType) => templateItem.code === DEFAULT_CUSTOM_THEME,
+    );
+  }
+};
+
 /** 옵션 레이아웃 설정 */
 const basicLayoutList = ref([['', '']]);
 const filteredOptionLayout = ref([['', '']]);
 const filterOptionLayout = () => {
-  if (storeDetailData.value.platform_store_Theme.includes(CUSTOM_THEME_CODE)) {
+  if (isCustomTheme(storeDetailData.value.platform_store_Theme)) {
     filteredOptionLayout.value = basicLayoutList.value.filter((item) =>
       item[0].includes('custom'),
     );
+    if (!isCustomTheme(tabletThemeData.value.themeData)) {
+      setDefaultCustomStyle();
+    }
     return;
   }
 
@@ -1334,6 +1385,7 @@ onMounted(async () => {
   await getLanguageFlagList();
   await getLoadVanTypeList();
   await getPosInfoList();
+  await getCustomTemplateList();
   getCheckingData();
 
   await nextTick(() => {
@@ -2775,27 +2827,30 @@ onMounted(async () => {
           </el-radio-group>
         </div>
         <div
-          v-if="isUndefinedData(storeDetailData.platform_store_credit_able)"
+          v-if="isUndefinedData(storeDetailData.middleWareVersion)"
           class="store-manage-contents-contents-wrapper"
         >
           <div class="store-manage-contents-contents-title">
             <div>연동할 미들웨어 버전</div>
             <span> - 미들웨어 버전에 맞춰서 설정해주시면 됩니다.</span>
           </div>
-          <el-radio-group v-model="storeDetailData.platform_store_credit_able">
-            <el-radio
-              :label="1"
-              border
-            >
-              운영 버전(선/후불 공용)
-            </el-radio>
-            <el-radio
-              :label="0"
-              border
-            >
-              과거 버전(후불 전용)
-            </el-radio>
-          </el-radio-group>
+          <el-select
+            v-model="storeDetailData.middleWareVersion"
+            class="width-100 mt-10 mb-10"
+          >
+            <el-option
+              value="0.2"
+              label="0.2 과거 버전(후불 전용)"
+            />
+            <el-option
+              value="0.5"
+              label="0.5 운영 버전(선/후불 공용)"
+            />
+            <el-option
+              value="0.8"
+              label="0.8.0 버전"
+            />
+          </el-select>
         </div>
         <div
           v-if="isUndefinedData(storeDetailData.preCreditTableUse)"

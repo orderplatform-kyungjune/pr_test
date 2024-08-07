@@ -71,6 +71,7 @@ import {
   WebUrlManage,
 } from '@views';
 import { authentication, routeHelper } from '@utils';
+import useModalStore from '@store/storeModal';
 import useAuthStore from '@store/storeAuth';
 import {
   agencyStatisticsData,
@@ -136,6 +137,7 @@ import {
   waitingServiceStoreList,
   webUrlManage,
 } from '@router/routePaths';
+
 import { DefaultLayout, LoginLayout } from '@layouts';
 import { LOGIN_ID, MASTER } from '@common/string';
 
@@ -493,6 +495,9 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const { authLnbListData, accessAuthPageData } = useAuthStore();
+
+  /** 페이지 이동시 모든 modal close */
+  useModalStore().closeAllModals();
 
   const routerPath = (path: string) => {
     if (to.path !== path) {

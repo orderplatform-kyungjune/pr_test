@@ -1,9 +1,4 @@
-import {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  isAxiosError,
-} from 'axios';
+import { AxiosResponse, isAxiosError } from 'axios';
 
 export interface ApiErrorType {
   message: string;
@@ -22,32 +17,28 @@ export class ApiError extends Error {
   }
 }
 
-interface SetAxiosApiType {
-  instance: AxiosInstance;
-  config: AxiosRequestConfig;
-  successStatus?: number;
-}
+type FullApiResponseType<T> = {
+  code: number;
+  result: boolean;
+  msg?: string;
+} & T;
 
 export const ERROR_MESSAGE = '네트워크 에러 입니다. 개발자에게 문의하세요.';
 
 /**
  * api setting handler, api 규격에 맞는 성공/실패 처리
- * @param instance - axios instance
- * @param config - axios request config
- * @param successStatus - api 요청 성공 status(기본값 200)
+ * @param axiosInstance - axios instance
  * @return return - 동적 타입의 axiosResponse Promise 객체
  * */
-export const setAxiosApi = <T>({
-  instance,
-  config,
-  successStatus = 200,
-}: SetAxiosApiType): Promise<AxiosResponse<T>> =>
-  instance(config)
+export const setAxiosApi = <T>(
+  axiosInstance: Promise<AxiosResponse<FullApiResponseType<T>>>,
+): Promise<FullApiResponseType<T>> =>
+  axiosInstance
     .then((response) => {
       // api 요청 성공, response 규격이 올바를 경우
       if (response?.data?.code) {
-        if (response.data.code === successStatus) {
-          return Promise.resolve(response);
+        if (response.data.code === 200) {
+          return Promise.resolve(response.data);
         }
 
         throw new ApiError({

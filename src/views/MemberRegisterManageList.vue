@@ -5,10 +5,14 @@ import { AxiosResponse } from 'axios';
 import { dateFormatterUtil, etcUtils, formattingUtils } from '@utils';
 import useTagsStore from '@store/storeTags';
 import { memberRegisterManageDetail } from '@router/routePaths';
-import { memberRegisterListItemType, memberRegisterSearchDataType } from '@interface/memberRegister';
+import {
+  memberRegisterListItemType,
+  memberRegisterSearchDataType,
+} from '@interface/memberRegister';
 import { torderMemberListDataType } from '@interface/member';
 import { RefreshRight, Search } from '@element-plus/icons-vue';
 import useExcelDownload from '@composables/excelDownload';
+import apiErrorDialogHandler from '@composables/apiErrorDialogHandler';
 import { BreadcrumbHeader } from '@components';
 import { MEMBER_REGISTER_MANAGE, SYSTEM_CONTROL } from '@common/string';
 import { PATTERN_ONLY_NUMBER, PATTERN_STORE_NAME } from '@common/regexPatterns';
@@ -18,13 +22,17 @@ import { endpoints, member, memberRegister } from '@apis';
 const { requestMemberRegisterList } = memberRegister;
 const { requestTorderMemberList } = member;
 const { replaceEmptyString } = etcUtils;
-const { maskAllNumber, formatTaxId, createRegExp, formatPhoneNumber } = formattingUtils;
+const { maskAllNumber, formatTaxId, createRegExp, formatPhoneNumber } =
+  formattingUtils;
 const { convertServerTimeToKorea } = dateFormatterUtil;
 const { getDownloadExcelWithToken } = useExcelDownload();
 const { addTagsData } = useTagsStore();
 
 // BreadcrumbHeader
-const headerProp = reactive([{ name: SYSTEM_CONTROL }, { name: MEMBER_REGISTER_MANAGE }]);
+const headerProp = reactive([
+  { name: SYSTEM_CONTROL },
+  { name: MEMBER_REGISTER_MANAGE },
+]);
 
 /** 오늘 날짜 YYYY-MM-DD 포맷팅 */
 const getTodayText = () => dayjs().format('YYYY-MM-DD');
@@ -90,17 +98,20 @@ const pagePerCount = [
 const isExcelDownloading: Ref<boolean> = ref(false);
 /** 엑셀 다운로드 */
 const postExcelDownload = async () => {
-  const startDate = searchedData.dateRange && searchedData.dateRange?.length > 0 ? searchedData.dateRange[0] : '';
-  const endDate = searchedData.dateRange && searchedData.dateRange?.length > 0 ? searchedData.dateRange[1] : '';
+  const startDate =
+    searchedData.dateRange && searchedData.dateRange?.length > 0
+      ? searchedData.dateRange[0]
+      : '';
+  const endDate =
+    searchedData.dateRange && searchedData.dateRange?.length > 0
+      ? searchedData.dateRange[1]
+      : '';
 
   try {
     isExcelDownloading.value = true;
     const requestURL = `${ADMIN_API_URL}${endpoints.excel.member_register_list_download}?searchState=${searchedData.state}&searchManager=${searchedData.manager}&searchKey=${searchedData.txtKey}&searchTxt=${searchedData.txt}&searchDateKey=${searchedData.dateKey}&searchStartDate=${startDate}&searchEndDate=${endDate}&excludingTestStores=${searchedData.excludingTestStores}`;
 
-    await getDownloadExcelWithToken(
-      '통합인증승인관리_리스트',
-      requestURL,
-    );
+    await getDownloadExcelWithToken('통합인증승인관리_리스트', requestURL);
   } catch (error: any) {
     if (error.status === 400) {
       await ElMessageBox.alert(error.message, '실패', {
@@ -121,7 +132,8 @@ const postExcelDownload = async () => {
 const getSearchInputPlaceHolder = () => {
   if (inputData.txtKey === 'storeName') return '매장명을 입력해주세요.';
   if (inputData.txtKey === 'userName') return '대표자명을 입력해주세요.';
-  if (inputData.txtKey === 'userTel') return '대표자 휴대전화번호를 입력해주세요.';
+  if (inputData.txtKey === 'userTel')
+    return '대표자 휴대전화번호를 입력해주세요.';
   if (inputData.txtKey === 'taxId') return '사업자번호를 입력해주세요.';
   if (inputData.txtKey === 'torderId') return '매장ID를 입력해주세요.';
   return '';
@@ -194,23 +206,16 @@ const getMemberRegisterList = async (excludingTestStores?: 'Y' | 'N') => {
 
   try {
     isLoadingRegisterList.value = true;
-    const res = (await requestMemberRegisterList(requestData)) as AxiosResponse;
+    const res = await requestMemberRegisterList(requestData);
 
-    paginationInfo.total = res.data.page_info.total;
-    paginationInfo.page = res.data.page_info.current_page;
-    paginationInfo.perPage = res.data.page_info.per_page;
-    paginationInfo.from = res.data.page_info.from;
-    paginationInfo.to = res.data.page_info.to;
-    memberRegisterList.value = res.data.data;
-  } catch (error: any) {
-    if (error.status === 400) {
-      await ElMessageBox.alert(error.message, '실패', {
-        confirmButtonText: '확인',
-        type: 'error',
-      });
-    } else {
-      console.warn(error);
-    }
+    paginationInfo.total = res.page_info.total;
+    paginationInfo.page = res.page_info.current_page;
+    paginationInfo.perPage = res.page_info.per_page;
+    paginationInfo.from = res.page_info.from;
+    paginationInfo.to = res.page_info.to;
+    memberRegisterList.value = res.data;
+  } catch (error) {
+    apiErrorDialogHandler({ error });
   } finally {
     isLoadingRegisterList.value = false;
   }
@@ -404,7 +409,8 @@ const onClickTaxIdCell = (row: memberRegisterListItemType) => {
 const displayPhoneInCell = (registerApplyData: memberRegisterListItemType) => {
   const { userTel } = registerApplyData;
   if (!userTel) return '-';
-  if (registerApplyData.isCellSelectedUserTel) return formatPhoneNumber(userTel);
+  if (registerApplyData.isCellSelectedUserTel)
+    return formatPhoneNumber(userTel);
   return maskAllNumber(formatPhoneNumber(userTel));
 };
 
@@ -421,7 +427,8 @@ const onClickPhoneCell = (row: memberRegisterListItemType) => {
  * @param {row} 선택한 row 의 인증 요청 정보
  * * */
 const getRowStyleByState = ({ row }: { row: memberRegisterListItemType }) => {
-  if (row.approveState === 0 || row.approveState === 3) return 'state-requested';
+  if (row.approveState === 0 || row.approveState === 3)
+    return 'state-requested';
   return '';
 };
 
@@ -480,21 +487,11 @@ getMemberRegisterList();
         v-model="inputData.state"
         class="search-item-width"
       >
-        <el-radio label="">
-          전체
-        </el-radio>
-        <el-radio label="0,3">
-          승인 요청
-        </el-radio>
-        <el-radio label="1">
-          승인 완료
-        </el-radio>
-        <el-radio label="2">
-          승인 거절
-        </el-radio>
-        <el-radio label="4">
-          승인 보류
-        </el-radio>
+        <el-radio label=""> 전체 </el-radio>
+        <el-radio label="0,3"> 승인 요청 </el-radio>
+        <el-radio label="1"> 승인 완료 </el-radio>
+        <el-radio label="2"> 승인 거절 </el-radio>
+        <el-radio label="4"> 승인 보류 </el-radio>
       </el-radio-group>
     </el-descriptions-item>
     <el-descriptions-item
@@ -696,7 +693,6 @@ getMemberRegisterList();
     >
       <template #default="{ $index }">
         <span class="font-small">
-
           {{ searchedDataNumber($index) }}
         </span>
       </template>
@@ -851,18 +847,20 @@ getMemberRegisterList();
       <template #default="{ row }">
         <router-link
           :to="{
-              path: memberRegisterManageDetail,
-              query: {
-                registerId: row.id,
-              },
-            }"
+            path: memberRegisterManageDetail,
+            query: {
+              registerId: row.id,
+            },
+          }"
         >
           <el-button
             type="danger"
-            @click="addTagsData({
-              name: '승인 관리 상세',
-              path: memberRegisterManageDetail,
-            });"
+            @click="
+              addTagsData({
+                name: '승인 관리 상세',
+                path: memberRegisterManageDetail,
+              })
+            "
           >
             보기
           </el-button>

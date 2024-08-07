@@ -314,6 +314,7 @@ const getInquiryDetailInfo = async () => {
         inputInquiryData.customerCompensate = res.data.data.customerCompensate;
         inputInquiryData.customerType = res.data.data.customerType;
         inputInquiryData.cs_incoming = res.data.data.cs_incoming;
+        inputInquiryData.complain = res.data.data.complain;
         personInCharge.value = res.data.data.checker;
         nowDate.value = res.data.data.bbsRegisterDate;
         commentDataList.value = res.data.data.comment;

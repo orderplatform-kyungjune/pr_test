@@ -1,4 +1,5 @@
 import { ElMessageBox } from 'element-plus';
+import { setAxiosApi } from '@utils/apiUtil';
 import {
   requestAllTranslateOptionGroupType,
   requestArrangeOptionGroupType,
@@ -12,7 +13,20 @@ import {
   requestTranslateOptionGroupType,
   requestUpdateDetailOptionType,
   requestUpdateOptionType,
+  requestOptionGroupCreateRequestBodyType,
+  requestOptionGroupDeleteRequestBodyType,
+  requestOptionCreateGetRequestBodyType,
+  optionUpdateRequestBodyType,
+  requestSelectedOptionInfoRequestParamsType,
+  requestUnlimitedDepthOptionGroupsRequestBodyType,
+  getOptionListAllGoodsDataType,
+  getUnlimitedOptionGroupDataType,
+  getInitOptionDataType,
+  optionUpdateListResponseDataType,
+  requestOptionSoldOutParamsType,
+  requestOptionUseParamsType,
 } from '@interface/option';
+import { storeCodeType, storePosInfoType } from '@common/interface';
 import endpoints from '@apis/endpoints';
 import adminTokenApi from '@apis/axios/adminTokenApi';
 
@@ -279,6 +293,147 @@ export const requestArrangeOptionGroup = (
       }
     });
 };
+
+/**
+ * 모든 옵션 목록 가져오기
+ * @param storeCode 매장 코드
+ * */
+export const requestOptionListAll = (storeCode: storeCodeType) =>
+  setAxiosApi<{ data: getOptionListAllGoodsDataType[] }>(
+    adminTokenApi({
+      method: 'GET',
+      url: endpoints.v2.option.list_all,
+      params: { storeCode },
+    }),
+  );
+
+/**
+ * 상품의 첫번째 depth N차 옵션 목록 가져오기
+ * @param data - storeCode(상점코드), posGoodCode(상품코드)
+ * */
+export const requestOneDepthOptionGroups = (data: storePosInfoType) =>
+  setAxiosApi<{ data: getUnlimitedOptionGroupDataType[] }>(
+    adminTokenApi({
+      method: 'POST',
+      url: endpoints.v2.option.one_depth_setting,
+      data,
+    }),
+  );
+
+/**
+ * 상품 > 옵션그룹 > 옵션의 첫번째 depth N차 옵션그룹 목록 가져오기
+ * @param data - storeCode(상점코드), posGoodCode(상품코드), optionItemNo(옵션메뉴코드)
+ * */
+export const requestUnlimitedDepthOptionGroups = (
+  data: requestUnlimitedDepthOptionGroupsRequestBodyType,
+) =>
+  setAxiosApi<{ data: getUnlimitedOptionGroupDataType[] }>(
+    adminTokenApi({
+      method: 'POST',
+      url: endpoints.v2.option.unlimit_depth_setting,
+      data,
+    }),
+  );
+
+/**
+ * 상품 > 모든 옵션 목록 가져오기
+ * @param params - storeCode(상점코드), posGoodCode(상품코드), optionItemNo(옵션메뉴코드)
+ * */
+export const requestInitOptions = (params: storePosInfoType) =>
+  setAxiosApi<{ data: getInitOptionDataType[] }>(
+    adminTokenApi({
+      method: 'GET',
+      url: endpoints.v2.option.init_option,
+      params,
+    }),
+  );
+
+/**
+ * 상품 > 모든 goods(옵션) 목록 가져오기
+ * @param params - storeCode(상점코드), posGoodCode(상품코드)
+ * */
+export const requestInitGoods = (params: storePosInfoType) =>
+  setAxiosApi<{ data: getInitOptionDataType[] }>(
+    adminTokenApi({
+      method: 'GET',
+      url: endpoints.v2.option.init_goods,
+      params,
+    }),
+  );
+
+/** 옵션 그룹 생성 * */
+export const requestOptionGroupCreate = (
+  data: requestOptionGroupCreateRequestBodyType,
+) =>
+  setAxiosApi(
+    adminTokenApi({ method: 'POST', url: endpoints.v2.option.create, data }),
+  );
+
+/** 옵션 그룹 수정 * */
+export const requestOptionGroupUpdate = (data: optionUpdateRequestBodyType) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'POST',
+      url: endpoints.v2.option.option_group_update,
+      data,
+    }),
+  );
+
+/** 옵션 그룹 삭제 * */
+export const requestOptionGroupDelete = (
+  data: requestOptionGroupDeleteRequestBodyType,
+) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'POST',
+      url: endpoints.v2.option.delete_single_option_group,
+      data,
+    }),
+  );
+
+/** 옵션 그룹 추가 * */
+export const requestOptionCreateGet = (
+  data: requestOptionCreateGetRequestBodyType,
+) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'POST',
+      url: endpoints.v2.option.create_get,
+      data,
+    }),
+  );
+
+/** 선택한 옵션 정보 가져오기 * */
+export const requestSelectedOptionInfo = (
+  params: requestSelectedOptionInfoRequestParamsType,
+) =>
+  setAxiosApi<{ data: optionUpdateListResponseDataType }>(
+    adminTokenApi({
+      method: 'GET',
+      url: endpoints.v2.option.update_list,
+      params,
+    }),
+  );
+
+/** 옵션 품절 상태 변경 * */
+export const requestOptionSoldOut = (params: requestOptionSoldOutParamsType) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'PUT',
+      url: endpoints.v2.option.sold_out,
+      params,
+    }),
+  );
+
+/** 옵션 판매 상태 변경 * */
+export const requestOptionUse = (params: requestOptionUseParamsType) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'PUT',
+      url: endpoints.v2.option.use,
+      params,
+    }),
+  );
 
 export default {
   requestPosInitData,

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { reactive, ref, Ref } from 'vue';
+import { ref, reactive, Ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { AxiosResponse } from 'axios';
-import { authentication, etcUtils, runtimeCheckHelper } from '@utils';
+import { runtimeCheckHelper, authentication, etcUtils } from '@utils';
 import useModalStore from '@store/storeModal';
 import { requestPosInitDataType } from '@interface/option';
-import { RefreshRight, Search } from '@element-plus/icons-vue';
+import { Search, RefreshRight } from '@element-plus/icons-vue';
 import { ADD_ORDER_TWO_OPTION_GROUP } from '@common/string';
 import { orderTwoOptionCodec } from '@codecs';
 import { orderTwoOption } from '@apis';
@@ -287,8 +287,8 @@ getPosInitData();
   <el-dialog
     v-model="flag.addOrderTwoOptionGroup"
     :close-on-click-modal="false"
-    align-center
     width="60%"
+    align-center
   >
     <template #header>
       <span class="mr-10"> 옵션 그룹 생성 </span>
@@ -297,10 +297,10 @@ getPosInitData();
     <el-input
       id="option-group-name"
       v-model="addOptionData.option_display_name"
-      class="mt-10 mb-20"
       clearable
       maxlength="30"
       show-word-limit
+      class="mt-10 mb-20"
     />
     <el-row class="mb-10">
       <span class="option-title"> 옵션 그룹 조건 </span>
@@ -313,8 +313,8 @@ getPosInitData();
       v-model="addOptionData.option_require"
       class="mb-20"
     >
-      <el-radio label="Y"> 필수</el-radio>
-      <el-radio label="N"> 선택</el-radio>
+      <el-radio label="Y"> 필수 </el-radio>
+      <el-radio label="N"> 선택 </el-radio>
     </el-radio-group>
     <!-- <el-row class="mb-20">
       <span class="option-title">
@@ -377,17 +377,18 @@ getPosInitData();
         </div>
         <div class="option-max-min-count-item">
           <span>최대 선택 개수</span>
-          <el-radio-group v-model="countRadioState.qty">
-            <el-radio :label="false"> 제한없음</el-radio>
-            <el-radio :label="true">
-              <el-input-number
-                v-model="addOptionData.max_limit_qty"
-                :disabled="!countRadioState.qty"
-                :min="1"
-                :value-on-clear="1"
-              />
-            </el-radio>
-          </el-radio-group>
+          <div>
+            <el-radio-group v-model="countRadioState.qty">
+              <el-radio :label="false"> 제한없음 </el-radio>
+              <el-radio :label="true"><span></span></el-radio>
+            </el-radio-group>
+            <el-input-number
+              v-model="addOptionData.max_limit_qty"
+              :min="1"
+              :disabled="!countRadioState.qty"
+              :value-on-clear="1"
+            />
+          </div>
           <span>개 이하로 제한</span>
         </div>
       </div>
@@ -396,30 +397,30 @@ getPosInitData();
     <el-row>
       <p class="option-title">옵션 목록</p>
       <el-row
-        align="bottom"
         class="width-100 mb-5"
+        align="bottom"
       >
         <el-input
           v-model="searchOptionMenu"
-          class="mt-10 flex-1"
           clearable
           placeholder="검색할 상품명 및 상품코드를 입력해주세요."
+          class="mt-10 flex-1"
           @keydown.enter="searchOption"
         />
         <div>
           <el-button
-            :disabled="searchOptionMenu?.length < 1"
+            type="primary"
+            round
             :icon="Search"
             class="ml-10"
-            round
-            type="primary"
+            :disabled="searchOptionMenu?.length < 1"
             @click="searchOption"
           >
             검색
           </el-button>
           <el-button
-            :icon="RefreshRight"
             round
+            :icon="RefreshRight"
             @click="resetSearchInput"
           >
             초기화
@@ -430,10 +431,10 @@ getPosInitData();
     <el-row class="ml-5">
       <el-checkbox
         v-model="checkboxAll"
-        :disabled="searchedOptionList?.length < 1"
-        :indeterminate="isIndeterminate"
         label="전체 선택"
         size="large"
+        :indeterminate="isIndeterminate"
+        :disabled="searchedOptionList?.length < 1"
         @change="changeCheckboxAll"
       />
     </el-row>
@@ -476,8 +477,8 @@ getPosInitData();
               <el-input-number
                 v-model="posItem.option_qty"
                 :min="0"
-                :value-on-clear="0"
                 class="mr-20"
+                :value-on-clear="0"
               />
             </el-col>
           </el-row>
@@ -499,15 +500,15 @@ getPosInitData();
       </el-button>
       <el-tooltip
         v-if="selectedOptionList?.length < 1"
-        content="옵션 상품을 선택해주세요."
         effect="dark"
+        content="옵션 상품을 선택해주세요."
         placement="top"
       >
         <el-button
           v-loading="submitLoading"
           class="submit-loading-button"
-          disabled
           type="primary"
+          disabled
           @click="addOptionGroup"
         >
           생성

@@ -210,6 +210,7 @@ export interface storeInfoDataStoreType {
   T_order_store_order_confirm: string;
   T_order_store_banner_control: string;
   T_order_store_credit_able: number;
+  middleWareVersion?: string;
   preCreditTableUse: number;
   T_order_store_categoryListUp: number;
   categoryIsBrand: number;

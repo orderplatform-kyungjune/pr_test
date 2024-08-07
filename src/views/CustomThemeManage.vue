@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { computed, reactive, Ref, ref } from 'vue';
+import { computed, onMounted, reactive, Ref, ref } from 'vue';
 import { cloneDeep } from 'lodash';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { AxiosResponse } from 'axios';
@@ -8,6 +8,7 @@ import { authentication, runtimeCheckHelper } from '@utils/index';
 import { isUPLUSAdmin } from '@utils/authentication';
 import useTagsStore from '@store/storeTags';
 import useModalStore from '@store/storeModal';
+import { DEFAULT_CUSTOM_THEME } from '@src/common/string';
 import { bannerManage, categorizeManageTabletV2, tableManage } from '@router/routePaths';
 import {
   requestStoreInfoDataStoreType,
@@ -362,21 +363,28 @@ const setDefaultCustomStyle = () => {
     defaultTemplate = cloneDeep(
       originStoreData.value.T_order_store_tablet_custom_style,
     );
-    if (!defaultTemplate) return;
-    defaultTemplate.code = USER_MIXED_PALETTE_CODE;
-    defaultTemplate.name = USER_MIXED_PALETTE_NAME;
-    defaultTemplate.mainColor = [];
-    if (!defaultTemplate.mode) defaultTemplate.mode = 'light';
+
+    const isCustomized =
+      allTemplateList.value.some(
+        (template: storeInfoDataCustomStyleType) =>
+          template.code === defaultTemplate?.code,
+      );
+
+      if (!isCustomized && defaultTemplate) {
+      defaultTemplate.code = USER_MIXED_PALETTE_CODE;
+      defaultTemplate.name = USER_MIXED_PALETTE_NAME;
+      defaultTemplate.mainColor = [];
+      if (!defaultTemplate.mode) defaultTemplate.mode = 'light';
+    }
   }
 
-  // 기본 color-green-light 템플릿 설정
+  // 기본 DEFAULT_CUSTOM_THEME 템플릿 설정
   if (!defaultTemplate) {
     defaultTemplate = allTemplateList.value?.find(
       (templateItem: storeInfoDataCustomStyleType) =>
-        templateItem.code === 'color-green-light',
+        templateItem.code === DEFAULT_CUSTOM_THEME,
     ) as storeInfoDataCustomStyleType;
   }
-
   applyTemplateData(defaultTemplate);
 
   changeCustomStyleMode();
@@ -540,14 +548,6 @@ const getTemplateMainColor = computed(
   () => selectedTemplateDisplayInfo.mainColor,
 );
 
-// el-color-picker 초기화버튼 숨기기
-document
-  .querySelectorAll('.el-color-dropdown__link-btn')
-  .forEach((element: Element) => {
-    // eslint-disable-next-line no-param-reassign
-    (element as HTMLElement).style.visibility = 'hidden';
-  });
-
 const initTabletDisplayData = async () => {
   await getStoreInfo();
   await getStoreThemeList();
@@ -562,6 +562,14 @@ const initTabletDisplayData = async () => {
 };
 
 initTabletDisplayData();
+
+onMounted(() =>
+// el-color-picker 초기화버튼 숨기기
+document
+  .querySelectorAll('.el-color-dropdown__link-btn')
+  .forEach((element: Element) => {
+    (element as HTMLElement).style.visibility = 'hidden';
+  }));
 </script>
 
 <template>

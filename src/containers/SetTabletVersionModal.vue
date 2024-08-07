@@ -1,27 +1,28 @@
 <script lang="ts" setup>
-import {useRoute} from 'vue-router';
-import {computed, h, onMounted, reactive, ref, Ref} from 'vue';
-import {cloneDeep} from 'lodash';
-import {ElMessage, ElMessageBox} from 'element-plus';
-import {AxiosResponse} from 'axios';
-import {authentication} from '@utils';
+import { useRoute } from 'vue-router';
+import { computed, h, onMounted, reactive, ref, Ref } from 'vue';
+import { cloneDeep } from 'lodash';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { AxiosResponse } from 'axios';
+import { authentication } from '@utils';
 import useModalStore from '@store/storeModal';
+import { DEFAULT_CUSTOM_THEME } from '@src/common/string';
 import {
   requestStoreThemeListType,
   requestUpdateStoreTabletVersionType,
   storeInfoDataCustomStyleType,
   storeInfoDataStoreType,
 } from '@interface/store';
-import {WarnTriangleFilled} from '@element-plus/icons-vue';
+import { WarnTriangleFilled } from '@element-plus/icons-vue';
 import apiErrorDialogHandler from '@composables/apiErrorDialogHandler';
-import {ExampleBackground} from '@components';
+import { ExampleBackground } from '@components';
 import {
   CUSTOM_THEME_CODE,
   SET_TABLET_VERSION,
   USER_MIXED_PALETTE_CODE,
   USER_MIXED_PALETTE_NAME,
 } from '@common/string';
-import {migration, store} from '@apis';
+import { migration, store } from '@apis';
 
 const { requestConvertVersionPreview } = migration;
 const { failAuthenticationAlert } = authentication;
@@ -302,11 +303,12 @@ const setDefaultCustomStyle = () => {
     );
 
     const isCustomized =
-      allTemplateList.value.findIndex(
+      allTemplateList.value.some(
         (template: storeInfoDataCustomStyleType) =>
           template.code === defaultTemplate?.code,
-      ) < 0;
-    if (isCustomized && defaultTemplate) {
+      );
+
+    if (!isCustomized && defaultTemplate) {
       defaultTemplate.code = USER_MIXED_PALETTE_CODE;
       defaultTemplate.name = USER_MIXED_PALETTE_NAME;
       defaultTemplate.mainColor = [];
@@ -318,7 +320,7 @@ const setDefaultCustomStyle = () => {
   if (!defaultTemplate) {
     defaultTemplate = allTemplateList.value?.find(
       (templateItem: storeInfoDataCustomStyleType) =>
-        templateItem.code === 'color-green-light',
+        templateItem.code === DEFAULT_CUSTOM_THEME,
     ) as storeInfoDataCustomStyleType;
   }
 

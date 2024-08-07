@@ -13,13 +13,12 @@ describe('network error 테스트', () => {
 
   let isError: null | ApiErrorType = null;
   beforeAll(() => {
-    setAxiosApi({
-      instance: axios,
-      config: {
+    setAxiosApi(
+      axios({
         method: 'GET',
         url,
-      },
-    }).catch((error) => {
+      }),
+    ).catch((error) => {
       isError = error;
     });
   });
@@ -43,13 +42,12 @@ describe('status 200으로 api 요청 성공, server error code 400 테스트', 
 
   let isError: null | ApiErrorType = null;
   beforeAll(() => {
-    setAxiosApi({
-      instance: axios,
-      config: {
+    setAxiosApi(
+      axios({
         method: 'GET',
         url,
-      },
-    }).catch((error) => {
+      }),
+    ).catch((error) => {
       isError = error;
     });
   });
@@ -69,13 +67,12 @@ describe('status 200으로 api 요청 성공, response 규격이 올바르지 �
 
   let isError: null | ApiErrorType = null;
   beforeAll(() => {
-    setAxiosApi({
-      instance: axios,
-      config: {
+    setAxiosApi(
+      axios({
         method: 'GET',
         url,
-      },
-    }).catch((error) => {
+      }),
+    ).catch((error) => {
       isError = error;
     });
   });

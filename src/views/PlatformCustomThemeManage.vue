@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { computed, reactive, Ref, ref } from 'vue';
+import { computed, onMounted, reactive, Ref, ref } from 'vue';
 import { cloneDeep } from 'lodash';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { AxiosResponse } from 'axios';
@@ -28,6 +28,7 @@ import {
 import {
   CUSTOM_SETTING,
   CUSTOM_THEME_CODE,
+  DEFAULT_CUSTOM_THEME,
   SET_TABLET_VERSION,
   STORE_LIST,
   TAB_CODE_TABLE_CONTROL,
@@ -349,17 +350,25 @@ const setDefaultCustomStyle = () => {
     defaultTemplate = cloneDeep(
       originStoreData.value.platform_store_tablet_custom_style,
     );
-    defaultTemplate.code = USER_MIXED_PALETTE_CODE;
-    defaultTemplate.name = USER_MIXED_PALETTE_NAME;
-    defaultTemplate.mainColor = [];
-    if (!defaultTemplate.mode) defaultTemplate.mode = 'light';
+    const isCustomized =
+      allTemplateList.value.some(
+        (template: storeInfoDataCustomStyleType) =>
+          template.code === defaultTemplate?.code,
+      );
+
+      if (!isCustomized && defaultTemplate) {
+      defaultTemplate.code = USER_MIXED_PALETTE_CODE;
+      defaultTemplate.name = USER_MIXED_PALETTE_NAME;
+      defaultTemplate.mainColor = [];
+      if (!defaultTemplate.mode) defaultTemplate.mode = 'light';
+    }
   }
 
   // 기본 color-green-light 템플릿 설정
   if (!defaultTemplate) {
     defaultTemplate = allTemplateList.value?.find(
       (templateItem: storeInfoDataCustomStyleType) =>
-        templateItem.code === 'color-green-light',
+        templateItem.code === DEFAULT_CUSTOM_THEME,
     ) as storeInfoDataCustomStyleType;
   }
 
@@ -523,14 +532,6 @@ const getTemplateMainColor = computed(
   () => selectedTemplateDisplayInfo.mainColor,
 );
 
-// el-color-picker 초기화버튼 숨기기
-document
-  .querySelectorAll('.el-color-dropdown__link-btn')
-  .forEach((element: Element) => {
-    // eslint-disable-next-line no-param-reassign
-    (element as HTMLElement).style.visibility = 'hidden';
-  });
-
 const initTabletDisplayData = async () => {
   await getStoreInfo();
   await getStoreThemeList();
@@ -544,6 +545,14 @@ const initTabletDisplayData = async () => {
     originStoreData.value.platform_store_tablet_custom_style?.background?.backgroundColor;
 };
 initTabletDisplayData();
+
+onMounted(() =>
+// el-color-picker 초기화버튼 숨기기
+document
+  .querySelectorAll('.el-color-dropdown__link-btn')
+  .forEach((element: Element) => {
+    (element as HTMLElement).style.visibility = 'hidden';
+  }));
 </script>
 
 <template>

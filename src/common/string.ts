@@ -69,6 +69,12 @@ export const MEMBER_REGISTER_SINGLE_STORE_INFO =
 export const MEMBER_REGISTER_HISTORY = 'memberRegisterHistory';
 export const UPDATE_PASSWORD = 'updatePassword';
 
+// N차 옵션
+export const UNLIMITED_OPTION_STEPS = 'unLimitedOptionSteps';
+export const ADD_NEW_OPTION_GROUP = 'addNewOptionGroup';
+export const ADD_OLD_OPTION_GROUP = 'addOldOptionGroup';
+export const MODIFY_OPTION_GROUP = 'modifyOptionGroup';
+
 // breadCrumbHeader
 export const STORE_LIST = '매장 리스트';
 export const CATEGORY_SETTING = '분류 설정';
@@ -148,3 +154,4 @@ export const TAB_CODE_TABLET_INFO = 'tabletInfo';
 export const CUSTOM_THEME_CODE = 'hyatt';
 export const USER_MIXED_PALETTE_CODE = 'user-mixed-palette';
 export const USER_MIXED_PALETTE_NAME = '사용자 지정';
+export const DEFAULT_CUSTOM_THEME = 'color-red-light';

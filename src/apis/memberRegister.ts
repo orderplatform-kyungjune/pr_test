@@ -17,82 +17,78 @@ const objectToQueryString = (
     .join('&');
 
 /** 통합인증 심사 신청 리스트 */
-export const requestMemberRegisterList = (data: requestMemberRegisterStoreType) => setAxiosApi<{
-  result: boolean;
-  code: number
-}>({
-  instance: adminTokenApi,
-  config: {
-    method: 'GET',
-    url: `${endpoints.member.member_register_list}?${objectToQueryString(data)}`,
-  },
-});
+export const requestMemberRegisterList = (
+  data: requestMemberRegisterStoreType,
+) =>
+  setAxiosApi<{ data: any; page_info: any }>(
+    adminTokenApi({
+      method: 'GET',
+      url: `${endpoints.member.member_register_list}?${objectToQueryString(data)}`,
+    }),
+  );
 
 /** 통합인증 심사 신청에 매칭된 매장 리스트 */
-export const requestMemberRegister = (data: requestMemberRegisterDetailType) => {
+export const requestMemberRegister = (
+  data: requestMemberRegisterDetailType,
+) => {
   let url = `${endpoints.member.member_register}?id=${encodeURIComponent(data.id)}`;
-  if (data.withinSearchTxt) url += `&withinSearchTxt=${encodeURIComponent(data.withinSearchTxt)}`;
+  if (data.withinSearchTxt) {
+    url += `&withinSearchTxt=${encodeURIComponent(data.withinSearchTxt)}`;
+  }
 
-  return setAxiosApi<{ result: boolean; code: number }>({
-    instance: adminTokenApi,
-    config: {
+  return setAxiosApi<{ data: any }>(
+    adminTokenApi({
       method: 'GET',
       url,
-    },
-  });
+    }),
+  );
 };
 
 /** 통합인증 신청 강제 매칭 매장 리스트 */
 export const requestForcedStoreList = (data: requestForcedStoreListType) => {
   let url = `${endpoints.member.member_register_store}?id=${data.id}&searchTxt=${encodeURIComponent(data.searchTxt)}`;
-  if (data.withinSearchTxt) url += `&withinSearchTxt=${encodeURIComponent(data.withinSearchTxt)}`;
-  return setAxiosApi<{
-    result: boolean;
-    code: number
-  }>({
-    instance: adminTokenApi,
-    config: {
+  if (data.withinSearchTxt) {
+    url += `&withinSearchTxt=${encodeURIComponent(data.withinSearchTxt)}`;
+  }
+
+  return setAxiosApi<{ data: any }>(
+    adminTokenApi({
       method: 'GET',
       url,
-    },
-  });
+    }),
+  );
 };
 
 /** 통합인증 심사 신청에 매칭된 매장 - 정보 업데이트 */
-export const requestUpdateMemberRegister = (data: requestUpdateRegisterInfoType) => setAxiosApi<{
-  result: boolean;
-  code: number
-}>({
-  instance: adminTokenApi,
-  config: {
-    method: 'PUT',
-    url: endpoints.member.member_register,
-    data,
-  },
-});
+export const requestUpdateMemberRegister = (
+  data: requestUpdateRegisterInfoType,
+) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'PUT',
+      url: endpoints.member.member_register,
+      data,
+    }),
+  );
 
-export const requestUpdateMemberRegisterState = (data: requestUpdateRegisterStateType) => setAxiosApi<{
-  result: boolean;
-  code: number
-}>({
-  instance: adminTokenApi,
-  config: {
-    method: 'PUT',
-    url: endpoints.member.member_register_state,
-    data,
-  },
-});
+export const requestUpdateMemberRegisterState = (
+  data: requestUpdateRegisterStateType,
+) =>
+  setAxiosApi(
+    adminTokenApi({
+      method: 'PUT',
+      url: endpoints.member.member_register_state,
+      data,
+    }),
+  );
 
-export const requestRegisterHistory = (registerId: string) => setAxiosApi<{
-  result: boolean;
-  code: number
-}>({
-  instance: adminTokenApi,
-  config: {
-    method: 'GET',
-    url: `${endpoints.member.member_register_history}?id=${encodeURIComponent(registerId)}`,
-  },
-});
+export const requestRegisterHistory = (registerId: string) =>
+  setAxiosApi<{ data: any }>(
+    adminTokenApi({
+      method: 'GET',
+      url: `${endpoints.member.member_register_history}?id=${encodeURIComponent(registerId)}`,
+    }),
+  );
 
 export default {
   requestMemberRegisterList,
