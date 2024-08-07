@@ -335,6 +335,7 @@ export interface productDetailInfoDataType {
   useLock: string;
   allergy_list: allergyListType[];
   T_order_store_good_allergy_use: string;
+  middleWareVersion: string;
 }
 
 export interface productDetailInfoDataPlatformType {
@@ -388,6 +389,7 @@ export interface productDetailInfoDataPlatformType {
   useLock: string;
   allergy_list: allergyListType[];
   platform_store_good_allergy_use: string;
+  middleWareVersion: string;
 }
 
 export interface productDetailInfoType {

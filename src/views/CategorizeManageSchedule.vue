@@ -334,12 +334,12 @@ getCategoryInfo();
   >
     <el-table-column
       prop="categoryName"
-      label="분류 이름"
+      label="분류명"
       align="left"
       header-align="center"
     />
     <el-table-column
-      label="노출 여부"
+      label="분류 노출"
       align="center"
       header-align="center"
       width="150"
@@ -357,7 +357,7 @@ getCategoryInfo();
       </template>
     </el-table-column>
     <el-table-column
-      label="스케줄 사용"
+      label="타이머 기능"
       align="center"
       header-align="center"
       width="170"
@@ -375,7 +375,7 @@ getCategoryInfo();
       </template>
     </el-table-column>
     <el-table-column
-      label="요일 설정"
+      label="적용 요일"
       align="center"
       header-align="center"
       min-width="100"
@@ -468,7 +468,7 @@ getCategoryInfo();
       </template>
     </el-table-column>
     <el-table-column
-      label="관리"
+      label="저장"
       align="center"
       header-align="center"
       width="100"

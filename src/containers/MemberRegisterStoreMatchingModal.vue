@@ -8,11 +8,10 @@ import {
   memberRegisterSearchStoreInfoType,
   singleDataUpdateKeyType,
 } from '@interface/memberRegister';
+import apiErrorDialogHandler from '@composables/apiErrorDialogHandler';
 import { memberRegister } from '@apis';
 
-const {
-  requestUpdateMemberRegister,
-} = memberRegister;
+const { requestUpdateMemberRegister } = memberRegister;
 const { replaceEmptyString } = etcUtils;
 const {
   formatPhoneNumber,
@@ -26,12 +25,12 @@ const { flag } = useModalStore();
 
 const props = defineProps<{
   getRegisterMatchingInfo: () => void;
-  registerId: number,
-  applyInfo: memberRegisterDetailType,
-  selectedStoreInfo: memberRegisterSearchStoreInfoType,
-  requestHoldingState: () => void,
-  openDisapprovalModal: (fromTotal: boolean) => void
-  openApprovalModal: () => void
+  registerId: number;
+  applyInfo: memberRegisterDetailType;
+  selectedStoreInfo: memberRegisterSearchStoreInfoType;
+  requestHoldingState: () => void;
+  openDisapprovalModal: (fromTotal: boolean) => void;
+  openApprovalModal: () => void;
 }>();
 
 /** 매장별 정보: 수정값 */
@@ -73,15 +72,8 @@ const putUpdateMatchingStoreSingleData = async (
       message: '정상적으로 등록되었습니다.',
     });
     props.getRegisterMatchingInfo?.();
-  } catch (error: any) {
-    if (error.status === 400) {
-      await ElMessageBox.alert(error.message, '실패', {
-        confirmButtonText: '확인',
-        type: 'error',
-      });
-    } else {
-      console.warn(error);
-    }
+  } catch (error) {
+    apiErrorDialogHandler({ error });
   }
 };
 
@@ -210,7 +202,9 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
   if (key === 'storeName' || key === 'storeAreaName' || key === 'userName') {
     if (isChangedSingleData(inputValue)) formattedData = inputValue;
   } else if (key === 'userTel') {
-    formattedData = checkStorePhoneNumberValidation(formatPhoneNumber(inputValue));
+    formattedData = checkStorePhoneNumberValidation(
+      formatPhoneNumber(inputValue),
+    );
   } else if (key === 'taxId') {
     formattedData = checkStoreTaxIdValidation(formatTaxId(inputValue));
   } else {
@@ -221,7 +215,6 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
 
   confirmAndUpdateSingleData(key, formattedData);
 };
-
 </script>
 
 <template>
@@ -250,7 +243,9 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
           {{ replaceEmptyString(applyInfo?.userName) }}
         </el-descriptions-item>
         <el-descriptions-item label="대표자 휴대전화번호">
-          {{ replaceEmptyString(formatPhoneNumber(applyInfo?.userTel as string)) }}
+          {{
+            replaceEmptyString(formatPhoneNumber(applyInfo?.userTel as string))
+          }}
         </el-descriptions-item>
         <el-descriptions-item label="사업자등록번호">
           {{ replaceEmptyString(formatTaxId(applyInfo?.taxId ?? '')) }}
@@ -266,8 +261,12 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
         title="매칭 매장 정보"
       >
         <el-descriptions-item
-          :class-name="getDifferentDataStyle(selectedStoreInfo.checker?.storeName)"
-          :label-class-name="getDifferentDataStyle(selectedStoreInfo.checker?.storeName)"
+          :class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.storeName)
+          "
+          :label-class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.storeName)
+          "
           label="매장명"
         >
           <el-row>
@@ -284,8 +283,12 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
           </el-row>
         </el-descriptions-item>
         <el-descriptions-item
-          :class-name="getDifferentDataStyle(selectedStoreInfo.checker?.storeAreaName)"
-          :label-class-name="getDifferentDataStyle(selectedStoreInfo.checker?.storeAreaName)"
+          :class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.storeAreaName)
+          "
+          :label-class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.storeAreaName)
+          "
           label="지점"
         >
           <el-row>
@@ -295,15 +298,21 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
             />
             <el-button
               type="info"
-              @click="updateSingleData('storeAreaName', inputData.storeAreaName)"
+              @click="
+                updateSingleData('storeAreaName', inputData.storeAreaName)
+              "
             >
               수정
             </el-button>
           </el-row>
         </el-descriptions-item>
         <el-descriptions-item
-          :class-name="getDifferentDataStyle(selectedStoreInfo.checker?.userName)"
-          :label-class-name="getDifferentDataStyle(selectedStoreInfo.checker?.userName)"
+          :class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.userName)
+          "
+          :label-class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.userName)
+          "
           label="대표자명"
         >
           <el-row>
@@ -320,8 +329,12 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
           </el-row>
         </el-descriptions-item>
         <el-descriptions-item
-          :class-name="getDifferentDataStyle(selectedStoreInfo.checker?.userTel)"
-          :label-class-name="getDifferentDataStyle(selectedStoreInfo.checker?.userTel)"
+          :class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.userTel)
+          "
+          :label-class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.userTel)
+          "
           label="대표자 휴대전화번호"
         >
           <el-row>
@@ -341,7 +354,9 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
         </el-descriptions-item>
         <el-descriptions-item
           :class-name="getDifferentDataStyle(selectedStoreInfo.checker?.taxId)"
-          :label-class-name="getDifferentDataStyle(selectedStoreInfo.checker?.taxId)"
+          :label-class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.taxId)
+          "
           label="사업자등록번호"
         >
           <el-row>
@@ -361,8 +376,12 @@ const updateSingleData = (key: singleDataUpdateKeyType, inputValue: string) => {
           </el-row>
         </el-descriptions-item>
         <el-descriptions-item
-          :class-name="getDifferentDataStyle(selectedStoreInfo.checker?.torderId)"
-          :label-class-name="getDifferentDataStyle(selectedStoreInfo.checker?.torderId)"
+          :class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.torderId)
+          "
+          :label-class-name="
+            getDifferentDataStyle(selectedStoreInfo.checker?.torderId)
+          "
           label="매장 ID"
         >
           {{ replaceEmptyString(selectedStoreInfo.info?.torderId) }}

@@ -1,4 +1,5 @@
 import { translateArrayType } from '@interface/language';
+import { storePosInfoType, apiResponseYesNoType } from '@common/interface';
 
 export interface requestPosInitDataType {
   O_id: string;
@@ -347,4 +348,207 @@ export interface requestArrangeOptionGroupType {
 export interface arrangeOptionGroupListType {
   id: number;
   name: string;
+}
+
+export type OptionTypeType = 'option' | 'goods';
+
+export interface unlimitedOptionType {
+  option_item_no: number;
+  option_name: string;
+  option_type: OptionTypeType;
+  option_sold_out: apiResponseYesNoType;
+  option_use: apiResponseYesNoType;
+  depth_code: string;
+  preset_yn: apiResponseYesNoType;
+}
+
+export interface getUnlimitedOptionGroupDataType {
+  option_require: apiResponseYesNoType;
+  max_limit_qty: number;
+  min_limit_qty: number;
+  option_group_name: string;
+  option_group_no: number;
+  items: unlimitedOptionType[];
+}
+
+export interface requestUnlimitedDepthOptionGroupsRequestBodyType
+  extends storePosInfoType {
+  optionItemNo: number;
+}
+
+export interface parentOptionType {
+  name: string;
+  no: number | null;
+  optionGroupNo: number | null;
+  depthCode: string;
+  items: getUnlimitedOptionGroupDataType[];
+}
+
+export interface getInitOptionDataType {
+  O_id: string;
+  O_name: string;
+  O_price: string;
+}
+
+export interface initOptionRequestType extends getInitOptionDataType {
+  option_qty: number;
+  preset_yn: apiResponseYesNoType;
+}
+
+export interface optionUpdateListSettingType {
+  storeCode: string;
+  posGoodCode: string;
+  option_display_name: string;
+  option_require: apiResponseYesNoType;
+  min_limit_qty: number;
+  max_limit_qty: number;
+}
+
+export interface requestSelectedOptionInfoRequestParamsType {
+  storeCode: string;
+  posGoodCode: string;
+  optionGroupNo: number | null;
+}
+
+export interface optionUpdateListOptionType {
+  id: string;
+  quantity: number;
+  preset_yn: apiResponseYesNoType;
+  depth: boolean;
+  use: apiResponseYesNoType;
+  soldOut: apiResponseYesNoType;
+}
+
+export interface optionUpdateListResponseDataType {
+  setting: optionUpdateListSettingType;
+  items: {
+    goods: optionUpdateListOptionType[];
+    options: optionUpdateListOptionType[];
+  };
+}
+
+export interface optionCreateGoodsType {
+  goods_id: string[];
+  goods_qty: number[];
+  preset_yn: apiResponseYesNoType[];
+}
+
+export interface optionCreateOptionType {
+  option_id: string[];
+  option_qty: number[];
+  preset_yn: apiResponseYesNoType[];
+}
+
+export interface optionCreateSettingType extends optionUpdateListSettingType {
+  optionGroupNo: number | null;
+  depthCode: string;
+}
+
+export interface optionCreateRequestDataType {
+  setting: optionCreateSettingType;
+  items: {
+    goods: string[];
+    option: string[];
+  };
+}
+
+export interface optionUpdateSettingType extends optionUpdateListSettingType {
+  optionGroupNo: number | null;
+}
+
+export interface optionUpdateRequestDataType {
+  setting: optionUpdateSettingType;
+  items: {
+    goods: string[];
+    option: string[];
+  };
+}
+
+export interface optionUpdateRequestBodyType {
+  setting: optionUpdateSettingType;
+  items: {
+    goods: optionCreateGoodsType;
+    option: optionCreateOptionType;
+  };
+}
+
+export interface requestOptionGroupCreateRequestBodyType {
+  setting: optionCreateSettingType;
+  items: {
+    goods: optionCreateGoodsType;
+    option: optionCreateOptionType;
+  };
+}
+
+export interface requestOptionGroupDeleteRequestBodyType {
+  storeCode: string;
+  posGoodCode: string;
+  optionGroupNo: number;
+}
+
+export interface addNewOptionGroupListDataType {
+  originOptions: initOptionRequestType[];
+  originGoods: initOptionRequestType[];
+}
+
+export interface modifyOptionType extends initOptionRequestType {
+  depth: boolean;
+  use: apiResponseYesNoType;
+  soldOut: apiResponseYesNoType;
+}
+
+export interface modifyOptionGroupsDataType {
+  originOptions: modifyOptionType[];
+  originGoods: modifyOptionType[];
+}
+
+export interface getOptionListAllItemType {
+  optionCode: string;
+  optionName: string;
+  optionPrice: number;
+  optionUse: apiResponseYesNoType;
+  optionImg: string;
+  optionSort: number;
+  optionIsSale: apiResponseYesNoType;
+  presetYN: apiResponseYesNoType;
+}
+
+export interface getOptionListAllOptionType {
+  optionGroupNo: string;
+  optionGroupName: string;
+  optionSortNumber: number;
+  image: string;
+  isSet: string;
+  item: getOptionListAllItemType[];
+}
+
+export interface getOptionListAllGoodsDataType {
+  goodCode: string;
+  goodDpName: string;
+  goodName: string;
+  option: getOptionListAllOptionType[];
+}
+
+export interface AddOldOptionGroupModalGoodsList
+  extends getOptionListAllGoodsDataType {
+  selectedOptionGroups: string[];
+}
+
+export interface requestOptionCreateGetRequestBodyType {
+  storeCode: string; // 매장코드
+  goodCode: string; // posGoodCode
+  copyGoodCode: string; // 가져올 상품 코드
+  itemNo?: number; // target 옵션 코드
+  copyGroupNo?: string[]; // 추가할 옵션 그룹 목록 (undefined 일경우 모든 옵션 그룹)
+  editType: 'add' | 'remove';
+}
+
+export interface requestOptionSoldOutParamsType extends storePosInfoType {
+  optionItemNo: number;
+  soldOut: apiResponseYesNoType;
+}
+
+export interface requestOptionUseParamsType extends storePosInfoType {
+  optionItemNo: number;
+  use: apiResponseYesNoType;
 }

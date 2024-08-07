@@ -1,13 +1,15 @@
 <script lang="ts" setup>
-import {useRoute, useRouter} from 'vue-router';
-import {computed, nextTick, onMounted, reactive, Ref, ref, watch} from 'vue';
-import {cloneDeep} from 'lodash';
-import {ElMessage, ElMessageBox, UploadProps} from 'element-plus';
-import {AxiosResponse} from 'axios';
-import {authentication, etcUtils, runtimeCheckHelper} from '@utils';
+import { useRoute, useRouter } from 'vue-router';
+import { computed, nextTick, onMounted, reactive, Ref, ref, watch } from 'vue';
+import { cloneDeep } from 'lodash';
+import { ElMessage, ElMessageBox, UploadProps } from 'element-plus';
+import { AxiosResponse } from 'axios';
+import { authentication, etcUtils, runtimeCheckHelper } from '@utils';
 import useTagsStore from '@store/storeTags';
 import useModalStore from '@store/storeModal';
-import {bannerManage, categorizeManageTabletV2, tableManage,} from '@router/routePaths';
+import { DEFAULT_CUSTOM_THEME } from '@src/common/string';
+import { requestCustomTemplateList } from '@src/apis/store';
+import { bannerManage, categorizeManageTabletV2, tableManage } from '@router/routePaths';
 import {
   requestStoreThemeListType,
   requestUpdateRestroomImageType,
@@ -16,14 +18,15 @@ import {
   storeBannerInfoType,
   storeInfoCreditPaymentMethodType,
   storeInfoCreditPaymentType,
+  storeInfoDataCustomStyleType,
   storeInfoDataStoreLanguageListType,
   storeInfoDataStoreType,
   storeInfoOfStoreManage,
   storeStateListDataType,
   storeTabletSortType,
 } from '@interface/store';
-import {selectBoxType} from '@interface/member';
-import {requestFranchiseListType} from '@interface/fran';
+import { selectBoxType } from '@interface/member';
+import { requestFranchiseListType } from '@interface/fran';
 import {
   Histogram,
   Management,
@@ -33,8 +36,8 @@ import {
   SetUp,
   StarFilled,
 } from '@element-plus/icons-vue';
-import {RefreshTabletModal, SetTabletVersionModal} from '@containers';
-import {BreadcrumbHeader, StoreNameBox} from '@components';
+import { RefreshTabletModal, SetTabletVersionModal } from '@containers';
+import { BreadcrumbHeader, StoreNameBox } from '@components';
 import {
   CUSTOM_THEME_CODE,
   REFRESH_TABLET,
@@ -43,31 +46,31 @@ import {
   STORE_SETTING,
   TAB_CODE_TABLE_CONTROL,
 } from '@common/string';
-import {franCodec, memberCodec, storeCodec, tableCodec} from '@codecs';
-import {fran, helper, member, store, tablet} from '@apis';
+import { franCodec, memberCodec, storeCodec, tableCodec } from '@codecs';
+import { fran, helper, member, store, tablet } from '@apis';
 
-const {selectBoxListCodec} = memberCodec;
+const { selectBoxListCodec } = memberCodec;
 
-const {runtimeCheck} = runtimeCheckHelper;
-const {failAuthenticationAlert, checkAuthFunction, isGlobalAdmin} =
+const { runtimeCheck } = runtimeCheckHelper;
+const { failAuthenticationAlert, checkAuthFunction, isGlobalAdmin } =
   authentication;
-const {giveFocusToElementById} = etcUtils;
+const { giveFocusToElementById } = etcUtils;
 const {
   requestCheckDuplicateTabletId,
   requestCheckDuplicateMiddleWareCode,
   requestCheckDuplicateSerialNumber,
 } = helper;
 const tagStore = useTagsStore();
-const {openModal, flag} = useModalStore();
+const { openModal, flag } = useModalStore();
 const route = useRoute();
 const router = useRouter();
-const {addTagsData, updateStoreNamesInTagArray} = tagStore;
+const { addTagsData, updateStoreNamesInTagArray } = tagStore;
 const storeManageHeader = reactive([
-  {name: STORE_LIST},
-  {name: STORE_SETTING},
+  { name: STORE_LIST },
+  { name: STORE_SETTING },
 ]);
 const pathQuery = reactive(route.query);
-const {requestCorporationList} = member;
+const { requestCorporationList } = member;
 const {
   requestStoreInfo,
   requestStoreUpdate,
@@ -84,8 +87,8 @@ const {
   requestPosInformationList,
   requestStoreThemeList,
 } = store;
-const {requestFranchiseList} = fran;
-const {requestLoadVanTypeList} = tablet;
+const { requestFranchiseList } = fran;
+const { requestLoadVanTypeList } = tablet;
 const {
   storeInfoCodec,
   storeThemeListCodec,
@@ -98,8 +101,8 @@ const {
   storeLanguageFlagListCodec,
   posInformationListCodec,
 } = storeCodec;
-const {vanTypeListCodec} = tableCodec;
-const {requestFranchiseListCodec} = franCodec;
+const { vanTypeListCodec } = tableCodec;
+const { requestFranchiseListCodec } = franCodec;
 
 /** 매장 설정 데이터 */
 const storeDetailData = ref({
@@ -110,7 +113,10 @@ const storeDetailData = ref({
   T_order_store_pwd: '',
   T_order_store_pwd_re: '',
 } as storeInfoDataStoreType);
-
+/** 태블릿 테마 원본 데이터 */
+const tabletThemeData = ref({
+  themeData: '',
+});
 /** 중복검사: 저장된 매장 데이터 */
 const savedData = reactive({
   serialNumber2: '',
@@ -331,6 +337,7 @@ const getStoreInfo = async () => {
     if (!typeError) {
       if (res.data.code === 200) {
         storeDetailData.value = res.data.data.store;
+        tabletThemeData.value.themeData = res.data.data.store.T_order_store_Theme;
         beforeModificationStoreName.value =
           res.data.data.store?.T_order_store_name;
         storeBannerData.value = res.data.data.banner;
@@ -511,9 +518,11 @@ const restoreScrollPosition = () => {
   }
 };
 
+const isCustomTheme = (value:string) => value === CUSTOM_THEME_CODE;
+
 /** 매장 수정 */
 const postStoreUpdate = async () => {
-  const storeCode = {storeCode: pathQuery.code as string};
+  const storeCode = { storeCode: pathQuery.code as string };
   const requestStoreData = cloneDeep(storeDetailData.value);
 
   const storeTabletOrder =
@@ -532,7 +541,11 @@ const postStoreUpdate = async () => {
   delete requestStoreData.T_order_store_logo;
   delete requestStoreData.T_order_store_background;
   delete requestStoreData.T_order_store_restroom_img;
-  delete requestStoreData.T_order_store_tablet_custom_style;
+
+  if (!isCustomTheme(requestStoreData.T_order_store_Theme)) {
+    delete requestStoreData.T_order_store_tablet_custom_style;
+  }
+
   const requestEditData = Object.assign(
     requestStoreData,
     storeCode,
@@ -829,15 +842,49 @@ const getDefaultCurrency = async () => {
     console.log(error);
   }
 };
+/** 커스텀 테마 템플릿 리스트 */
+const allCustomTemplateList: Ref<storeInfoDataCustomStyleType[]> = ref([]);
+
+const getCustomTemplateList = async () => {
+  try {
+    const res = (await requestCustomTemplateList()) as AxiosResponse;
+
+    if (res.data.code === 400) {
+      await ElMessageBox.alert(res.data.msg, '실패', {
+        confirmButtonText: '확인',
+        type: 'error',
+      });
+    }
+    if (res.data.code === 401) {
+      failAuthenticationAlert();
+    }
+    if (res.data.code === 200) {
+      allCustomTemplateList.value = res.data.data;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+/** 커스텀테마 default 스타일 설정 */
+const setDefaultCustomStyle = () => {
+  if (allCustomTemplateList.value.length !== 0) {
+        storeDetailData.value.T_order_store_tablet_custom_style = allCustomTemplateList.value.find(
+      (templateItem: storeInfoDataCustomStyleType) => templateItem.code === DEFAULT_CUSTOM_THEME,
+    );
+  }
+};
 
 /** 옵션 레이아웃 설정 */
 const basicLayoutList = ref([['', '']]);
 const filteredOptionLayout = ref([['', '']]);
 const filterOptionLayout = () => {
-  if (storeDetailData.value.T_order_store_Theme.includes(CUSTOM_THEME_CODE)) {
+  if (isCustomTheme(storeDetailData.value.T_order_store_Theme)) {
     filteredOptionLayout.value = basicLayoutList.value.filter((item) =>
       item[0].includes('custom'),
     );
+    if (!isCustomTheme(tabletThemeData.value.themeData)) {
+      setDefaultCustomStyle();
+    }
     return;
   }
 
@@ -1111,7 +1158,7 @@ const havePreCreditTableUse = computed(
 );
 
 /** 매장 open 시간 selectBox 배열 */
-const getOpenStoreTime = Array.from({length: 24}).map((_, index) => {
+const getOpenStoreTime = Array.from({ length: 24 }).map((_, index) => {
   if (index < 10) {
     const lowerObj = {
       value: `0${index}`,
@@ -1128,7 +1175,7 @@ const getOpenStoreTime = Array.from({length: 24}).map((_, index) => {
 });
 
 /** 매장 close 시간 selectBox 배열 */
-const getCloseStoreTime = Array.from({length: 31}).map((_, index) => {
+const getCloseStoreTime = Array.from({ length: 31 }).map((_, index) => {
   if (index < 10) {
     const lowerObj = {
       value: `0${index}`,
@@ -1290,7 +1337,7 @@ const getCorporationListData = async () => {
 /** 접수 번호 중복 검사 api 호출 */
 const postCheckDuplicateSerialNumber2 = async () => {
   try {
-    const serial = {serial_number2: storeDetailData.value.serial_number2};
+    const serial = { serial_number2: storeDetailData.value.serial_number2 };
 
     if (serial.serial_number2 === '') {
       ElMessage({
@@ -1620,6 +1667,7 @@ onMounted(async () => {
   await getLoadVanTypeList();
   await getFranChiseList();
   await getPosInfoList();
+  await getCustomTemplateList();
   getCheckingData();
 
   await nextTick(() => {
@@ -1638,8 +1686,8 @@ onMounted(async () => {
     :storeCode="selectedStoreInfo.storeBriefInfo[0]?.T_order_store_code"
     :storeName="selectedStoreInfo.storeBriefInfo[0]?.T_order_store_name"
   />
-  <BreadcrumbHeader :propsHeader="storeManageHeader"/>
-  <StoreNameBox :apiVersion="storeDetailData.T_order_store_apiType"/>
+  <BreadcrumbHeader :propsHeader="storeManageHeader" />
+  <StoreNameBox :apiVersion="storeDetailData.T_order_store_apiType" />
   <el-row
     align="middle"
     justify="space-between"
@@ -1866,7 +1914,7 @@ onMounted(async () => {
           </div>
           <div class="store-manage-contents-duplicate-check">
             <div class="store-manage-contents-duplicate-input">
-              <el-input v-model="storeDetailData.serial_number2"/>
+              <el-input v-model="storeDetailData.serial_number2" />
             </div>
             <div>
               <el-button
@@ -1914,7 +1962,7 @@ onMounted(async () => {
             <div>
               태블릿 로그인 아이디
               <el-icon>
-                <StarFilled color="red"/>
+                <StarFilled color="red" />
               </el-icon>
             </div>
             <span> - 운영중인 태블릿의 로그인 아이디 입니다.</span>
@@ -1979,7 +2027,7 @@ onMounted(async () => {
             <div>
               태블릿 접근 비밀번호
               <el-icon>
-                <StarFilled color="red"/>
+                <StarFilled color="red" />
               </el-icon>
             </div>
             <span> - 태블릿의 설정 접근 시 입력하는 비밀번호입니다.</span>
@@ -2058,7 +2106,7 @@ onMounted(async () => {
               <div>
                 태블릿 테마 설정
                 <el-icon>
-                  <StarFilled color="red"/>
+                  <StarFilled color="red" />
                 </el-icon>
               </div>
               <span> - 태블릿의 기본 테마를 지정합니다.</span>
@@ -2088,7 +2136,7 @@ onMounted(async () => {
               <div>
                 옵션 레이아웃
                 <el-icon>
-                  <StarFilled color="red"/>
+                  <StarFilled color="red" />
                 </el-icon>
               </div>
               <span> - 옵션 선택 시 화면 레이아웃을 설정합니다.</span>
@@ -2652,7 +2700,7 @@ onMounted(async () => {
                 <template #error>
                   <div class="image-slot ad-list">
                     <el-icon class="error-icon">
-                      <Picture/>
+                      <Picture />
                     </el-icon>
                     <span>불러오기 실패</span>
                   </div>
@@ -2968,7 +3016,7 @@ onMounted(async () => {
                 <template #error>
                   <div class="image-slot ad-list">
                     <el-icon class="error-icon">
-                      <Picture/>
+                      <Picture />
                     </el-icon>
                     <span>불러오기 실패</span>
                   </div>
@@ -3235,27 +3283,30 @@ onMounted(async () => {
           </el-radio-group>
         </div>
         <div
-          v-if="isUndefinedData(storeDetailData.T_order_store_credit_able)"
+          v-if="isUndefinedData(storeDetailData.middleWareVersion)"
           class="store-manage-contents-contents-wrapper"
         >
           <div class="store-manage-contents-contents-title">
             <div>연동할 미들웨어 버전</div>
             <span> - 미들웨어 버전에 맞춰서 설정해주시면 됩니다.</span>
           </div>
-          <el-radio-group v-model="storeDetailData.T_order_store_credit_able">
-            <el-radio
-              :label="1"
-              border
-            >
-              운영 버전(선/후불 공용)
-            </el-radio>
-            <el-radio
-              :label="0"
-              border
-            >
-              과거 버전(후불 전용)
-            </el-radio>
-          </el-radio-group>
+          <el-select
+            v-model="storeDetailData.middleWareVersion"
+            class="width-100 mt-10 mb-10"
+          >
+            <el-option
+              value="0.2"
+              label="0.2 과거 버전(후불 전용)"
+            />
+            <el-option
+              value="0.5"
+              label="0.5 운영 버전(선/후불 공용)"
+            />
+            <el-option
+              value="0.8"
+              label="0.8.0 버전"
+            />
+          </el-select>
         </div>
         <div
           v-if="isUndefinedData(storeDetailData.preCreditTableUse)"
@@ -3859,7 +3910,7 @@ onMounted(async () => {
             <div>
               태블릿 노출 매장명
               <el-icon>
-                <StarFilled color="red"/>
+                <StarFilled color="red" />
               </el-icon>
             </div>
             <span> - 운영중인 업체 이름입니다.</span>
@@ -4156,7 +4207,7 @@ onMounted(async () => {
                   <template #error>
                     <div class="image-slot">
                       <el-icon>
-                        <Picture/>
+                        <Picture />
                       </el-icon>
                     </div>
                   </template>
@@ -4221,7 +4272,7 @@ onMounted(async () => {
                   <template #error>
                     <div class="image-slot">
                       <el-icon>
-                        <Picture/>
+                        <Picture />
                       </el-icon>
                     </div>
                   </template>
@@ -4312,7 +4363,7 @@ onMounted(async () => {
                   <template #error>
                     <div class="image-slot">
                       <el-icon>
-                        <Picture/>
+                        <Picture />
                       </el-icon>
                     </div>
                   </template>

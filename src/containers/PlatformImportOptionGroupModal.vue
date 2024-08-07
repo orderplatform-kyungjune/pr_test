@@ -116,9 +116,9 @@ const setOrderOneOptionData = (
   const confirmText =
     props.type === 'remove'
       ? '정말 옵션 그룹을 덮어쓰시겠습니까?'
-      : '정말 옵션 그룹을 추가하시겠습니까?';
+      : '정말 옵션 그룹을 가져오시겠습니까?';
   const confirmTitle =
-    props.type === 'remove' ? '옵션 그룹 덮어쓰기' : '옵션 그룹 추가하기';
+    props.type === 'remove' ? '옵션 그룹 덮어쓰기' : '옵션 그룹 가져오기';
   ElMessageBox.confirm(confirmText, confirmTitle, {
     confirmButtonText: '네',
     cancelButtonText: '아니오',
@@ -176,9 +176,9 @@ const setOrderTwoOptionData = (
   const confirmText =
     props.type === 'remove'
       ? `${item.goodDpName}의 옵션 그룹을 덮어쓰시겠습니까?`
-      : `${item.goodDpName}의 옵션 그룹을 추가하시겠습니까?`;
+      : `${item.goodDpName}의 옵션 그룹을 가져오시겠습니까?`;
   const confirmTitle =
-    props.type === 'remove' ? '옵션 그룹 덮어쓰기' : '옵션 그룹 추가하기';
+    props.type === 'remove' ? '옵션 그룹 덮어쓰기' : '옵션 그룹 가져오기';
   ElMessageBox.confirm(confirmText, confirmTitle, {
     confirmButtonText: '네',
     cancelButtonText: '아니오',
@@ -287,7 +287,7 @@ if (props.isStoreApi2) {
   >
     <template #header>
       <div v-if="isAddType(type)">
-        <span class="mr-10"> 옵션 그룹 추가하기 </span>
+        <span class="mr-10"> 옵션 그룹 가져오기 </span>
       </div>
       <div v-else>
         <span class="mr-10"> 옵션 그룹 덮어쓰기 </span>
@@ -320,7 +320,7 @@ if (props.isStoreApi2) {
                   type="primary"
                   @click="onClickAddOrOverwriteOptionGroupButton(product)"
                 >
-                  추가하기
+                  가져오기
                 </el-button>
                 <el-button
                   v-else

@@ -1,19 +1,16 @@
 <script lang="ts" setup>
 import { reactive, Ref, ref } from 'vue';
-import { ElMessageBox } from 'element-plus';
-import { AxiosResponse } from 'axios';
 import { dateFormatterUtil, etcUtils, formattingUtils } from '@utils';
 import useModalStore from '@store/storeModal';
 import {
   memberRegisterDefaultStoreInfoType,
   memberRegisterHistoryItemType,
 } from '@interface/memberRegister';
+import apiErrorDialogHandler from '@composables/apiErrorDialogHandler';
 import { MEMBER_REGISTER_HISTORY } from '@common/string';
 import { memberRegister } from '@apis';
 
-const {
-  requestRegisterHistory,
-} = memberRegister;
+const { requestRegisterHistory } = memberRegister;
 
 const { flag, modalData, closeModal } = useModalStore();
 
@@ -37,26 +34,19 @@ const historyList: Ref<memberRegisterHistoryItemType[]> = ref([]);
 /** 수정 이력 불러오기 api 호출 */
 const getHistoryList = async () => {
   try {
-    const res = (await requestRegisterHistory(registerId ?? '')) as AxiosResponse;
+    const res = await requestRegisterHistory(registerId ?? '');
 
-    historyList.value = res.data.data?.history;
-    delete res.data.data?.history;
-    storeData.value = res.data.data;
+    historyList.value = res.data?.history;
+    delete res.data?.history;
+    storeData.value = res.data;
     storeData.value.displayTaxId = maskAllNumber(
       formatTaxId(storeData.value.taxId),
     );
     inputStoreData.areaName = storeData.value.storeAreaName;
     inputStoreData.userName = storeData.value.userName;
     inputStoreData.phoneNumber = formatPhoneNumber(storeData.value.userTel);
-  } catch (error: any) {
-    if (error.status === 400) {
-      await ElMessageBox.alert(error.message, '실패', {
-        confirmButtonText: '확인',
-        type: 'error',
-      });
-    } else {
-      console.warn(error);
-    }
+  } catch (error) {
+    apiErrorDialogHandler({ error });
   }
 };
 

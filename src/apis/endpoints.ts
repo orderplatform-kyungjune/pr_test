@@ -115,6 +115,22 @@ const endpoints = {
     option_group_name_list: '/option/option_group_name_list',
     update_option_group_sort: '/option/update_option_group_sort',
   },
+  v2: {
+    option: {
+      one_depth_setting: '/v2/option/one_depth_setting',
+      unlimit_depth_setting: '/v2/option/unlimit_depth_setting',
+      init_option: '/v2/option/init_option',
+      init_goods: '/v2/option/init_goods',
+      create: '/v2/option/create',
+      list_all: '/v2/option/list_all',
+      create_get: '/v2/option/create_get',
+      option_group_update: '/v2/option/option_group_update',
+      update_list: '/v2/option/update_list',
+      delete_single_option_group: '/v2/option/delete_single_option_group',
+      sold_out: '/v2/option/sold_out',
+      use: '/v2/option/use',
+    },
+  },
   promotion: {
     date: '/promotion/HITE_JINRO/stats/v2/date',
     phone_list: '/promotion/HITE_JINRO/stats/v2/prize/daily/phone/list',

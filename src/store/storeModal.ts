@@ -1,10 +1,15 @@
-import { reactive } from 'vue';
+import { reactive, onUnmounted } from 'vue';
 import { defineStore } from 'pinia';
 import { modalDataType, modalType } from '@interface/modal';
 import { MODAL } from '@common/string';
 
 const useModalStore = defineStore(MODAL, () => {
   const flag = reactive<modalType>({
+    unLimitedOptionSteps: false,
+    addNewOptionGroup: false,
+    addOldOptionGroup: false,
+    modifyOptionGroup: false,
+
     addProduct: false,
     editProduct: false,
     addCategory: false,
@@ -87,6 +92,9 @@ const useModalStore = defineStore(MODAL, () => {
     allergyDetail: {},
     memberRegisterDetail: {},
     memberRegisterHistory: {},
+    unLimitedOptionSteps: {},
+    addNewOptionGroup: {},
+    addOldOptionGroup: {},
   });
 
   const openModal = (key: string) => {
@@ -101,6 +109,15 @@ const useModalStore = defineStore(MODAL, () => {
 
   const closeModal = (key: string) => {
     flag[key] = false;
+  };
+
+  /** 모든 modal 닫기 */
+  const closeAllModals = () => {
+    Object.keys(flag).forEach((key) => {
+      if (flag[key] !== false) {
+        flag[key] = false;
+      }
+    });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,6 +144,7 @@ const useModalStore = defineStore(MODAL, () => {
     closeModal,
     closeModalWithData,
     toggleModal,
+    closeAllModals,
   };
 });
 

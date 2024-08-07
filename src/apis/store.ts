@@ -84,14 +84,13 @@ export const requestStoreUpdate = (data: requestStoreInfoDataStoreType) => {
 export const requestStoreTabletVersionUpdate = (
   data: requestUpdateStoreTabletVersionType,
 ) =>
-  setAxiosApi<{ result: boolean; code: number }>({
-    instance: adminTokenApi,
-    config: {
+  setAxiosApi(
+    adminTokenApi({
       method: 'POST',
       url: endpoints.store.update_tablet_version,
       data,
-    },
-  });
+    }),
+  );
 
 export const requestStoreTabletVersionUpdateInPlatform = (
   data: requestUpdateStoreTabletVersionPlatformType,
