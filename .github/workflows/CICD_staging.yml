@@ -53,13 +53,6 @@ jobs:
         with:
           node-version: "20.x"
 
-      # node_modules 캐시 복원
-      - name: restore node_modules cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-
       # node_modules 설치
       - name: install dependencies
         run: yarn
@@ -69,7 +62,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
   #---------------------------------- torder
   build_torder:
@@ -90,7 +83,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       # build
       - name: build TORDER
@@ -120,7 +113,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
 
       # dist 폴더 캐시 복원
       - name: restore dist cache
@@ -157,7 +150,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       - name: build UPLUS
         run: |
@@ -183,7 +176,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: uplus-dist-${{ runner.os }}-${{ needs.build_uplus.outputs.sha }}-${{ github.workflow }}
 
       - name: restore dist cache
         uses: actions/cache/restore@v4
