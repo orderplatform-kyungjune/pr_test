@@ -62,10 +62,8 @@ jobs:
       - name: save node_modules cache
         uses: actions/cache/save@v4
         with:
-          path: |
-            node_modules
-            yarn.lock
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ steps.check_branch.outputs.sha }}-${{ github.workflow }}
 
   #---------------------------------- torder
   build_torder:
@@ -85,14 +83,8 @@ jobs:
       - name: restore node_modules cache
         uses: actions/cache/restore@v4
         with:
-          path: |
-            node_modules
-            yarn.lock
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-
-      - name: 체크
-        run: |
-          ls -al
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       # build
       - name: build TORDER
@@ -121,10 +113,8 @@ jobs:
       - name: restore node_modules cache
         uses: actions/cache/restore@v4
         with:
-          path: |
-            node_modules
-            yarn.lock
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ needs.build_torder.outputs.sha }}-${{ github.workflow }}
 
       # dist 폴더 캐시 복원
       - name: restore dist cache
