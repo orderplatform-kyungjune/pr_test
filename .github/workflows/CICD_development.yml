@@ -93,6 +93,10 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
+      - name: 체크
+        run: |
+          ls -al
+          
       # build
       - name: build TORDER
         run: |
