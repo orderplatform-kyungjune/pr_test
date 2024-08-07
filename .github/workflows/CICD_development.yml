@@ -151,7 +151,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       - name: build UPLUS
         run: |
@@ -177,7 +177,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.build_uplus.outputs.sha }}-${{ github.workflow }}
 
       - name: restore dist cache
         uses: actions/cache/restore@v4
@@ -213,7 +213,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.setup.outputs.sha }}-${{ github.workflow }}
 
       - name: build BRAND1
         run: |
@@ -239,7 +239,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: node-modules-${{ runner.os }}-${{ needs.build_brand1.outputs.sha }}-${{ github.workflow }}
 
       - name: restore dist cache
         uses: actions/cache/restore@v4
