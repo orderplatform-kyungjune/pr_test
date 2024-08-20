@@ -1,0 +1,427 @@
+name: FRONT 코드리뷰봇
+
+on:
+  pull_request:
+    types:
+      - opened
+      - closed
+  pull_request_review:
+    types:
+      - submitted
+  pull_request_review_comment:
+    types:
+      - created
+
+jobs:
+  notify_pr_created:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.state == 'open'
+    steps:
+      - name: Notify PR Created
+        uses: 8398a7/action-slack@v3.14.0
+        with:
+          status: custom
+          fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
+          mention: "channel"
+          if_mention: always
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.event.pull_request.title }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*프로덕트*\n<${{  github.event.repository.html_url }}|${{ github.event.repository.name }}>"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*상태*\n요청 :rotating_light:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*요청자*\n${{ github.event.pull_request.user.login }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "해당 PR로 이동하기"
+                      },
+                      "accessory": {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": ":github:",
+                          "emoji": true
+                        },
+                        "url": "${{ github.event.pull_request.html_url }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
+
+  notify_pr_approved:
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'APPROVED'
+    steps:
+      - name: Notify PR Review
+        uses: 8398a7/action-slack@v3.14.0
+        with:
+          status: custom
+          fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
+          mention: "channel"
+          if_mention: always
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.event.pull_request.title }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*프로덕트*\n<${{  github.event.repository.html_url }}|${{ github.event.repository.name }}>"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*상태*\n승인 :+1:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*요청자*\n${{ github.event.pull_request.user.login }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*리뷰어*\n${{ github.event.review.user.login }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*코멘트*\n${{ github.event.review.body }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "해당 PR로 이동하기"
+                      },
+                      "accessory": {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": ":github:",
+                          "emoji": true
+                        },
+                        "url": "${{ github.event.pull_request.html_url }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
+
+  notify_pr_files_changed_comment:
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'COMMENTED'
+    steps:
+      - name: Notify PR Files Changed Comment
+        uses: 8398a7/action-slack@v3.14.0
+        with:
+          status: custom
+          fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
+          mention: "channel"
+          if_mention: always
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.event.pull_request.title }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*프로덕트*\n<${{  github.event.repository.html_url }}|${{ github.event.repository.name }}>"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*상태*\n코멘트 :speech_balloon:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*요청자*\n${{ github.event.pull_request.user.login }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*리뷰어*\n${{ github.event.review.user.login }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*코멘트*\n${{ github.event.review.body }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "해당 PR로 이동하기"
+                      },
+                      "accessory": {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": ":github:",
+                          "emoji": true
+                        },
+                        "url": "${{ github.event.pull_request.html_url }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
+
+  notify_pr_comment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request }}
+    steps:
+      - name: Notify PR Comment
+        uses: 8398a7/action-slack@v3.14.0
+        with:
+          status: custom
+          fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
+          mention: "channel"
+          if_mention: always
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.event.issue.title }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*프로덕트*\n<${{  github.event.repository.html_url }}|${{ github.event.repository.name }}>"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*상태*\n코멘트 :speech_balloon:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*요청자*\n${{ github.event.issue.assignee.login }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*리뷰어*\n${{ github.event.comment.user.login }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*코멘트*\n${{ github.event.comment.body }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "해당 코멘트로 이동하기"
+                      },
+                      "accessory": {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": ":github:",
+                          "emoji": true
+                        },
+                        "url": "${{ github.event.comment.html_url }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
+
+  notify_pr_merged:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    steps:
+      - name: Notify PR Merged
+        uses: 8398a7/action-slack@v3.14.0
+        with:
+          status: custom
+          fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
+          mention: "channel"
+          if_mention: always
+          custom_payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ github.event.pull_request.title }}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*프로덕트*\n<${{  github.event.repository.html_url }}|${{ github.event.repository.name }}>"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*상태*\n병합 :white_check_mark:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*작업자*\n${{ github.event.pull_request.user.login }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*병합 대상*\n${{ github.event.pull_request.base.ref }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "해당 PR로 이동하기"
+                      },
+                      "accessory": {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": ":github:",
+                          "emoji": true
+                        },
+                        "url": "${{ github.event.pull_request.html_url }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
