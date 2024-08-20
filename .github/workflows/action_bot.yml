@@ -4,7 +4,7 @@ on:
   pull_request: # PR 생성/재생성시에 D-DAY label 추가
     types: [opened, reopened]
   pull_request_review: # PR 리뷰 상태를 감지하여 D-DAY label 삭제
-    types: [submitted, edited, dismissed]
+    types: [submitted]
   schedule:
     - cron: '1 15 * * 0-4'   # 매주 월~금요일까지 한국 시간 00:01에 D-DAY label 업데이트
     - cron: '59 22 * * 0-4'  # 매주 월~금요일까지 한국 시간 07:59에 slack 알림
