@@ -176,7 +176,7 @@ jobs:
 
   notify_pr_files_changed_comment:
     runs-on: ubuntu-latest
-    if: github.event.review.state == 'COMMENTED' && github.event.comment.in_reply_to_id == null
+    if: github.event.review.state == 'COMMENTED' && github.event.review.body != null
     steps:
       - name: Notify PR Files Changed Comment
         uses: 8398a7/action-slack@v3.14.0
