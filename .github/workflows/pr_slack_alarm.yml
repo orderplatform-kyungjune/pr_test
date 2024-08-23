@@ -180,10 +180,11 @@ jobs:
     if: github.event.review.state == 'COMMENTED' && github.event.review.body != null
     steps:
       - name: Replace Newlines in Review Body
-        run: |
-            echo "REVIEW_BODY=$(node -e \"console.log(process.env.GITHUB_EVENT_REVIEW_BODY.replace(/\\n/g, '\\\\n'))\")" >> $GITHUB_ENV
         env:
           GITHUB_EVENT_REVIEW_BODY: ${{ github.event.review.body }}
+        run: |
+          REVIEW_BODY=$(echo "${GITHUB_EVENT_REVIEW_BODY}" | node -e "process.stdin.on('data', d => console.log(d.toString().replace(/\\n/g, '\\\\n')))")
+          echo "REVIEW_BODY=${REVIEW_BODY}" >> $GITHUB_ENV
 
       - name: Notify PR Files Changed Comment
         uses: 8398a7/action-slack@v3.14.0
