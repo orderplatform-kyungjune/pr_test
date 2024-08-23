@@ -179,17 +179,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.review.state == 'COMMENTED' && github.event.review.body != null
     steps:
-      - name: Replace Newlines in Review Body
-        env:
-          GITHUB_EVENT_REVIEW_BODY: ${{ github.event.review.body }}
-        run: |
-          REVIEW_BODY=$(echo "${GITHUB_EVENT_REVIEW_BODY}" | node -e "process.stdin.on('data', d => console.log(d.toString().replace(/\\n/g, '\\\\n')))")
-          echo "REVIEW_BODY=${REVIEW_BODY}" >> $GITHUB_ENV
-
       - name: Notify PR Files Changed Comment
         uses: 8398a7/action-slack@v3.14.0
         with:
-          token: ${{ secrets.BOT_PAT }}
           status: custom
           fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
           mention: "channel"
@@ -240,7 +232,7 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*코멘트*\n${{ env.REVIEW_BODY }}"
+                          "text": "*코멘트*\n`${{ github.event.review.body }}`"
                         }
                       ]
                     },
