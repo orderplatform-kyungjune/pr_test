@@ -5,12 +5,13 @@ on:
     types:
       - opened
       - closed
+  issue_comment:
+    types:
+      - created
+      - edited
   pull_request_review:
     types:
       - submitted
-  pull_request_review_comment:
-    types:
-      - created
 
 jobs:
   notify_pr_created:
@@ -178,6 +179,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.review.state == 'COMMENTED' && github.event.review.body != null
     steps:
+      - name: Set Review Body with Newlines Replaced
+        run: echo "REVIEW_BODY=$(echo '${{ github.event.review.body }}' | jq -R '. | gsub(\"\\n\"; \"\\\\n\")')" >> $GITHUB_ENV
+
       - name: Notify PR Files Changed Comment
         uses: 8398a7/action-slack@v3.14.0
         with:
@@ -231,7 +235,7 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": "*코멘트*\n${{ github.event.review.body }}"
+                          "text": "*코멘트*\n${{ env.REVIEW_BODY }}"
                         }
                       ]
                     },
