@@ -189,6 +189,7 @@ jobs:
       - name: Notify PR Files Changed Comment
         uses: 8398a7/action-slack@v3.14.0
         with:
+          token: ${{ secrets.BOT_PAT }}
           status: custom
           fields: workflow, job, commit, repo, ref, author, took, pullRequest, message
           mention: "channel"
