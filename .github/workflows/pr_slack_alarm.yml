@@ -232,7 +232,7 @@ jobs:
                       "fields": [
                         {
                           "type": "mrkdwn",
-                          "text": |"*코멘트*\n${{ github.event.review.body }}"
+                          "text": `*코멘트*\n${{ github.event.review.body }}`
                         }
                       ]
                     },
