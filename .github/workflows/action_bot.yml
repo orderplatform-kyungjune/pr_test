@@ -384,21 +384,42 @@ jobs:
             const currentTagSha = process.env.CURRENT_TAG_SHA;
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
             
-            let query;
-            if (!previousTagSha) {
-              query = `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged merged:<${currentTagSha}`;
-            } else {
-              query = `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged merged:${previousTagSha}..${currentTagSha}`;
-            }
-      
-            const { data: searchResults } = await github.rest.search.issuesAndPullRequests({
-              q: query,
-              per_page: 100,
-            });
-      
-            const mergedPRs = searchResults.items;
+            let commitsData;
             
-            if (mergedPRs.length === 0) {
+            // 이전 태그가 없으면 현재 태그의 모든 커밋을 가져옴
+            if (!previousTagSha) {
+              const { data: commits } = await github.rest.repos.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: currentTagSha,
+                per_page: 100
+              });
+              commitsData = commits;
+            } else {
+              // 이전 태그와 현재 태그 사이의 커밋을 비교
+              const { data } = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: previousTagSha,
+                head: currentTagSha
+              });
+              commitsData = data.commits;
+            }
+            
+            const mergedPRs = [];
+            
+            // 커밋에서 PR을 가져오는 대신, GitHub REST API에서 merge된 PR을 직접 검색
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              per_page: 100
+            });
+            
+            // pull requests 중에서 병합된 PR만 필터링
+            const mergedPRsFiltered = pullRequests.filter(pr => pr.merged_at && new Date(pr.merged_at) >= new Date(previousTagSha) && new Date(pr.merged_at) <= new Date(currentTagSha));
+            
+            if (mergedPRsFiltered.length === 0) {
               core.exportVariable('MERGED_PR_TITLES', '');
               console.log('No merged pull requests found.');
               return;
@@ -408,7 +429,8 @@ jobs:
             const releasePRs = [];
             const etcPRs = [];
             
-            for (const mergedPR of mergedPRs) {
+            // PR 제목을 분석하여 카테고리별로 분류
+            for (const mergedPR of mergedPRsFiltered) {
               const { number, title, user } = mergedPR;
               const lowerCaseTitle = title.toLowerCase();
               if (lowerCaseTitle.includes('feature/')) {
