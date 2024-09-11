@@ -415,10 +415,10 @@ jobs:
               state: 'closed',
               per_page: 100
             });
-            
+            console.log('pr목록',pullRequests)
             // pull requests 중에서 병합된 PR만 필터링
             const mergedPRsFiltered = pullRequests.filter(pr => pr.merged_at && new Date(pr.merged_at) >= new Date(previousTagSha) && new Date(pr.merged_at) <= new Date(currentTagSha));
-            
+            console.log('mergedPRsFiltered목록',mergedPRsFiltered)
             if (mergedPRsFiltered.length === 0) {
               core.exportVariable('MERGED_PR_TITLES', '');
               console.log('No merged pull requests found.');
