@@ -359,9 +359,6 @@ jobs:
               return;
             }
             
-            console.log('tags',tags)
-            console.log('currentIndex',currentIndex)
-            
             const currentTag = tags[currentIndex];
             
             // 태그가 하나만 있는 경우
@@ -384,20 +381,8 @@ jobs:
         with:
           github-token: ${{ secrets.BOT_PAT }}
           script: |
-            const currentTagSha = process.env.CURRENT_TAG_SHA;
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
-            
-            let startDate, endDate;
-            
-            // 현재 SHA에 대한 커밋 정보를 가져와서 날짜 추출
-            const { data: currentTagCommit } = await github.rest.repos.getCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: currentTagSha,
-            });
-            endDate = currentTagCommit.commit.author.date;
-            
-            // 이전 SHA가 있을 경우, 해당 커밋 정보에서 날짜 추출
+            let startDate;
             if (previousTagSha) {
               const { data: previousTagCommit } = await github.rest.repos.getCommit({
                 owner: context.repo.owner,
@@ -406,11 +391,18 @@ jobs:
               });
               startDate = previousTagCommit.commit.author.date;
             } else {
-              // 이전 태그가 없을 경우, 오래된 날짜로 설정 (예: 프로젝트 초기)
               startDate = '1970-01-01T00:00:00Z';
             }
             
-            // 병합된 PR을 가져오고, 병합 날짜를 기준으로 필터링
+            const currentTagSha = process.env.CURRENT_TAG_SHA;
+            let endDate;
+            const { data: currentTagCommit } = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: currentTagSha,
+            });
+            endDate = currentTagCommit.commit.author.date;
+            
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
