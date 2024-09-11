@@ -415,6 +415,7 @@ jobs:
               per_page: 100,
             });
             
+            console.log('pullRequests',pullRequests)
             const mergedPRs = pullRequests.filter(pr => pr.merged_at && pr.merged_at >= startDate && pr.merged_at <= endDate);
             
             if (mergedPRs.length === 0) {
