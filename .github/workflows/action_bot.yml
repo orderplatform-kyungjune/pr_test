@@ -419,7 +419,6 @@ jobs:
             // pull requests 중에서 병합된 PR만 필터링
             const mergedPRsFiltered = pullRequests.filter(pr => pr.merged_at && new Date(pr.merged_at) >= new Date(previousTagSha) && new Date(pr.merged_at) <= new Date(currentTagSha));
             
-            console.log('new Date(pr.merged_at)',new Date(pr.merged_at));
             console.log('previousTagSha',previousTagSha);
             console.log('new Date(previousTagSha)',new Date(previousTagSha));
             
