@@ -30,6 +30,11 @@ jobs:
           script: |
             async function addLabel() { 
               try {
+                if (context.payload.pull_request.base.ref === 'main') {
+                  console.log('Target branch is main. Skipping label.');
+                  return;
+                }
+            
                 const prNumber = context.payload.pull_request.number;
                 const { data: labels } = await github.rest.issues.listLabelsOnIssue({
                   owner: context.repo.owner,
