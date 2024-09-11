@@ -410,9 +410,9 @@ jobs:
               per_page: 100,
             });
             
-            const mergedPRsFiltered = pullRequests.filter(pr => pr.merged_at && pr.merged_at >= startDate && pr.merged_at <= endDate);
+            const mergedPRs = pullRequests.filter(pr => pr.merged_at && pr.merged_at >= startDate && pr.merged_at <= endDate);
             
-            if (mergedPRsFiltered.length === 0) {
+            if (mergedPRs.length === 0) {
               core.exportVariable('MERGED_PR_TITLES', '');
               console.log('No merged pull requests found.');
               return;
@@ -423,7 +423,7 @@ jobs:
             const etcPRs = [];
             
             // PR 제목을 분석하여 카테고리별로 분류
-            for (const mergedPR of mergedPRsFiltered) {
+            for (const mergedPR of mergedPRs) {
               const { number, title, user } = mergedPR;
               const lowerCaseTitle = title.toLowerCase();
               if (lowerCaseTitle.includes('feature/')) {
