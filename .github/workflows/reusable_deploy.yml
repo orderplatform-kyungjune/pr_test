@@ -1,0 +1,56 @@
+name: deploy
+
+on:
+  workflow_call:
+    secrets:
+      TOKEN:
+        required: true
+      LABEL:
+        required: true
+      AWS_ROLE_ARN:
+        required: true
+      AWS_BUCKET_NAME:
+        required: true
+      AWS_REGION:
+        required: true
+      AWS_DISTRIBUTION_ID:
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          token: ${{ secrets.TOKEN }}
+
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ github.sha }}-${{ github.workflow }}
+
+      - name: restore dist cache
+        uses: actions/cache/restore@v4
+        with:
+          path: dist
+          key: ${{ secrets.LABEL }}-dist-${{ github.sha }}-${{ github.workflow }}
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: update AWS
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          AWS_DISTRIBUTION_ID: ${{ secrets.AWS_DISTRIBUTION_ID }}
+        run: |
+          echo "is deploying..."
+          yarn deploy:action

@@ -1,0 +1,35 @@
+name: build
+
+on:
+  workflow_call:
+    secrets:
+      BUILD_COMMAND:
+        required: true
+      LABEL:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ github.sha }}-${{ github.workflow }}
+
+      - name: build
+        run: |
+          echo "is building..."
+          yarn ${{ secrets.BUILD_COMMAND }}
+
+      - name: save dist cache
+        uses: actions/cache/save@v4
+        with:
+          path: dist
+          key: ${{ secrets.LABEL }}-dist-${{ github.sha }}-${{ github.workflow }}

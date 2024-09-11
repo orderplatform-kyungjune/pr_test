@@ -383,38 +383,20 @@ jobs:
           script: |
             const currentTagSha = process.env.CURRENT_TAG_SHA;
             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
-            let commitsData;
             
+            let query;
             if (!previousTagSha) {
-              const { data: commits } = await github.rest.repos.listCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                sha: currentTagSha,
-              });
-              commitsData = commits;
+              query = `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged merged:<${currentTagSha}`;
             } else {
-              const { data } = await github.rest.repos.compareCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: previousTagSha,
-                head: context.sha
-              });
-              commitsData = data.commits;
+              query = `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged merged:${previousTagSha}..${currentTagSha}`;
             }
-            
-            const mergedPRs = [];
-            
-            for (const commitData of commitsData) {
-              if (commitData.commit.message.includes('Merge pull request')) {
-                const prNumber = commitData.commit.message.match(/#(\d+)/)[1];
-                const { data: pr } = await github.rest.pulls.get({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber
-                });
-                mergedPRs.push(pr);
-              }
-            }
+      
+            const { data: searchResults } = await github.rest.search.issuesAndPullRequests({
+              q: query,
+              per_page: 100,
+            });
+      
+            const mergedPRs = searchResults.items;
             
             if (mergedPRs.length === 0) {
               core.exportVariable('MERGED_PR_TITLES', '');
@@ -428,9 +410,10 @@ jobs:
             
             for (const mergedPR of mergedPRs) {
               const { number, title, user } = mergedPR;
-              if (title.includes('Feature/') || title.includes('feature/')) {
+              const lowerCaseTitle = title.toLowerCase();
+              if (lowerCaseTitle.includes('feature/')) {
                 featurePRs.push(`- #${number} ${title} by @${user.login}`);
-              } else if (title.includes('Release/') || title.includes('release/')) {
+              } else if (lowerCaseTitle.includes('release/')) {
                 releasePRs.push(`- #${number} ${title} by @${user.login}`);
               } else {
                 etcPRs.push(`- #${number} ${title} by @${user.login}`);
