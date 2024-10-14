@@ -30,6 +30,7 @@ jobs:
           script: |
             async function addLabel() { 
               try {
+                // main 브랜치가 target인 PR일경우 제외
                 if (context.payload.pull_request.base.ref === 'main') {
                   console.log('Target branch is main. Skipping label.');
                   return;
@@ -356,6 +357,7 @@ jobs:
               repo: context.repo.repo,
               per_page: 100
             });
+            console.log('태그 목록',tags)
             const currentTagName = context.ref.replace('refs/tags/', '');
             const currentIndex = tags.findIndex(tag => tag.name === currentTagName);
             
@@ -415,7 +417,6 @@ jobs:
               per_page: 100,
             });
             
-            console.log('pullRequests',pullRequests)
             const mergedPRs = pullRequests.filter(pr => pr.merged_at && pr.merged_at >= startDate && pr.merged_at <= endDate);
             
             if (mergedPRs.length === 0) {

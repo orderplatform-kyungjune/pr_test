@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       label:
-        description: 'label to deploy'
+        description: '배포 대상 도메인(개별/그룹) 선택'
         required: true
         default: 'TORDER'
         type: choice
