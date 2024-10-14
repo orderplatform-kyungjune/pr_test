@@ -357,27 +357,41 @@ jobs:
               repo: context.repo.repo,
               per_page: 100
             });
-            console.log('태그 목록',tags)
-            console.log(tags[0].commit.committer.date)
+            console.log('tags', tags)
+            // 태그 목록을 커밋 날짜 기준으로 정렬
+            const tagsWithCommitDates = await Promise.all(
+              tags.map(async tag => {
+                const { data: commit } = await github.rest.git.getCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: tag.commit.sha
+                });
+                return { ...tag, date: new Date(commit.committer.date) };
+              })
+            );
+            
+            // 커밋 날짜를 기준으로 최신 태그 순으로 정렬
+            const sortedTags = tagsWithCommitDates.sort((a, b) => b.date - a.date);
+            console.log('sortedTags', sortedTags)
             const currentTagName = context.ref.replace('refs/tags/', '');
-            const currentIndex = tags.findIndex(tag => tag.name === currentTagName);
+            const currentIndex = sortedTags.findIndex(tag => tag.name === currentTagName);
             
             if (currentIndex === -1) {
               core.setFailed('Current tag not found.');
               return;
             }
             
-            const currentTag = tags[currentIndex];
+            const currentTag = sortedTags[currentIndex];
             
             // 태그가 하나만 있는 경우
-            if (tags.length === 1) {
+            if (sortedTags.length === 1) {
               core.exportVariable('PREVIOUS_TAG_SHA', '');
               core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
               console.log('Only one tag found.');
               return;
             }
             
-            const previousTag = tags[currentIndex + 1];
+            const previousTag = sortedTags[currentIndex + 1];
             core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
             core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
             console.log('Previous Tag:', previousTag.name);
