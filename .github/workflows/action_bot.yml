@@ -1,516 +1,516 @@
-name: github action bot
+# name: github action bot
 
-on:
-  pull_request: # PR 생성/재생성시에 D-DAY label 추가
-    types: [opened, reopened]
-  pull_request_review: # PR 리뷰 상태를 감지하여 D-DAY label 삭제
-    types: [submitted]
-  schedule:
-    - cron: '1 15 * * 0-4'   # 매주 월~금요일까지 한국 시간 00:01에 D-DAY label 업데이트
-    - cron: '59 22 * * 0-4'  # 매주 월~금요일까지 한국 시간 07:59에 slack 알림
-  push:
-    tags:
-      - 'v*'  # 'v'로 시작하는 태그 푸시하면 릴리즈 노트 생성
+# on:
+#   pull_request: # PR 생성/재생성시에 D-DAY label 추가
+#     types: [opened, reopened]
+#   pull_request_review: # PR 리뷰 상태를 감지하여 D-DAY label 삭제
+#     types: [submitted]
+#   schedule:
+#     - cron: '1 15 * * 0-4'   # 매주 월~금요일까지 한국 시간 00:01에 D-DAY label 업데이트
+#     - cron: '59 22 * * 0-4'  # 매주 월~금요일까지 한국 시간 07:59에 slack 알림
+#   push:
+#     tags:
+#       - 'v*'  # 'v'로 시작하는 태그 푸시하면 릴리즈 노트 생성
 
-jobs:
-  # D-DAY 라벨 생성
-  add-label:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.BOT_PAT }}
-      # D-5 라벨 생성
-      - name: add D-5 label
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            async function addLabel() { 
-              try {
-                // main 브랜치가 target인 PR일경우 제외
-                if (context.payload.pull_request.base.ref === 'main') {
-                  console.log('Target branch is main. Skipping label.');
-                  return;
-                }
+# jobs:
+#   # D-DAY 라벨 생성
+#   add-label:
+#     runs-on: ubuntu-latest
+#     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+#     steps:
+#       - name: checkout repository
+#         uses: actions/checkout@v4
+#         with:
+#           token: ${{ secrets.BOT_PAT }}
+#       # D-5 라벨 생성
+#       - name: add D-5 label
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             async function addLabel() { 
+#               try {
+#                 // main 브랜치가 target인 PR일경우 제외
+#                 if (context.payload.pull_request.base.ref === 'main') {
+#                   console.log('Target branch is main. Skipping label.');
+#                   return;
+#                 }
             
-                const prNumber = context.payload.pull_request.number;
-                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber
-                });
+#                 const prNumber = context.payload.pull_request.number;
+#                 const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+#                   owner: context.repo.owner,
+#                   repo: context.repo.repo,
+#                   issue_number: prNumber
+#                 });
 
-                if (labels.some(label => label.name.startsWith('D-'))) {
-                  console.log('D- label already exists.');
-                  return;
-                }
+#                 if (labels.some(label => label.name.startsWith('D-'))) {
+#                   console.log('D- label already exists.');
+#                   return;
+#                 }
 
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber,
-                  labels: ['D-5'],
-                });
-                console.log('Label D-5 added.');
-              } catch (error) {
-                console.error('Error adding labels:', error);
-              }
-            };
-            addLabel();
+#                 await github.rest.issues.addLabels({
+#                   owner: context.repo.owner,
+#                   repo: context.repo.repo,
+#                   issue_number: prNumber,
+#                   labels: ['D-5'],
+#                 });
+#                 console.log('Label D-5 added.');
+#               } catch (error) {
+#                 console.error('Error adding labels:', error);
+#               }
+#             };
+#             addLabel();
 
-  # D-DAY 라벨 삭제
-  remove-label:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request_review'
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.BOT_PAT }}
+#   # D-DAY 라벨 삭제
+#   remove-label:
+#     runs-on: ubuntu-latest
+#     if: github.event_name == 'pull_request_review'
+#     steps:
+#       - name: checkout repository
+#         uses: actions/checkout@v4
+#         with:
+#           token: ${{ secrets.BOT_PAT }}
 
-      # D-DAY 라벨 삭제
-      - name: remove D- labels
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            async function removeLabels() {
-              const prNumber = context.payload.pull_request.number;
-              const { owner, repo } = context.repo;
+#       # D-DAY 라벨 삭제
+#       - name: remove D- labels
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             async function removeLabels() {
+#               const prNumber = context.payload.pull_request.number;
+#               const { owner, repo } = context.repo;
 
-              const { data: reviews } = await github.rest.pulls.listReviews({
-                owner,
-                repo,
-                pull_number: prNumber
-              });
+#               const { data: reviews } = await github.rest.pulls.listReviews({
+#                 owner,
+#                 repo,
+#                 pull_number: prNumber
+#               });
 
-              const reviewerStates = new Map();
+#               const reviewerStates = new Map();
 
-              for (const review of reviews) {
-                reviewerStates.set(review.user.login, review.state);
-              }
+#               for (const review of reviews) {
+#                 reviewerStates.set(review.user.login, review.state);
+#               }
 
-              const uniqueApprovers = new Set(
-                [...reviewerStates.entries()]
-                  .filter(([user, state]) => state === 'APPROVED')
-                  .map(([user, state]) => user)
-              );
+#               const uniqueApprovers = new Set(
+#                 [...reviewerStates.entries()]
+#                   .filter(([user, state]) => state === 'APPROVED')
+#                   .map(([user, state]) => user)
+#               );
 
-              if (uniqueApprovers.size < 2) {
-                console.log('Less than 2 unique approvals, no labels removed.');
-                return;
-              }
+#               if (uniqueApprovers.size < 2) {
+#                 console.log('Less than 2 unique approvals, no labels removed.');
+#                 return;
+#               }
 
-              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                owner,
-                repo,
-                issue_number: prNumber
-              });
+#               const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+#                 owner,
+#                 repo,
+#                 issue_number: prNumber
+#               });
 
-              for (const label of labels) {
-                if (label.name.startsWith('D-')) {
-                  await github.rest.issues.removeLabel({
-                    owner,
-                    repo,
-                    issue_number: prNumber,
-                    name: label.name
-                  });
-                  console.log(`Label ${label.name} removed.`);
-                }
-              }
-            }
+#               for (const label of labels) {
+#                 if (label.name.startsWith('D-')) {
+#                   await github.rest.issues.removeLabel({
+#                     owner,
+#                     repo,
+#                     issue_number: prNumber,
+#                     name: label.name
+#                   });
+#                   console.log(`Label ${label.name} removed.`);
+#                 }
+#               }
+#             }
             
-            removeLabels().catch(error => {
-              console.error('Error removing labels:', error);
-              process.exit(1);
-            });
+#             removeLabels().catch(error => {
+#               console.error('Error removing labels:', error);
+#               process.exit(1);
+#             });
 
-  # D-DAY label 업데이트 (ex. D-5 => D-4)
-  update-label:
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '1 15 * * 0-4'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+#   # D-DAY label 업데이트 (ex. D-5 => D-4)
+#   update-label:
+#     runs-on: ubuntu-latest
+#     if: github.event.schedule == '1 15 * * 0-4'
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-      # 모든 PR의 라벨 가져옴
-      - name: get PR labels
-        id: pr-labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            async function getLabels() {
-              const { data: pullRequests } = await github.rest.pulls.list({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                state: 'open'
-              });
+#       # 모든 PR의 라벨 가져옴
+#       - name: get PR labels
+#         id: pr-labels
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             async function getLabels() {
+#               const { data: pullRequests } = await github.rest.pulls.list({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 state: 'open'
+#               });
 
-              const labelsByPR = {};
+#               const labelsByPR = {};
 
-              for (const pr of pullRequests) {
-                const prNumber = pr.number;
-                const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber
-                });
+#               for (const pr of pullRequests) {
+#                 const prNumber = pr.number;
+#                 const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+#                   owner: context.repo.owner,
+#                   repo: context.repo.repo,
+#                   issue_number: prNumber
+#                 });
 
-                labelsByPR[prNumber] = labels.map(label => label.name);
-              }
+#                 labelsByPR[prNumber] = labels.map(label => label.name);
+#               }
 
-              core.setOutput('labelsByPR', JSON.stringify(labelsByPR));  
-            }
+#               core.setOutput('labelsByPR', JSON.stringify(labelsByPR));  
+#             }
             
-            getLabels();
+#             getLabels();
 
-      # 가져온 PR의 라벨중 "D-"로 시작하는 라벨 업데이트 (ex. D-5 => D-4)
-      - name: update labels
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            async function updateLabels() {
-              try {
-                const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
+#       # 가져온 PR의 라벨중 "D-"로 시작하는 라벨 업데이트 (ex. D-5 => D-4)
+#       - name: update labels
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             async function updateLabels() {
+#               try {
+#                 const labelsByPR = JSON.parse(process.env.LABELS_BY_PR);
 
-                for (const prNumber in labelsByPR) {
-                  const DLabels = labelsByPR[prNumber].filter(prLabel => prLabel.startsWith('D-'));
+#                 for (const prNumber in labelsByPR) {
+#                   const DLabels = labelsByPR[prNumber].filter(prLabel => prLabel.startsWith('D-'));
 
-                  if (DLabels.length < 1) {
-                    continue;
-                  }
+#                   if (DLabels.length < 1) {
+#                     continue;
+#                   }
 
-                  for (const DLabel of DLabels) {
-                    await github.rest.issues.removeLabel({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      issue_number: prNumber,
-                      name: DLabel
-                    });
-                  } 
+#                   for (const DLabel of DLabels) {
+#                     await github.rest.issues.removeLabel({
+#                       owner: context.repo.owner,
+#                       repo: context.repo.repo,
+#                       issue_number: prNumber,
+#                       name: DLabel
+#                     });
+#                   } 
 
-                  const biggestLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2))));
-                  const newLabel = `D-${biggestLabelNumber < 1 ? 0 : biggestLabelNumber - 1}`;
-                  await github.rest.issues.addLabels({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: prNumber,
-                    labels: [newLabel]
-                  });
+#                   const biggestLabelNumber = Math.max(...DLabels.map(DLabel => parseInt(DLabel.slice(2))));
+#                   const newLabel = `D-${biggestLabelNumber < 1 ? 0 : biggestLabelNumber - 1}`;
+#                   await github.rest.issues.addLabels({
+#                     owner: context.repo.owner,
+#                     repo: context.repo.repo,
+#                     issue_number: prNumber,
+#                     labels: [newLabel]
+#                   });
 
-                  console.log(`PR:${prNumber}, "D-" Label updated to "${newLabel}"`);
-                }
-              } catch (error) {
-                console.error('Error updating labels:', error);
-              }
-            }
+#                   console.log(`PR:${prNumber}, "D-" Label updated to "${newLabel}"`);
+#                 }
+#               } catch (error) {
+#                 console.error('Error updating labels:', error);
+#               }
+#             }
 
-            updateLabels();
-        env:
-          LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
+#             updateLabels();
+#         env:
+#           LABELS_BY_PR: ${{ steps.pr-labels.outputs.labelsByPR }}
 
-  # "D-"로 시작하는 라벨이 있는 PR 목록 slack 채널로 알림
-  notify-slack:
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '59 22 * * 0-4'
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
+#   # "D-"로 시작하는 라벨이 있는 PR 목록 slack 채널로 알림
+#   notify-slack:
+#     runs-on: ubuntu-latest
+#     if: github.event.schedule == '59 22 * * 0-4'
+#     steps:
+#       - name: checkout repository
+#         uses: actions/checkout@v4
 
-      # "D-"로 시작하는 라벨이 있는 PR 목록을 순서대로 나열함
-      - name: get pull requests
-        id: get-prs
-        uses: actions/github-script@v7
-        with:
-          script: |
-            // PR 목록 가져오기
-            const { data: pullRequests } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open'
-            });
+#       # "D-"로 시작하는 라벨이 있는 PR 목록을 순서대로 나열함
+#       - name: get pull requests
+#         id: get-prs
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             // PR 목록 가져오기
+#             const { data: pullRequests } = await github.rest.pulls.list({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               state: 'open'
+#             });
             
-            // label color
-            let colorMap = {
-              'D-0': '#B60205', // 빨간색
-              'D-1': '#D93F0B', // 주황색
-              'D-2': '#FBCA04', // 노랑색
-            };
+#             // label color
+#             let colorMap = {
+#               'D-0': '#B60205', // 빨간색
+#               'D-1': '#D93F0B', // 주황색
+#               'D-2': '#FBCA04', // 노랑색
+#             };
             
-            let prBlocks = await Promise.all(pullRequests.map(async (pullRequest) => {
-              const { number, title, created_at } = pullRequest;
-              const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
-              const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
+#             let prBlocks = await Promise.all(pullRequests.map(async (pullRequest) => {
+#               const { number, title, created_at } = pullRequest;
+#               const link = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`;
+#               const createdAt = new Date(created_at).toLocaleDateString('ko-KR');
             
-              // 라벨 가져오기
-              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: number
-              });
+#               // 라벨 가져오기
+#               const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 issue_number: number
+#               });
             
-              // D- 라벨 찾기
-              let color = '#0E8A16'; // 기본 색상 (초록색)
-              let labelNumber = Infinity;
-              let labelText = '';
-              let hasDLabel = false;
-              labels.forEach(label => {
-                if (label.name.startsWith('D-')) {
-                  const num = Number(label.name.slice(2));
-                  if (!isNaN(num) && num < labelNumber) {
-                    labelNumber = num;
-                    color = colorMap[label.name] || color;
-                    labelText = label.name;
-                    hasDLabel = true;
-                  }
-                }
-              });
+#               // D- 라벨 찾기
+#               let color = '#0E8A16'; // 기본 색상 (초록색)
+#               let labelNumber = Infinity;
+#               let labelText = '';
+#               let hasDLabel = false;
+#               labels.forEach(label => {
+#                 if (label.name.startsWith('D-')) {
+#                   const num = Number(label.name.slice(2));
+#                   if (!isNaN(num) && num < labelNumber) {
+#                     labelNumber = num;
+#                     color = colorMap[label.name] || color;
+#                     labelText = label.name;
+#                     hasDLabel = true;
+#                   }
+#                 }
+#               });
             
-              if (!hasDLabel) {
-                return null;
-              }
+#               if (!hasDLabel) {
+#                 return null;
+#               }
             
-              return {
-                labelNumber, // D- 뒤에 붙는 숫자
-                block: {
-                  "color": color,
-                  "blocks": [
-                    {
-                      "type": "section",
-                      "text": {
-                        "type": "mrkdwn",
-                        "text": `*[${labelText}] <${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
-                      }
-                    }
-                  ]
-                }
-              };
-            }));
+#               return {
+#                 labelNumber, // D- 뒤에 붙는 숫자
+#                 block: {
+#                   "color": color,
+#                   "blocks": [
+#                     {
+#                       "type": "section",
+#                       "text": {
+#                         "type": "mrkdwn",
+#                         "text": `*[${labelText}] <${link}|${title}>*\n#${number} opened on ${createdAt} by ${pullRequest.user.login}`
+#                       }
+#                     }
+#                   ]
+#                 }
+#               };
+#             }));
             
-            // null 값 제거
-            prBlocks = prBlocks.filter(prBlock => prBlock !== null);
+#             // null 값 제거
+#             prBlocks = prBlocks.filter(prBlock => prBlock !== null);
             
-            // 라벨의 D- 뒤에 붙는 숫자가 적은 순서대로 정렬
-            prBlocks.sort((a, b) => a.labelNumber - b.labelNumber);
+#             // 라벨의 D- 뒤에 붙는 숫자가 적은 순서대로 정렬
+#             prBlocks.sort((a, b) => a.labelNumber - b.labelNumber);
             
-            if (prBlocks.length === 0) {
-              core.setOutput('hasPrs', 'false');
-            } else {
-              core.setOutput('hasPrs', 'true');
-              core.setOutput('prBlocks', JSON.stringify(prBlocks.map(prBlock => prBlock.block)));
-              core.setOutput('prCount', prBlocks.length);
-            }
+#             if (prBlocks.length === 0) {
+#               core.setOutput('hasPrs', 'false');
+#             } else {
+#               core.setOutput('hasPrs', 'true');
+#               core.setOutput('prBlocks', JSON.stringify(prBlocks.map(prBlock => prBlock.block)));
+#               core.setOutput('prCount', prBlocks.length);
+#             }
 
-      # 가져온 PR 목록을 슬랙 채널에 알림
-      - name: Notify Slack
-        if: steps.get-prs.outputs.hasPrs == 'true'
-        uses: 8398a7/action-slack@v3
-        with:
-          status: custom
-          fields: workflow,job,commit,repo,ref,author,took
-          mention: "here"
-          custom_payload: |
-            {
-              "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개* PR이 여러분의 리뷰를 기다리고 있어요",
-              "attachments": [
-                {
-                  "blocks": [
-                    {
-                      "type": "header",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "${{ github.repository }}"
-                      }
-                    },
-                    {
-                      "type": "divider"
-                    }
-                  ]
-                },
-                ...${{ steps.get-prs.outputs.prBlocks }}
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
+#       # 가져온 PR 목록을 슬랙 채널에 알림
+#       - name: Notify Slack
+#         if: steps.get-prs.outputs.hasPrs == 'true'
+#         uses: 8398a7/action-slack@v3
+#         with:
+#           status: custom
+#           fields: workflow,job,commit,repo,ref,author,took
+#           mention: "here"
+#           custom_payload: |
+#             {
+#               "text": "<!here> *${{ steps.get-prs.outputs.prCount }}개* PR이 여러분의 리뷰를 기다리고 있어요",
+#               "attachments": [
+#                 {
+#                   "blocks": [
+#                     {
+#                       "type": "header",
+#                       "text": {
+#                         "type": "plain_text",
+#                         "text": "${{ github.repository }}"
+#                       }
+#                     },
+#                     {
+#                       "type": "divider"
+#                     }
+#                   ]
+#                 },
+#                 ...${{ steps.get-prs.outputs.prBlocks }}
+#               ]
+#             }
+#         env:
+#           SLACK_WEBHOOK_URL: ${{ secrets.RACCOON_SLACK_WEBHOOK_URL }}
 
-  # "v"로 시작하는 태그를 감지하여 main 브랜치에 머지된 PR 목록을 기반으로 release-note 만듬
-  create_release_note:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
+#   # "v"로 시작하는 태그를 감지하여 main 브랜치에 머지된 PR 목록을 기반으로 release-note 만듬
+#   create_release_note:
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+#     steps:
+#       - name: checkout repository
+#         uses: actions/checkout@v4
 
-      # 이전 tag와 현재 tag의 commit sha 가져오기
-      - name: get previous tag
-        id: get_previous_tag
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            const { data: tags } = await github.rest.repos.listTags({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            });
-            console.log('tags', tags)
-            // 태그 목록을 커밋 날짜 기준으로 정렬
-            const tagsWithCommitDates = await Promise.all(
-              tags.map(async tag => {
-                const { data: commit } = await github.rest.git.getCommit({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  commit_sha: tag.commit.sha
-                });
-                return { ...tag, date: new Date(commit.committer.date) };
-              })
-            );
+#       # 이전 tag와 현재 tag의 commit sha 가져오기
+#       - name: get previous tag
+#         id: get_previous_tag
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             const { data: tags } = await github.rest.repos.listTags({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               per_page: 100
+#             });
+#             console.log('tags', tags)
+#             // 태그 목록을 커밋 날짜 기준으로 정렬
+#             const tagsWithCommitDates = await Promise.all(
+#               tags.map(async tag => {
+#                 const { data: commit } = await github.rest.git.getCommit({
+#                   owner: context.repo.owner,
+#                   repo: context.repo.repo,
+#                   commit_sha: tag.commit.sha
+#                 });
+#                 return { ...tag, date: new Date(commit.committer.date) };
+#               })
+#             );
             
-            // 커밋 날짜를 기준으로 최신 태그 순으로 정렬
-            const sortedTags = tagsWithCommitDates.sort((a, b) => b.date - a.date);
-            console.log('sortedTags', sortedTags)
-            const currentTagName = context.ref.replace('refs/tags/', '');
-            const currentIndex = sortedTags.findIndex(tag => tag.name === currentTagName);
+#             // 커밋 날짜를 기준으로 최신 태그 순으로 정렬
+#             const sortedTags = tagsWithCommitDates.sort((a, b) => b.date - a.date);
+#             console.log('sortedTags', sortedTags)
+#             const currentTagName = context.ref.replace('refs/tags/', '');
+#             const currentIndex = sortedTags.findIndex(tag => tag.name === currentTagName);
             
-            if (currentIndex === -1) {
-              core.setFailed('Current tag not found.');
-              return;
-            }
+#             if (currentIndex === -1) {
+#               core.setFailed('Current tag not found.');
+#               return;
+#             }
             
-            const currentTag = sortedTags[currentIndex];
+#             const currentTag = sortedTags[currentIndex];
             
-            // 태그가 하나만 있는 경우
-            if (sortedTags.length === 1) {
-              core.exportVariable('PREVIOUS_TAG_SHA', '');
-              core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
-              console.log('Only one tag found.');
-              return;
-            }
+#             // 태그가 하나만 있는 경우
+#             if (sortedTags.length === 1) {
+#               core.exportVariable('PREVIOUS_TAG_SHA', '');
+#               core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
+#               console.log('Only one tag found.');
+#               return;
+#             }
             
-            const previousTag = sortedTags[currentIndex + 1];
-            core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
-            core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
-            console.log('Previous Tag:', previousTag.name);
+#             const previousTag = sortedTags[currentIndex + 1];
+#             core.exportVariable('PREVIOUS_TAG_SHA', previousTag.commit.sha);
+#             core.exportVariable('CURRENT_TAG_SHA', currentTag.commit.sha);
+#             console.log('Previous Tag:', previousTag.name);
 
-      # merge된 PR 제목 목록을 가져와 release note를 string으로 생성
-      - name: get merged pull requests
-        id: get_merged_prs
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            const previousTagSha = process.env.PREVIOUS_TAG_SHA;
-            let startDate;
-            if (previousTagSha) {
-              const { data: previousTagCommit } = await github.rest.repos.getCommit({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: previousTagSha,
-              });
-              startDate = previousTagCommit.commit.author.date;
-            } else {
-              startDate = '1970-01-01T00:00:00Z';
-            }
+#       # merge된 PR 제목 목록을 가져와 release note를 string으로 생성
+#       - name: get merged pull requests
+#         id: get_merged_prs
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             const previousTagSha = process.env.PREVIOUS_TAG_SHA;
+#             let startDate;
+#             if (previousTagSha) {
+#               const { data: previousTagCommit } = await github.rest.repos.getCommit({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 ref: previousTagSha,
+#               });
+#               startDate = previousTagCommit.commit.author.date;
+#             } else {
+#               startDate = '1970-01-01T00:00:00Z';
+#             }
             
-            const currentTagSha = process.env.CURRENT_TAG_SHA;
-            let endDate;
-            const { data: currentTagCommit } = await github.rest.repos.getCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: currentTagSha,
-            });
-            endDate = currentTagCommit.commit.author.date;
+#             const currentTagSha = process.env.CURRENT_TAG_SHA;
+#             let endDate;
+#             const { data: currentTagCommit } = await github.rest.repos.getCommit({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               ref: currentTagSha,
+#             });
+#             endDate = currentTagCommit.commit.author.date;
             
-            const { data: pullRequests } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'closed',
-              per_page: 100,
-            });
+#             const { data: pullRequests } = await github.rest.pulls.list({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               state: 'closed',
+#               per_page: 100,
+#             });
             
-            const mergedPRs = pullRequests.filter(pr => pr.merged_at && pr.merged_at >= startDate && pr.merged_at <= endDate);
+#             const mergedPRs = pullRequests.filter(pr => pr.merged_at && pr.merged_at >= startDate && pr.merged_at <= endDate);
             
-            if (mergedPRs.length === 0) {
-              core.exportVariable('MERGED_PR_TITLES', '');
-              console.log('No merged pull requests found.');
-              return;
-            }
+#             if (mergedPRs.length === 0) {
+#               core.exportVariable('MERGED_PR_TITLES', '');
+#               console.log('No merged pull requests found.');
+#               return;
+#             }
             
-            const featurePRs = [];
-            const releasePRs = [];
-            const etcPRs = [];
+#             const featurePRs = [];
+#             const releasePRs = [];
+#             const etcPRs = [];
             
-            // PR 제목을 분석하여 카테고리별로 분류
-            for (const mergedPR of mergedPRs) {
-              const { number, title, user } = mergedPR;
-              const lowerCaseTitle = title.toLowerCase();
-              if (lowerCaseTitle.includes('feature/')) {
-                featurePRs.push(`- #${number} ${title} by @${user.login}`);
-              } else if (lowerCaseTitle.includes('release/')) {
-                releasePRs.push(`- #${number} ${title} by @${user.login}`);
-              } else {
-                etcPRs.push(`- #${number} ${title} by @${user.login}`);
-              }
-            }
+#             // PR 제목을 분석하여 카테고리별로 분류
+#             for (const mergedPR of mergedPRs) {
+#               const { number, title, user } = mergedPR;
+#               const lowerCaseTitle = title.toLowerCase();
+#               if (lowerCaseTitle.includes('feature/')) {
+#                 featurePRs.push(`- #${number} ${title} by @${user.login}`);
+#               } else if (lowerCaseTitle.includes('release/')) {
+#                 releasePRs.push(`- #${number} ${title} by @${user.login}`);
+#               } else {
+#                 etcPRs.push(`- #${number} ${title} by @${user.login}`);
+#               }
+#             }
             
-            let prTitles = '';
-            if (releasePRs.length > 0) {
-              prTitles += `### RELEASE\n${releasePRs.join('\n')}\n\n`;
-            }
-            if (featurePRs.length > 0) {
-              prTitles += `### FEATURE\n${featurePRs.join('\n')}\n\n`;
-            }
-            if (etcPRs.length > 0) {
-              prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
-            }
+#             let prTitles = '';
+#             if (releasePRs.length > 0) {
+#               prTitles += `### RELEASE\n${releasePRs.join('\n')}\n\n`;
+#             }
+#             if (featurePRs.length > 0) {
+#               prTitles += `### FEATURE\n${featurePRs.join('\n')}\n\n`;
+#             }
+#             if (etcPRs.length > 0) {
+#               prTitles += `### ETC\n${etcPRs.join('\n')}\n\n`;
+#             }
             
-            core.exportVariable('MERGED_PR_TITLES', prTitles);
+#             core.exportVariable('MERGED_PR_TITLES', prTitles);
 
-      # 빈 release note 생성
-      - name: create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+#       # 빈 release note 생성
+#       - name: create release
+#         id: create_release
+#         uses: actions/create-release@v1
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
+#         with:
+#           tag_name: ${{ github.ref_name }}
+#           release_name: Release ${{ github.ref_name }}
+#           draft: false
+#           prerelease: false
 
-      # 생성된 빈 release note에 PR제목 목록으로 구성된 내용을 update
-      - name: update release notes
-        id: update_notes
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            const prTitles = process.env.MERGED_PR_TITLES;
-            if (!prTitles) {
-              console.log('No merged pull requests found.');
-              return;
-            }
+#       # 생성된 빈 release note에 PR제목 목록으로 구성된 내용을 update
+#       - name: update release notes
+#         id: update_notes
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             const prTitles = process.env.MERGED_PR_TITLES;
+#             if (!prTitles) {
+#               console.log('No merged pull requests found.');
+#               return;
+#             }
             
-            const { data: release } = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: context.ref.replace('refs/tags/', ''),
-            });
+#             const { data: release } = await github.rest.repos.getReleaseByTag({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               tag: context.ref.replace('refs/tags/', ''),
+#             });
             
-            await github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: release.id,
-              body: `${prTitles}`,
-            });
+#             await github.rest.repos.updateRelease({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               release_id: release.id,
+#               body: `${prTitles}`,
+#             });
             
-            core.exportVariable('RELEASE_URL', release.html_url);
+#             core.exportVariable('RELEASE_URL', release.html_url);
 
-      # release note url 제공
-      - name: output release url
-        run: |
-          echo "Release URL: $RELEASE_URL"
+#       # release note url 제공
+#       - name: output release url
+#         run: |
+#           echo "Release URL: $RELEASE_URL"
