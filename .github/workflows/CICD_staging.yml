@@ -1,80 +1,80 @@
-name: CI/CD staging
+# name: CI/CD staging
 
-on:
-  workflow_dispatch:
-    inputs:
-      label:
-        description: '배포 대상 도메인(개별/그룹) 선택'
-        required: true
-        default: 'TORDER'
-        type: choice
-        options:
-          - ALL
-          - TORDER
-          - UPLUS
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       label:
+#         description: '배포 대상 도메인(개별/그룹) 선택'
+#         required: true
+#         default: 'TORDER'
+#         type: choice
+#         options:
+#           - ALL
+#           - TORDER
+#           - UPLUS
 
-jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      # 선택한 branch or tag 체크아웃
-      - name: check out branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
+# jobs:
+#   setup:
+#     runs-on: ubuntu-latest
+#     steps:
+#       # 선택한 branch or tag 체크아웃
+#       - name: check out branch
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.ref }}
 
-      # 노드 버전 세팅
-      - name: setup node version
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
+#       # 노드 버전 세팅
+#       - name: setup node version
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: "20.x"
 
-      # node_modules 설치
-      - name: install dependencies
-        run: yarn
+#       # node_modules 설치
+#       - name: install dependencies
+#         run: yarn
 
-      # node_modules 캐시 저장
-      - name: save node_modules cache
-        uses: actions/cache/save@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ github.sha }}-${{ github.workflow }}
+#       # node_modules 캐시 저장
+#       - name: save node_modules cache
+#         uses: actions/cache/save@v4
+#         with:
+#           path: node_modules
+#           key: node-modules-${{ github.sha }}-${{ github.workflow }}
 
-  #---------------------------------- torder
-  build_torder:
-    if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: origin:build:staging
-      LABEL: torder
+#   #---------------------------------- torder
+#   build_torder:
+#     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: origin:build:staging
+#       LABEL: torder
 
-  deploy_torder:
-    needs: build_torder
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: torder
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_STAGING_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+#   deploy_torder:
+#     needs: build_torder
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: torder
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_STAGING_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
 
-  #---------------------------------- uplus_old
-  build_uplus_old:
-    if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: uplus_old:build:staging
-      LABEL: uplus_old
+#   #---------------------------------- uplus_old
+#   build_uplus_old:
+#     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: uplus_old:build:staging
+#       LABEL: uplus_old
 
-  deploy_uplus_old:
-    needs: build_uplus_old
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: uplus_old
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_STAGE_UPLUS_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_STAGE_UPLUS_DISTRIBUTION_ID }}
+#   deploy_uplus_old:
+#     needs: build_uplus_old
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: uplus_old
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_STAGE_UPLUS_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_STAGE_UPLUS_DISTRIBUTION_ID }}
