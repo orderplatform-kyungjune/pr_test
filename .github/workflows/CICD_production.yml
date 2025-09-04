@@ -1,313 +1,313 @@
-name: CICD production
+# name: CICD production
 
-on:
-  workflow_dispatch:
-    inputs:
-      label:
-        description: '배포 대상 도메인(개별/그룹) 선택'
-        required: true
-        default: 'TORDER'
-        type: choice
-        options:
-          - ALL
-          - TORDER+GLOBAL  #SAAS를 제외한 나머지
-          - SAAS
-          - TORDER
-          - SINGAPORE
-          - US1
-          - SYDNEY
-          - PARTNERS
-          - UPLUS
-          - CAPSSMART
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       label:
+#         description: '배포 대상 도메인(개별/그룹) 선택'
+#         required: true
+#         default: 'TORDER'
+#         type: choice
+#         options:
+#           - ALL
+#           - TORDER+GLOBAL  #SAAS를 제외한 나머지
+#           - SAAS
+#           - TORDER
+#           - SINGAPORE
+#           - US1
+#           - SYDNEY
+#           - PARTNERS
+#           - UPLUS
+#           - CAPSSMART
 
-jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      # 선택한 branch or tag 체크아웃
-      - name: check out tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
+# jobs:
+#   setup:
+#     runs-on: ubuntu-latest
+#     steps:
+#       # 선택한 branch or tag 체크아웃
+#       - name: check out tag
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.ref }}
 
-      # 노드 버전 세팅
-      - name: setup node version
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
+#       # 노드 버전 세팅
+#       - name: setup node version
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: "20.x"
 
-      # node_modules 설치
-      - name: install dependencies
-        run: yarn
+#       # node_modules 설치
+#       - name: install dependencies
+#         run: yarn
 
-      # node_modules 캐시 저장
-      - name: save node_modules cache
-        uses: actions/cache/save@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ github.sha }}-${{ github.workflow }}
+#       # node_modules 캐시 저장
+#       - name: save node_modules cache
+#         uses: actions/cache/save@v4
+#         with:
+#           path: node_modules
+#           key: node-modules-${{ github.sha }}-${{ github.workflow }}
 
-  #---------------------------------- torder
-  build_torder:
-    if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: origin:build:prod
-      LABEL: torder
+#   #---------------------------------- torder
+#   build_torder:
+#     if: ${{ github.event.inputs.label == 'TORDER' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: origin:build:prod
+#       LABEL: torder
 
-  deploy_torder:
-    needs: build_torder
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: torder
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_DISTRIBUTION_ID }}
+#   deploy_torder:
+#     needs: build_torder
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: torder
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_DISTRIBUTION_ID }}
 
-  #---------------------------------- uplus_old
-#  build_uplus_old:
-#    if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'SAAS' || github.event.inputs.label == 'ALL' }}
-#    needs: setup
-#    uses: ./.github/workflows/reusable_build.yml
-#    secrets:
-#      BUILD_COMMAND: uplus_old:build:prod
-#      LABEL: uplus_old
-#
-#  deploy_uplus_old:
-#    needs: build_uplus_old
-#    uses: ./.github/workflows/reusable_deploy.yml
-#    secrets:
-#      TOKEN: ${{ secrets.BOT_PAT }}
-#      LABEL: uplus_old
-#      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-#      AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_UPLUS_BUCKET_NAME }}
-#      AWS_REGION: ${{ secrets.AWS_REGION }}
-#      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_UPLUS_DISTRIBUTION_ID }}
+#   #---------------------------------- uplus_old
+# #  build_uplus_old:
+# #    if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'SAAS' || github.event.inputs.label == 'ALL' }}
+# #    needs: setup
+# #    uses: ./.github/workflows/reusable_build.yml
+# #    secrets:
+# #      BUILD_COMMAND: uplus_old:build:prod
+# #      LABEL: uplus_old
+# #
+# #  deploy_uplus_old:
+# #    needs: build_uplus_old
+# #    uses: ./.github/workflows/reusable_deploy.yml
+# #    secrets:
+# #      TOKEN: ${{ secrets.BOT_PAT }}
+# #      LABEL: uplus_old
+# #      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+# #      AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_UPLUS_BUCKET_NAME }}
+# #      AWS_REGION: ${{ secrets.AWS_REGION }}
+# #      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_UPLUS_DISTRIBUTION_ID }}
 
-  #---------------------------------- uplus_new (망분리)
-  build_uplus_new:
-    if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'SAAS' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: uplus_new:build:prod
-      LABEL: uplus_new
+#   #---------------------------------- uplus_new (망분리)
+#   build_uplus_new:
+#     if: ${{ github.event.inputs.label == 'UPLUS' || github.event.inputs.label == 'SAAS' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: uplus_new:build:prod
+#       LABEL: uplus_new
 
-  deploy_uplus_new:
-    needs: build_uplus_new
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: uplus_new
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_790631726648 }}
-      AWS_BUCKET_NAME: admin.saas.uplusorder.com
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_DISTRIBUTION_ID: E2VNQLBDSXFDQ3
+#   deploy_uplus_new:
+#     needs: build_uplus_new
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: uplus_new
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_790631726648 }}
+#       AWS_BUCKET_NAME: admin.saas.uplusorder.com
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
+#       AWS_DISTRIBUTION_ID: E2VNQLBDSXFDQ3
 
-  #---------------------------------- capssmart
-  build_capssmart:
-    if: ${{ github.event.inputs.label == 'CAPSSMART' || github.event.inputs.label == 'SAAS' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: capssmart:build:prod
-      LABEL: capssmart
+#   #---------------------------------- capssmart
+#   build_capssmart:
+#     if: ${{ github.event.inputs.label == 'CAPSSMART' || github.event.inputs.label == 'SAAS' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: capssmart:build:prod
+#       LABEL: capssmart
 
-  deploy_capssmart:
-    needs: build_capssmart
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: capssmart
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_790631726648 }}
-      AWS_BUCKET_NAME: admin.capssmart.torder.com
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_DISTRIBUTION_ID: EP7SQWIIVODB4
+#   deploy_capssmart:
+#     needs: build_capssmart
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: capssmart
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_790631726648 }}
+#       AWS_BUCKET_NAME: admin.capssmart.torder.com
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
+#       AWS_DISTRIBUTION_ID: EP7SQWIIVODB4
 
-  #---------------------------------- singapore
-  build_singapore:
-    if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: sg:build:prod
-      LABEL: singapore
+#   #---------------------------------- singapore
+#   build_singapore:
+#     if: ${{ github.event.inputs.label == 'SINGAPORE' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: sg:build:prod
+#       LABEL: singapore
 
-  deploy_singapore:
-    needs: build_singapore
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: singapore
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_SG_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_SG_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_SG_DISTRIBUTION_ID }}
+#   deploy_singapore:
+#     needs: build_singapore
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: singapore
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_SG_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_SG_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_SG_DISTRIBUTION_ID }}
 
-  #---------------------------------- us1
-  build_us1:
-    if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: us_east:build:prod
-      LABEL: us1
+#   #---------------------------------- us1
+#   build_us1:
+#     if: ${{ github.event.inputs.label == 'US1' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: us_east:build:prod
+#       LABEL: us1
 
-  deploy_us1:
-    needs: build_us1
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: us1
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_US1_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_US1_DISTRIBUTION_ID }}
+#   deploy_us1:
+#     needs: build_us1
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: us1
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_US1_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_US1_DISTRIBUTION_ID }}
 
-  deploy_us_east:
-    needs: build_us1
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: us1
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_US_EAST_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_US_EAST_DISTRIBUTION_ID }}
+#   deploy_us_east:
+#     needs: build_us1
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: us1
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_US_EAST_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_US_EAST_DISTRIBUTION_ID }}
 
-  #---------------------------------- sydney
-  build_sydney:
-    if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: sydney:build:prod
-      LABEL: sydney
+#   #---------------------------------- sydney
+#   build_sydney:
+#     if: ${{ github.event.inputs.label == 'SYDNEY' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: sydney:build:prod
+#       LABEL: sydney
 
-  deploy_sydney:
-    needs: build_sydney
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: sydney
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_SYDNEY_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_SYDNEY_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_SYDNEY_DISTRIBUTION_ID }}
+#   deploy_sydney:
+#     needs: build_sydney
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: sydney
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_SYDNEY_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_SYDNEY_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_SYDNEY_DISTRIBUTION_ID }}
 
-  #---------------------------------- partners
-  build_partners:
-    if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
-    needs: setup
-    uses: ./.github/workflows/reusable_build.yml
-    secrets:
-      BUILD_COMMAND: partners:build:prod
-      LABEL: partners
+#   #---------------------------------- partners
+#   build_partners:
+#     if: ${{ github.event.inputs.label == 'PARTNERS' || github.event.inputs.label == 'TORDER+GLOBAL' || github.event.inputs.label == 'ALL' }}
+#     needs: setup
+#     uses: ./.github/workflows/reusable_build.yml
+#     secrets:
+#       BUILD_COMMAND: partners:build:prod
+#       LABEL: partners
 
-  deploy_partners:
-    needs: build_partners
-    uses: ./.github/workflows/reusable_deploy.yml
-    secrets:
-      TOKEN: ${{ secrets.BOT_PAT }}
-      LABEL: partners
-      AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_US1_PARTNERS_BUCKET_NAME }}
-      AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
-      AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_US1_PARTNERS_DISTRIBUTION_ID }}
+#   deploy_partners:
+#     needs: build_partners
+#     uses: ./.github/workflows/reusable_deploy.yml
+#     secrets:
+#       TOKEN: ${{ secrets.BOT_PAT }}
+#       LABEL: partners
+#       AWS_ROLE_ARN: ${{ secrets.FRONTEND_ROLE_488659748805 }}
+#       AWS_BUCKET_NAME: ${{ secrets.AWS_LIVE_US1_PARTNERS_BUCKET_NAME }}
+#       AWS_REGION: ${{ secrets.AWS_US_EAST_REGION }}
+#       AWS_DISTRIBUTION_ID: ${{ secrets.AWS_LIVE_US1_PARTNERS_DISTRIBUTION_ID }}
 
-  # slack 알림
-  slack_notification:
-    runs-on: ubuntu-latest
-    needs: [deploy_torder, deploy_singapore, deploy_us1, deploy_us_east, deploy_sydney, deploy_partners, deploy_uplus_new, deploy_capssmart]
-    if: ${{ always() }}
-    steps:
-      # job 성공 여부 체크
-      - name: check workflow status
-        id: workflow_status
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.BOT_PAT }}
-          script: |
-            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId
-            });
+#   # slack 알림
+#   slack_notification:
+#     runs-on: ubuntu-latest
+#     needs: [deploy_torder, deploy_singapore, deploy_us1, deploy_us_east, deploy_sydney, deploy_partners, deploy_uplus_new, deploy_capssmart]
+#     if: ${{ always() }}
+#     steps:
+#       # job 성공 여부 체크
+#       - name: check workflow status
+#         id: workflow_status
+#         uses: actions/github-script@v7
+#         with:
+#           github-token: ${{ secrets.BOT_PAT }}
+#           script: |
+#             const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               run_id: context.runId
+#             });
 
-            let status = 'success';
-            for (const job of jobs.jobs) {
-              if (job.conclusion === 'failure' || job.conclusion === 'cancelled' || job.conclusion === 'neutral') {
-                status = job.conclusion;
-                break;
-              }
-            }
+#             let status = 'success';
+#             for (const job of jobs.jobs) {
+#               if (job.conclusion === 'failure' || job.conclusion === 'cancelled' || job.conclusion === 'neutral') {
+#                 status = job.conclusion;
+#                 break;
+#               }
+#             }
 
-            core.setOutput('status', status);
+#             core.setOutput('status', status);
 
-      # slack 알림
-      - name: slack notification
-        uses: 8398a7/action-slack@v3
-        with:
-          status: custom
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-          custom_payload: |
-            {
-              "attachments": [
-                {
-                  "color": '${{ steps.workflow_status.outputs.status }}' === 'success' ? '#52BF90' : '#FF240D',
-                  "blocks": [
-                    {
-                      "type": "header",
-                      "text": {
-                        "type": "plain_text",
-                        "text": ":t'order: 어드민 LIVE 배포"
-                      }
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*라벨*\n${{ github.event.inputs.label }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*태그*\n${{ github.ref }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*상태*\n${{ steps.workflow_status.outputs.status }}"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "*담당자*\n${{ github.event.sender.login }}"
-                        }
-                      ]
-                    },
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }}
+#       # slack 알림
+#       - name: slack notification
+#         uses: 8398a7/action-slack@v3
+#         with:
+#           status: custom
+#           fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+#           custom_payload: |
+#             {
+#               "attachments": [
+#                 {
+#                   "color": '${{ steps.workflow_status.outputs.status }}' === 'success' ? '#52BF90' : '#FF240D',
+#                   "blocks": [
+#                     {
+#                       "type": "header",
+#                       "text": {
+#                         "type": "plain_text",
+#                         "text": ":t'order: 어드민 LIVE 배포"
+#                       }
+#                     },
+#                     {
+#                       "type": "divider"
+#                     },
+#                     {
+#                       "type": "section",
+#                       "fields": [
+#                         {
+#                           "type": "mrkdwn",
+#                           "text": "*라벨*\n${{ github.event.inputs.label }}"
+#                         }
+#                       ]
+#                     },
+#                     {
+#                       "type": "section",
+#                       "fields": [
+#                         {
+#                           "type": "mrkdwn",
+#                           "text": "*태그*\n${{ github.ref }}"
+#                         }
+#                       ]
+#                     },
+#                     {
+#                       "type": "section",
+#                       "fields": [
+#                         {
+#                           "type": "mrkdwn",
+#                           "text": "*상태*\n${{ steps.workflow_status.outputs.status }}"
+#                         }
+#                       ]
+#                     },
+#                     {
+#                       "type": "section",
+#                       "fields": [
+#                         {
+#                           "type": "mrkdwn",
+#                           "text": "*담당자*\n${{ github.event.sender.login }}"
+#                         }
+#                       ]
+#                     },
+#                   ]
+#                 }
+#               ]
+#             }
+#         env:
+#           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }}
